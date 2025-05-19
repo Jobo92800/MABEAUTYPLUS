@@ -1,0 +1,43 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "clients",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "centerId", "order": "ASCENDING" },
+        { "fieldPath": "lastName", "order": "ASCENDING" },
+        { "fieldPath": "__name__", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "measurements",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "clientId", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "DESCENDING" },
+        { "fieldPath": "__name__", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "mensurations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "clientId", "order": "ASCENDING" },
+        { "fieldPath": "centerId", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "DESCENDING" },
+        { "fieldPath": "__name__", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "sessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "clientId", "order": "ASCENDING" },
+        { "fieldPath": "type", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "DESCENDING" },
+        { "fieldPath": "__name__", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

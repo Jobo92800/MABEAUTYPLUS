@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 200">
+  <defs>
+    <style>
+      .lotus {
+        fill: none;
+        stroke-width: 2;
+      }
+      .petal-pink {
+        stroke: #EC4899;
+      }
+      .petal-blue {
+        stroke: #35AEDC;
+      }
+      .text {
+        fill: #35AEDC;
+        font-family: Arial, sans-serif;
+        font-size: 48px;
+      }
+    </style>
+  </defs>
+  <g transform="translate(100,20)">
+    <path class="lotus petal-pink" d="M50,30 C30,10 30,40 50,60" />
+    <path class="lotus petal-pink" d="M50,30 C70,10 70,40 50,60" />
+    <path class="lotus petal-blue" d="M20,40 C0,20 0,50 20,70" />
+    <path class="lotus petal-blue" d="M80,40 C100,20 100,50 80,70" />
+  </g>
+  <text x="100" y="150" class="text">MAbeautyplus</text>
+</svg>
