@@ -112,17 +112,16 @@ const ClientList: React.FC<ClientListProps> = ({ clients, centerId, onClientDele
     const today = new Date();
 
     return payments.some(category => {
-      // Check any payment line (deposit or installment) that is red
+      // Check deposit
       const hasOverdueDeposit = category.deposit?.date && 
         new Date(category.deposit.date) < today && 
-        !category.deposit.isPaid && 
-        !category.deposit.isGiven;
+        (!category.deposit.isPaid || !category.deposit.isGiven);
 
+      // Check installments
       const hasOverdueInstallment = category.installments.some(payment => 
         payment.date && 
         new Date(payment.date) < today && 
-        !payment.isPaid && 
-        !payment.isGiven
+        (!payment.isPaid || !payment.isGiven)
       );
 
       return hasOverdueDeposit || hasOverdueInstallment;
