@@ -10,9 +10,10 @@ import type { FullClientData } from '../../../types/client';
 interface ClientFormProps {
   onSubmit: (data: FormData) => void;
   initialData?: FullClientData;
+  isSubmitting?: boolean;
 }
 
-const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, initialData }) => {
+const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, initialData, isSubmitting }) => {
   const navigate = useNavigate();
   const { selectedTreatment, TreatmentForm } = useTreatmentForm(initialData);
 
@@ -44,9 +45,16 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, initialData }) => {
           </button>
           <button
             type="submit"
-            className="rounded-full px-6 py-2 text-sm font-semibold text-white shadow-sm hover:shadow-md transition-all duration-200 bg-brand-blue"
+            disabled={isSubmitting}
+            className={`
+              rounded-full px-6 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-200
+              ${isSubmitting 
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-brand-blue hover:shadow-md'
+              }
+            `}
           >
-            Enregistrer
+            {isSubmitting ? 'Enregistrement...' : 'Enregistrer'}
           </button>
         </div>
       </div>

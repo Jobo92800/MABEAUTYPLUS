@@ -33,11 +33,36 @@ export const getClientData = async (clientId: string): Promise<Client | null> =>
   }
 };
 
+export const checkClientExists = async (firstName: string, lastName: string, centerId: string): Promise<boolean> => {
+  try {
+    const q = query(
+      collection(db, 'clients'),
+      where('firstName', '==', firstName),
+      where('lastName', '==', lastName),
+      where('centerId', '==', centerId)
+    );
+    const snapshot = await getDocs(q);
+    return !snapshot.empty;
+  } catch (error) {
+    console.error('Error checking client existence:', error);
+    throw new Error('Impossible de vérifier si le client existe déjà');
+  }
+};
+
 export const saveClient = async (formData: FormData, centerId: string): Promise<string> => {
   try {
+    const firstName = formData.get('firstName') as string;
+    const lastName = formData.get('lastName') as string;
+
+    // Check if client already exists
+    const exists = await checkClientExists(firstName, lastName, centerId);
+    if (exists) {
+      throw new Error('Un client avec ce nom et prénom existe déjà');
+    }
+
     const clientData = {
-      firstName: formData.get('firstName') as string,
-      lastName: formData.get('lastName') as string,
+      firstName,
+      lastName,
       email: formData.get('email') as string,
       phone: formData.get('phone') as string,
       birthDate: formData.get('birthDate') as string,
@@ -67,16 +92,36 @@ export const saveClient = async (formData: FormData, centerId: string): Promise<
     return clientRef.id;
   } catch (error) {
     console.error('Erreur lors de la sauvegarde du client:', error);
+    if (error instanceof Error) {
+      throw error;
+    }
     throw new Error('Impossible de sauvegarder les données du client');
   }
 };
 
 export const updateClient = async (clientId: string, formData: FormData, centerId: string): Promise<void> => {
   try {
+    const firstName = formData.get('firstName') as string;
+    const lastName = formData.get('lastName') as string;
+
+    // Get current client data
+    const currentClient = await getClientData(clientId);
+    if (!currentClient) {
+      throw new Error('Client non trouvé');
+    }
+
+    // Only check for duplicates if name has changed
+    if (currentClient.firstName !== firstName || currentClient.lastName !== lastName) {
+      const exists = await checkClientExists(firstName, lastName, centerId);
+      if (exists) {
+        throw new Error('Un client avec ce nom et prénom existe déjà');
+      }
+    }
+
     const clientRef = doc(db, 'clients', clientId);
     const clientData = {
-      firstName: formData.get('firstName'),
-      lastName: formData.get('lastName'),
+      firstName,
+      lastName,
       email: formData.get('email'),
       phone: formData.get('phone'),
       birthDate: formData.get('birthDate'),
@@ -97,6 +142,9 @@ export const updateClient = async (clientId: string, formData: FormData, centerI
     await saveFormData(clientId, formData, collections);
   } catch (error) {
     console.error('Erreur lors de la mise à jour du client:', error);
+    if (error instanceof Error) {
+      throw error;
+    }
     throw new Error('Impossible de mettre à jour les données du client');
   }
 };

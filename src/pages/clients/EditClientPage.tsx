@@ -66,6 +66,7 @@ const EditClientPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [generatingPDF, setGeneratingPDF] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fetchData = async () => {
     if (!id || !centerId) return;
@@ -99,13 +100,20 @@ const EditClientPage = () => {
   const handleSubmit = async (formData: FormData) => {
     if (!id || !centerId) return;
 
+    if (isSubmitting) {
+      return;
+    }
+
     try {
+      setIsSubmitting(true);
       await updateClient(id, formData, centerId);
       await fetchData();
       toast.success('Client mis à jour avec succès');
     } catch (error) {
       console.error('Error updating client:', error);
-      toast.error('Une erreur est survenue lors de la mise à jour du client');
+      toast.error(error instanceof Error ? error.message : 'Une erreur est survenue lors de la mise à jour du client');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -226,7 +234,7 @@ const EditClientPage = () => {
       {/* Content */}
       <div>
         {currentTab === 'info' && (
-          <ClientForm onSubmit={handleSubmit} initialData={clientData} />
+          <ClientForm onSubmit={handleSubmit} initialData={clientData} isSubmitting={isSubmitting} />
         )}
         {currentTab === 'sessions' && (
           <SessionsTab clientId={id!} centerId={centerId!} />
