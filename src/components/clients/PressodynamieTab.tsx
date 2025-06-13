@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Plus, X } from 'lucide-react';
-import { getSessions, addSession } from '../../services/database';
+import { Plus, X, Pencil, Trash2 } from 'lucide-react';
+import { getSessions, addSession, updateSession, deleteSession } from '../../services/database';
 import type { Session } from '../../types/session';
+import { toast } from 'react-hot-toast';
 
 interface PressodynamieTabProps {
   clientId: string;
@@ -15,6 +16,7 @@ const PressodynamieTab: React.FC<PressodynamieTabProps> = ({ clientId, centerId 
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [editingSession, setEditingSession] = useState<Session | null>(null);
   const [newSession, setNewSession] = useState({
     date: format(new Date(), 'yyyy-MM-dd'),
     mode: {
@@ -26,43 +28,54 @@ const PressodynamieTab: React.FC<PressodynamieTabProps> = ({ clientId, centerId 
     comment: ''
   });
 
-  useEffect(() => {
-    const fetchSessions = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await getSessions(clientId, centerId, 'pressodynamie');
-        setSessions(data);
-      } catch (err: any) {
-        console.error('Error fetching pressodynamie sessions:', err);
-        setError('Erreur lors du chargement des séances');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchSessions = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getSessions(clientId, centerId, 'pressodynamie');
+      setSessions(data);
+    } catch (err: any) {
+      console.error('Error fetching pressodynamie sessions:', err);
+      setError('Erreur lors du chargement des séances');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchSessions();
   }, [clientId, centerId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await addSession({
-        clientId,
-        centerId,
-        type: 'pressodynamie',
-        date: newSession.date,
-        mode: newSession.mode,
-        comment: newSession.comment,
-        number: sessions.length + 1
-      });
+      if (editingSession) {
+        await updateSession({
+          ...editingSession,
+          date: newSession.date,
+          mode: newSession.mode,
+          comment: newSession.comment
+        });
+        toast.success('Séance mise à jour avec succès');
+      } else {
+        await addSession({
+          clientId,
+          centerId,
+          type: 'pressodynamie',
+          date: newSession.date,
+          mode: newSession.mode,
+          comment: newSession.comment,
+          number: sessions.length + 1
+        });
+        toast.success('Séance ajoutée avec succès');
+      }
 
       // Rafraîchir la liste des séances
-      const updatedSessions = await getSessions(clientId, centerId, 'pressodynamie');
-      setSessions(updatedSessions);
+      await fetchSessions();
       
       // Réinitialiser le formulaire
       setShowAddForm(false);
+      setEditingSession(null);
       setNewSession({
         date: format(new Date(), 'yyyy-MM-dd'),
         mode: {
@@ -74,8 +87,38 @@ const PressodynamieTab: React.FC<PressodynamieTabProps> = ({ clientId, centerId 
         comment: ''
       });
     } catch (error) {
-      console.error('Error adding pressodynamie session:', error);
-      alert('Erreur lors de l\'ajout de la séance');
+      console.error('Error saving pressodynamie session:', error);
+      toast.error('Erreur lors de l\'enregistrement de la séance');
+    }
+  };
+
+  const handleEdit = (session: Session) => {
+    setEditingSession(session);
+    setNewSession({
+      date: session.date,
+      mode: session.mode || {
+        minutes: '',
+        c: '',
+        d: '',
+        w: ''
+      },
+      comment: session.comment || ''
+    });
+    setShowAddForm(true);
+  };
+
+  const handleDelete = async (sessionId: string) => {
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer cette séance ?')) {
+      return;
+    }
+
+    try {
+      await deleteSession(sessionId);
+      toast.success('Séance supprimée avec succès');
+      await fetchSessions();
+    } catch (error) {
+      console.error('Error deleting session:', error);
+      toast.error('Erreur lors de la suppression de la séance');
     }
   };
 
@@ -126,10 +169,15 @@ const PressodynamieTab: React.FC<PressodynamieTabProps> = ({ clientId, centerId 
           {showAddForm && (
             <div className="mt-4 bg-gray-50 p-4 rounded-lg">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-sm font-medium text-gray-900">Nouvelle séance</h3>
+                <h3 className="text-sm font-medium text-gray-900">
+                  {editingSession ? 'Modifier la séance' : 'Nouvelle séance'}
+                </h3>
                 <button
                   type="button"
-                  onClick={() => setShowAddForm(false)}
+                  onClick={() => {
+                    setShowAddForm(false);
+                    setEditingSession(null);
+                  }}
                   className="text-gray-400 hover:text-gray-500"
                 >
                   <X className="h-5 w-5" />
@@ -238,7 +286,7 @@ const PressodynamieTab: React.FC<PressodynamieTabProps> = ({ clientId, centerId 
                     type="submit"
                     className="rounded-full bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm hover:shadow-md transition-all duration-200"
                   >
-                    Enregistrer
+                    {editingSession ? 'Mettre à jour' : 'Enregistrer'}
                   </button>
                 </div>
               </form>
@@ -255,10 +303,11 @@ const PressodynamieTab: React.FC<PressodynamieTabProps> = ({ clientId, centerId 
                       <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Date</th>
                       <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Mode/intensité</th>
                       <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Commentaire</th>
+                      <th scope="col" className="px-3 py-3.5 text-right text-sm font-semibold text-gray-900">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {sessions.map((session) => (
+                    {[...sessions].reverse().map((session) => (
                       <tr key={session.id}>
                         <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900">{session.number}</td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
@@ -268,6 +317,22 @@ const PressodynamieTab: React.FC<PressodynamieTabProps> = ({ clientId, centerId 
                           Min: {session.mode?.minutes} - C: {session.mode?.c} - D: {session.mode?.d} - W: {session.mode?.w}
                         </td>
                         <td className="px-3 py-4 text-sm text-gray-500">{session.comment}</td>
+                        <td className="whitespace-nowrap px-3 py-4 text-sm text-right">
+                          <div className="flex justify-end space-x-2">
+                            <button
+                              onClick={() => handleEdit(session)}
+                              className="text-brand-blue hover:text-brand-blue/80"
+                            >
+                              <Pencil className="h-5 w-5" />
+                            </button>
+                            <button
+                              onClick={() => session.id && handleDelete(session.id)}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="h-5 w-5" />
+                            </button>
+                          </div>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
