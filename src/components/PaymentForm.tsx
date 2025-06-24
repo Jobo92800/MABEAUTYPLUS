@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, X, CreditCard, Calendar, Euro } from 'lucide-react';
+import { Plus, X, CreditCard, Calendar, Euro, Trash2 } from 'lucide-react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { PAYMENT_COLLECTION } from '../services/collections';
@@ -143,6 +143,22 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix })
           ...cat,
           installments: [...cat.installments, { amount: '', date: '', purpose: '', method: '', isPaid: false, isGiven: false }]
         };
+      }
+      return cat;
+    });
+    setCategories(newCategories);
+    savePaymentData(newCategories);
+  };
+
+  const removePaymentLine = (categoryId: string, index: number) => {
+    const newCategories = categories.map(cat => {
+      if (cat.id === categoryId) {
+        const newInstallments = cat.installments.filter((_, i) => i !== index);
+        // Ensure at least one installment remains
+        if (newInstallments.length === 0) {
+          newInstallments.push({ amount: '', date: '', purpose: '', method: '', isPaid: false, isGiven: false });
+        }
+        return { ...cat, installments: newInstallments };
       }
       return cat;
     });
@@ -376,7 +392,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix })
                 {category.installments.map((line, index) => (
                   <div 
                     key={index} 
-                    className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 items-start p-3 rounded-lg ${getPaymentLineColor(line.date, line.method, line.isPaid, line.isGiven)}`}
+                    className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-3 items-start p-3 rounded-lg ${getPaymentLineColor(line.date, line.method, line.isPaid, line.isGiven)}`}
                   >
                     {/* Amount */}
                     <div className="relative">
@@ -448,6 +464,23 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix })
                         />
                         <span className="text-sm text-gray-700">Donné</span>
                       </label>
+                    </div>
+
+                    {/* Delete Button */}
+                    <div className="flex justify-center">
+                      <button
+                        type="button"
+                        onClick={() => removePaymentLine(category.id, index)}
+                        disabled={category.installments.length === 1}
+                        className={`p-2 rounded-full transition-colors ${
+                          category.installments.length === 1
+                            ? 'text-gray-300 cursor-not-allowed'
+                            : 'text-red-500 hover:text-red-700 hover:bg-red-50'
+                        }`}
+                        title={category.installments.length === 1 ? 'Au moins une ligne de paiement est requise' : 'Supprimer cette ligne'}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </div>
                   </div>
                 ))}
