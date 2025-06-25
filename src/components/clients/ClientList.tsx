@@ -21,17 +21,19 @@ interface ClientNote {
   date: { toDate: () => Date };
 }
 
+interface PaymentLine {
+  date: string;
+  isPaid: boolean;
+  isGiven: boolean;
+}
+
 interface PaymentCategory {
   deposit?: {
     date: string;
     isPaid: boolean;
     isGiven: boolean;
   };
-  installments: Array<{
-    date: string;
-    isPaid: boolean;
-    isGiven: boolean;
-  }>;
+  installments: PaymentLine[];
 }
 
 const ClientList: React.FC<ClientListProps> = ({ clients, centerId, onClientDeleted }) => {
@@ -110,12 +112,21 @@ const ClientList: React.FC<ClientListProps> = ({ clients, centerId, onClientDele
   const hasOverduePayments = (clientId: string): boolean => {
     const payments = clientPayments[clientId] || [];
     const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time to start of day for accurate comparison
 
     return payments.some(category => {
       // Check deposit
       if (category.deposit?.date) {
         const depositDate = new Date(category.deposit.date);
-        if (!category.deposit.isPaid && !category.deposit.isGiven && depositDate < today) {
+        depositDate.setHours(0, 0, 0, 0);
+        
+        // If it's a check and not given and not paid and date is past
+        if (category.deposit.method === 'cheque' && !category.deposit.isGiven && !category.deposit.isPaid) {
+          return true; // Checks not given are always considered overdue
+        }
+        
+        // If date is past and not paid and not given
+        if (depositDate < today && !category.deposit.isPaid && !category.deposit.isGiven) {
           return true;
         }
       }
@@ -124,7 +135,17 @@ const ClientList: React.FC<ClientListProps> = ({ clients, centerId, onClientDele
       return category.installments.some(payment => {
         if (payment.date) {
           const paymentDate = new Date(payment.date);
-          return !payment.isPaid && !payment.isGiven && paymentDate < today;
+          paymentDate.setHours(0, 0, 0, 0);
+          
+          // If it's a check and not given and not paid
+          if (payment.method === 'cheque' && !payment.isGiven && !payment.isPaid) {
+            return true; // Checks not given are always considered overdue
+          }
+          
+          // If date is past and not paid and not given
+          if (paymentDate < today && !payment.isPaid && !payment.isGiven) {
+            return true;
+          }
         }
         return false;
       });
