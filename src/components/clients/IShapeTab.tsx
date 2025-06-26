@@ -41,11 +41,19 @@ const IShapeTab: React.FC<IShapeTabProps> = ({ clientId, centerId }) => {
         getSessions(clientId, centerId, 'ishape'),
         getTotalTreatmentSessions(clientId, 'ishape')
       ]);
-      // Sort sessions by date (newest first)
+      
+      // Sort sessions by date (oldest first) and assign sequential numbers
       const sortedSessions = [...sessionsData].sort((a, b) => 
-        new Date(b.date).getTime() - new Date(a.date).getTime()
+        new Date(a.date).getTime() - new Date(b.date).getTime()
       );
-      setSessions(sortedSessions);
+      
+      // Assign sequential numbers based on chronological order
+      const sessionsWithCorrectNumbers = sortedSessions.map((session, index) => ({
+        ...session,
+        number: index + 1
+      }));
+      
+      setSessions(sessionsWithCorrectNumbers);
       setTotalSessions(totalSessionsData);
     } catch (err) {
       console.error('Error fetching data:', err);
@@ -80,6 +88,7 @@ const IShapeTab: React.FC<IShapeTabProps> = ({ clientId, centerId }) => {
         });
         toast.success('Séance mise à jour avec succès');
       } else {
+        // Don't assign a number here - it will be calculated based on chronological order
         await addSession({
           clientId,
           centerId,
@@ -88,7 +97,7 @@ const IShapeTab: React.FC<IShapeTabProps> = ({ clientId, centerId }) => {
           comment: newSession.comment,
           photoTaken: newSession.photoTaken,
           measurements: newSession.measurements,
-          number: sessions.length + 1
+          number: 0 // Temporary number, will be recalculated
         });
 
         // Decrease total sessions count by 1
@@ -99,7 +108,7 @@ const IShapeTab: React.FC<IShapeTabProps> = ({ clientId, centerId }) => {
         toast.success('Séance ajoutée avec succès');
       }
 
-      await fetchData();
+      await fetchData(); // This will recalculate all numbers
       setShowAddForm(false);
       setEditingSession(null);
       setNewSession({
@@ -147,7 +156,7 @@ const IShapeTab: React.FC<IShapeTabProps> = ({ clientId, centerId }) => {
     try {
       await deleteSession(sessionId);
       toast.success('Séance supprimée avec succès');
-      await fetchData();
+      await fetchData(); // This will recalculate all numbers
     } catch (error) {
       console.error('Error deleting session:', error);
       toast.error('Erreur lors de la suppression de la séance');
@@ -157,12 +166,9 @@ const IShapeTab: React.FC<IShapeTabProps> = ({ clientId, centerId }) => {
   const calculateTotalLost = () => {
     if (sessions.length < 2) return null;
 
-    const sortedSessions = [...sessions].sort((a, b) => 
-      new Date(a.date).getTime() - new Date(b.date).getTime()
-    );
-
-    const firstSession = sortedSessions[0];
-    const lastSession = sortedSessions[sortedSessions.length - 1];
+    // Use sessions already sorted by date (oldest first)
+    const firstSession = sessions[0];
+    const lastSession = sessions[sessions.length - 1];
 
     const calculateDiff = (first: string | undefined, last: string | undefined) => {
       if (!first || !last) return 0;
@@ -208,6 +214,9 @@ const IShapeTab: React.FC<IShapeTabProps> = ({ clientId, centerId }) => {
       </div>
     );
   }
+
+  // For display, show sessions in reverse chronological order (newest first)
+  const displaySessions = [...sessions].reverse();
 
   return (
     <div className="space-y-6">
@@ -543,7 +552,7 @@ const IShapeTab: React.FC<IShapeTabProps> = ({ clientId, centerId }) => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {sessions.map((session) => (
+                    {displaySessions.map((session) => (
                       <tr key={session.id}>
                         <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900">{session.number}</td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
@@ -585,7 +594,7 @@ const IShapeTab: React.FC<IShapeTabProps> = ({ clientId, centerId }) => {
                 </h4>
                 <div className="h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={[...sessions].reverse().map(s => ({
+                    <LineChart data={sessions.map(s => ({
                       date: format(new Date(s.date), 'dd/MM'),
                       brasDroit: parseFloat(s.measurements?.arms.right) || null,
                       brasGauche: parseFloat(s.measurements?.arms.left) || null,
@@ -612,7 +621,7 @@ const IShapeTab: React.FC<IShapeTabProps> = ({ clientId, centerId }) => {
                 </h4>
                 <div className="h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={[...sessions].reverse().map(s => ({
+                    <LineChart data={sessions.map(s => ({
                       date: format(new Date(s.date), 'dd/MM'),
                       nombril: parseFloat(s.measurements?.navel) || null,
                       hanches: parseFloat(s.measurements?.hips) || null,
