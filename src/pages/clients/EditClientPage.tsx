@@ -64,9 +64,10 @@ const menuCategories = [
   }
 ];
 
+// SOS n'a plus de calcul automatique d'échéance
 const COMPLEMENT_TYPES = [
   { id: 'BURN', daysPerBox: 15 },
-  { id: 'SOS', daysPerBox: 15 },
+  { id: 'SOS', daysPerBox: null }, // Pas de calcul automatique pour SOS
   { id: 'DETOX', daysPerBox: 15 },
   { id: 'SKIN', daysPerBox: 30 }
 ];
@@ -84,7 +85,7 @@ const EditClientPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasExpiredComplements, setHasExpiredComplements] = useState(false);
 
-  // Fonction pour vérifier les compléments expirés
+  // Fonction pour vérifier les compléments expirés (SOS exclu du calcul automatique)
   const checkExpiredComplements = async () => {
     if (!id || !centerId) return;
 
@@ -110,9 +111,16 @@ const EditClientPage = () => {
         return acc;
       }, {} as Record<string, Array<{ date: string; quantity: number; type: string }>>);
 
-      // Pour chaque type, vérifier l'expiration
+      // Pour chaque type, vérifier l'expiration (sauf SOS)
       Object.entries(salesByType).forEach(([type, typeSales]) => {
         if (!totals[type]) return;
+
+        // SOS n'a pas de calcul automatique d'échéance
+        if (type === 'SOS') {
+          totals[type].total = typeSales.reduce((sum, sale) => sum + sale.quantity, 0);
+          totals[type].isExpired = false; // SOS ne peut jamais être "expiré" automatiquement
+          return;
+        }
 
         // Trier les ventes par date (plus récente en premier)
         const sortedSales = typeSales.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -123,7 +131,7 @@ const EditClientPage = () => {
         // Calculer la quantité restante en partant de la vente la plus récente
         for (const sale of sortedSales) {
           const complementType = COMPLEMENT_TYPES.find(t => t.id === sale.type);
-          if (!complementType) continue;
+          if (!complementType || !complementType.daysPerBox) continue;
           
           const totalDays = complementType.daysPerBox * sale.quantity;
           const expiryDate = addDays(new Date(sale.date), totalDays);
@@ -141,7 +149,7 @@ const EditClientPage = () => {
           const latestSale = sortedSales[0];
           if (latestSale) {
             const complementType = COMPLEMENT_TYPES.find(t => t.id === latestSale.type);
-            if (complementType) {
+            if (complementType && complementType.daysPerBox) {
               const totalDays = complementType.daysPerBox * latestSale.quantity;
               const expiryDate = addDays(new Date(latestSale.date), totalDays);
               if (isAfter(currentDate, expiryDate)) {
@@ -154,8 +162,10 @@ const EditClientPage = () => {
         totals[type].total = typeSales.reduce((sum, sale) => sum + sale.quantity, 0);
       });
 
-      // Vérifier s'il y a au moins un complément expiré
-      const hasAnyExpired = Object.values(totals).some(total => total.isExpired);
+      // Vérifier s'il y a au moins un complément expiré (SOS exclu)
+      const hasAnyExpired = Object.entries(totals)
+        .filter(([type]) => type !== 'SOS') // Exclure SOS de la vérification
+        .some(([, total]) => total.isExpired);
       setHasExpiredComplements(hasAnyExpired);
     } catch (error) {
       console.error('Error checking expired complements:', error);

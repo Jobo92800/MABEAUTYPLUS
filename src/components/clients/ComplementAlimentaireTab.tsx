@@ -22,6 +22,7 @@ interface ComplementSale {
   createdAt?: string;
 }
 
+// SOS n'a plus de calcul automatique d'échéance
 const COMPLEMENT_TYPES = [
   { 
     id: 'BURN', 
@@ -37,7 +38,7 @@ const COMPLEMENT_TYPES = [
     color: 'bg-red-500', 
     bgColor: 'bg-red-50', 
     textColor: 'text-red-700',
-    daysPerBox: 15
+    daysPerBox: null // Pas de calcul automatique pour SOS
   },
   { 
     id: 'DETOX', 
@@ -173,23 +174,25 @@ const ComplementAlimentaireTab: React.FC<ComplementAlimentaireTabProps> = ({
     }
   };
 
-  // Calculer la date d'échéance pour une vente
+  // Calculer la date d'échéance pour une vente (sauf SOS)
   const calculateExpiryDate = (sale: ComplementSale) => {
     const complementType = COMPLEMENT_TYPES.find(t => t.id === sale.type);
-    if (!complementType) return null;
+    if (!complementType || !complementType.daysPerBox) return null; // SOS retourne null
     
     const totalDays = complementType.daysPerBox * sale.quantity;
     return addDays(new Date(sale.date), totalDays);
   };
 
-  // Vérifier si un complément est expiré
+  // Vérifier si un complément est expiré (SOS ne peut jamais être expiré)
   const isExpired = (sale: ComplementSale) => {
+    if (sale.type === 'SOS') return false; // SOS ne peut jamais être expiré
+    
     const expiryDate = calculateExpiryDate(sale);
     if (!expiryDate) return false;
     return isAfter(new Date(), expiryDate);
   };
 
-  // Calculer les totaux par type et vérifier l'expiration
+  // Calculer les totaux par type et vérifier l'expiration (SOS exclu du calcul d'expiration)
   const calculateTotalsWithExpiry = () => {
     const totals = COMPLEMENT_TYPES.reduce((acc, type) => {
       acc[type.id] = { total: 0, isExpired: false, latestExpiryDate: null };
@@ -206,6 +209,16 @@ const ComplementAlimentaireTab: React.FC<ComplementAlimentaireTabProps> = ({
     // Pour chaque type, calculer le total et vérifier l'expiration
     Object.entries(salesByType).forEach(([type, typeSales]) => {
       if (!totals[type]) return;
+
+      // SOS n'a pas de calcul d'expiration
+      if (type === 'SOS') {
+        totals[type] = {
+          total: typeSales.reduce((sum, sale) => sum + sale.quantity, 0),
+          isExpired: false, // SOS ne peut jamais être expiré
+          latestExpiryDate: null
+        };
+        return;
+      }
 
       // Trier les ventes par date (plus récente en premier)
       const sortedSales = typeSales.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -254,9 +267,11 @@ const ComplementAlimentaireTab: React.FC<ComplementAlimentaireTabProps> = ({
 
   const totalsWithExpiry = calculateTotalsWithExpiry();
 
-  // Vérifier s'il y a au moins un complément expiré et notifier le parent
+  // Vérifier s'il y a au moins un complément expiré et notifier le parent (SOS exclu)
   useEffect(() => {
-    const hasAnyExpired = Object.values(totalsWithExpiry).some(total => total.isExpired);
+    const hasAnyExpired = Object.entries(totalsWithExpiry)
+      .filter(([type]) => type !== 'SOS') // Exclure SOS de la vérification
+      .some(([, total]) => total.isExpired);
     if (onExpiryStatusChange) {
       onExpiryStatusChange(hasAnyExpired);
     }
@@ -324,6 +339,11 @@ const ComplementAlimentaireTab: React.FC<ComplementAlimentaireTabProps> = ({
                   {isExpiredType && (
                     <div className="text-xs text-red-600 mt-1">
                       Stock expiré
+                    </div>
+                  )}
+                  {type.id === 'SOS' && (
+                    <div className="text-xs text-gray-500 mt-1">
+                      Pas d'échéance
                     </div>
                   )}
                 </div>
@@ -402,7 +422,7 @@ const ComplementAlimentaireTab: React.FC<ComplementAlimentaireTabProps> = ({
                       <option value="">Sélectionner un type</option>
                       {COMPLEMENT_TYPES.map((type) => (
                         <option key={type.id} value={type.id}>
-                          {type.label} ({type.daysPerBox} jours/boîte)
+                          {type.label} {type.daysPerBox ? `(${type.daysPerBox} jours/boîte)` : '(pas d\'échéance)'}
                         </option>
                       ))}
                     </select>
@@ -424,8 +444,8 @@ const ComplementAlimentaireTab: React.FC<ComplementAlimentaireTabProps> = ({
                   </div>
                 </div>
 
-                {/* Aperçu de la date d'échéance */}
-                {newSale.type && newSale.quantity && (
+                {/* Aperçu de la date d'échéance (sauf pour SOS) */}
+                {newSale.type && newSale.type !== 'SOS' && newSale.quantity && (
                   <div className="bg-blue-50 p-3 rounded-md">
                     <div className="flex items-center">
                       <Calendar className="h-4 w-4 text-blue-500 mr-2" />
@@ -433,7 +453,7 @@ const ComplementAlimentaireTab: React.FC<ComplementAlimentaireTabProps> = ({
                         Date d'échéance calculée : {
                           (() => {
                             const complementType = COMPLEMENT_TYPES.find(t => t.id === newSale.type);
-                            if (complementType) {
+                            if (complementType && complementType.daysPerBox) {
                               const totalDays = complementType.daysPerBox * newSale.quantity;
                               const expiryDate = addDays(new Date(newSale.date), totalDays);
                               return format(expiryDate, 'dd MMMM yyyy', { locale: fr });
@@ -441,6 +461,18 @@ const ComplementAlimentaireTab: React.FC<ComplementAlimentaireTabProps> = ({
                             return '';
                           })()
                         }
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Message pour SOS */}
+                {newSale.type === 'SOS' && (
+                  <div className="bg-gray-50 p-3 rounded-md">
+                    <div className="flex items-center">
+                      <Calendar className="h-4 w-4 text-gray-500 mr-2" />
+                      <span className="text-sm text-gray-700">
+                        SOS : Pas de calcul automatique d'échéance
                       </span>
                     </div>
                   </div>
@@ -492,10 +524,20 @@ const ComplementAlimentaireTab: React.FC<ComplementAlimentaireTabProps> = ({
                             {sale.quantity} boîte{sale.quantity > 1 ? 's' : ''}
                           </td>
                           <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                            {expiryDate ? format(expiryDate, 'dd/MM/yyyy', { locale: fr }) : '-'}
+                            {sale.type === 'SOS' ? (
+                              <span className="text-gray-400 italic">Pas d'échéance</span>
+                            ) : expiryDate ? (
+                              format(expiryDate, 'dd/MM/yyyy', { locale: fr })
+                            ) : (
+                              '-'
+                            )}
                           </td>
                           <td className="whitespace-nowrap px-3 py-4 text-sm">
-                            {expired ? (
+                            {sale.type === 'SOS' ? (
+                              <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">
+                                Pas d'échéance
+                              </span>
+                            ) : expired ? (
                               <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-700">
                                 <AlertTriangle className="h-3 w-3 mr-1" />
                                 Expiré
