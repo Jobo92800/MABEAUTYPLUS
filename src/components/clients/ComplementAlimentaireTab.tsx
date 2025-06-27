@@ -156,7 +156,7 @@ const ComplementAlimentaireTab: React.FC<ComplementAlimentaireTabProps> = ({ cli
     return totals;
   };
 
-  // Fonction pour obtenir les couleurs d'un type
+  // Fonction pour obtenir les couleurs d'un type (uniquement pour l'historique)
   const getTypeColors = (typeId: string) => {
     const type = COMPLEMENT_TYPES.find(t => t.id === typeId);
     return type || { color: 'bg-gray-500', bgColor: 'bg-gray-50', textColor: 'text-gray-700' };
@@ -188,7 +188,7 @@ const ComplementAlimentaireTab: React.FC<ComplementAlimentaireTabProps> = ({ cli
 
   return (
     <div className="space-y-6">
-      {/* Tableau récapitulatif */}
+      {/* Tableau récapitulatif - Style neutre */}
       <div className="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl">
         <div className="px-4 py-5 sm:p-6">
           <h2 className="text-base font-semibold leading-6 text-gray-900 mb-4">
@@ -196,9 +196,9 @@ const ComplementAlimentaireTab: React.FC<ComplementAlimentaireTabProps> = ({ cli
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {COMPLEMENT_TYPES.map((type) => (
-              <div key={type.id} className={`${type.bgColor} p-4 rounded-lg text-center border-l-4 ${type.color}`}>
-                <div className={`text-lg font-semibold ${type.textColor}`}>{type.label}</div>
-                <div className={`text-2xl font-bold ${type.textColor}`}>{totals[type.id]}</div>
+              <div key={type.id} className="bg-gray-50 p-4 rounded-lg text-center border-l-4 border-brand-blue">
+                <div className="text-lg font-semibold text-gray-700">{type.label}</div>
+                <div className="text-2xl font-bold text-brand-blue">{totals[type.id]}</div>
               </div>
             ))}
           </div>
@@ -329,7 +329,7 @@ const ComplementAlimentaireTab: React.FC<ComplementAlimentaireTabProps> = ({ cli
                             {format(new Date(sale.date), 'dd MMMM yyyy', { locale: fr })}
                           </td>
                           <td className="whitespace-nowrap px-3 py-4 text-sm">
-                            <span className={`inline-flex items-center rounded-full ${typeColors.bgColor} px-3 py-1 text-sm font-medium ${typeColors.textColor} border-l-2 ${typeColors.color}`}>
+                            <span className={`inline-flex items-center rounded-full ${typeColors.bgColor} px-3 py-1 text-sm font-medium ${typeColors.textColor}`}>
                               {sale.type}
                             </span>
                           </td>
