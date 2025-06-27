@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Plus, X, Pencil, Trash2 } from 'lucide-react';
 import { getSessions, addSession, updateSession, deleteSession } from '../../services/database';
+import { getTotalTreatmentSessions, updateTotalTreatmentSessions } from '../../services/database/operations/totalSessions';
 import type { Session } from '../../types/session';
 import { toast } from 'react-hot-toast';
 
@@ -17,6 +18,7 @@ const PressodynamieTab: React.FC<PressodynamieTabProps> = ({ clientId, centerId 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editingSession, setEditingSession] = useState<Session | null>(null);
+  const [totalSessions, setTotalSessions] = useState<number>(0);
   const [newSession, setNewSession] = useState({
     date: format(new Date(), 'yyyy-MM-dd'),
     mode: {
@@ -28,23 +30,38 @@ const PressodynamieTab: React.FC<PressodynamieTabProps> = ({ clientId, centerId 
     comment: ''
   });
 
-  const fetchSessions = async () => {
+  const fetchData = async () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await getSessions(clientId, centerId, 'pressodynamie');
-      setSessions(data);
+      const [sessionsData, totalSessionsData] = await Promise.all([
+        getSessions(clientId, centerId, 'pressodynamie'),
+        getTotalTreatmentSessions(clientId, 'pressodynamie')
+      ]);
+      setSessions(sessionsData);
+      setTotalSessions(totalSessionsData);
     } catch (err: any) {
-      console.error('Error fetching pressodynamie sessions:', err);
-      setError('Erreur lors du chargement des séances');
+      console.error('Error fetching pressodynamie data:', err);
+      setError('Erreur lors du chargement des données');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchSessions();
+    fetchData();
   }, [clientId, centerId]);
+
+  const handleTotalSessionsChange = async (value: number) => {
+    try {
+      await updateTotalTreatmentSessions(clientId, 'pressodynamie', value);
+      setTotalSessions(value);
+      toast.success('Nombre total de séances mis à jour');
+    } catch (error) {
+      console.error('Error updating total sessions:', error);
+      toast.error('Erreur lors de la mise à jour du nombre total de séances');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,13 +84,16 @@ const PressodynamieTab: React.FC<PressodynamieTabProps> = ({ clientId, centerId 
           comment: newSession.comment,
           number: sessions.length + 1
         });
+
+        // Décrémenter le nombre total de séances
+        const newTotalSessions = Math.max(0, totalSessions - 1);
+        await updateTotalTreatmentSessions(clientId, 'pressodynamie', newTotalSessions);
+        setTotalSessions(newTotalSessions);
+        
         toast.success('Séance ajoutée avec succès');
       }
 
-      // Rafraîchir la liste des séances
-      await fetchSessions();
-      
-      // Réinitialiser le formulaire
+      await fetchData();
       setShowAddForm(false);
       setEditingSession(null);
       setNewSession({
@@ -115,7 +135,7 @@ const PressodynamieTab: React.FC<PressodynamieTabProps> = ({ clientId, centerId 
     try {
       await deleteSession(sessionId);
       toast.success('Séance supprimée avec succès');
-      await fetchSessions();
+      await fetchData();
     } catch (error) {
       console.error('Error deleting session:', error);
       toast.error('Erreur lors de la suppression de la séance');
@@ -146,6 +166,25 @@ const PressodynamieTab: React.FC<PressodynamieTabProps> = ({ clientId, centerId 
 
   return (
     <div className="space-y-6">
+      {/* Total Sessions Counter */}
+      <div className="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl p-6">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-gray-900">
+            Séances Pressodynamie
+          </h3>
+          <div className="flex items-center space-x-2">
+            <input
+              type="number"
+              value={totalSessions}
+              onChange={(e) => handleTotalSessionsChange(parseInt(e.target.value) || 0)}
+              className="w-20 rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue sm:text-sm"
+              min="0"
+            />
+            <span className="text-sm text-gray-500">séances</span>
+          </div>
+        </div>
+      </div>
+
       <div className="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl">
         <div className="px-4 py-5 sm:p-6">
           <div className="sm:flex sm:items-center">
