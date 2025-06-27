@@ -22,6 +22,7 @@ import { generateClientPDF } from '../../utils/pdfGenerator';
 import type { FullClientData } from '../../types/client';
 import type { Measurement } from '../../types/measurements';
 import type { Session } from '../../types/session';
+import { addDays, isAfter } from 'date-fns';
 
 const menuCategories = [
   {
@@ -63,6 +64,13 @@ const menuCategories = [
   }
 ];
 
+const COMPLEMENT_TYPES = [
+  { id: 'BURN', daysPerBox: 15 },
+  { id: 'SOS', daysPerBox: 15 },
+  { id: 'DETOX', daysPerBox: 15 },
+  { id: 'SKIN', daysPerBox: 30 }
+];
+
 const EditClientPage = () => {
   const { id, centerId } = useParams();
   const navigate = useNavigate();
@@ -74,7 +82,85 @@ const EditClientPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [hasExpiredComplements, setHasExpiredComplements] = useState(false); // Nouvel état
+  const [hasExpiredComplements, setHasExpiredComplements] = useState(false);
+
+  // Fonction pour vérifier les compléments expirés
+  const checkExpiredComplements = async () => {
+    if (!id || !centerId) return;
+
+    try {
+      const complementSessions = await getSessions(id, centerId, 'complement-alimentaire');
+      
+      // Calculer les totaux par type et vérifier l'expiration
+      const totals = COMPLEMENT_TYPES.reduce((acc, type) => {
+        acc[type.id] = { total: 0, isExpired: false };
+        return acc;
+      }, {} as Record<string, { total: number; isExpired: boolean }>);
+
+      // Grouper les ventes par type
+      const salesByType = complementSessions.reduce((acc, session) => {
+        const type = session.complementType;
+        if (!type) return acc;
+        if (!acc[type]) acc[type] = [];
+        acc[type].push({
+          date: session.date,
+          quantity: session.quantity || 1,
+          type: type
+        });
+        return acc;
+      }, {} as Record<string, Array<{ date: string; quantity: number; type: string }>>);
+
+      // Pour chaque type, vérifier l'expiration
+      Object.entries(salesByType).forEach(([type, typeSales]) => {
+        if (!totals[type]) return;
+
+        // Trier les ventes par date (plus récente en premier)
+        const sortedSales = typeSales.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        
+        let remainingQuantity = 0;
+        const currentDate = new Date();
+
+        // Calculer la quantité restante en partant de la vente la plus récente
+        for (const sale of sortedSales) {
+          const complementType = COMPLEMENT_TYPES.find(t => t.id === sale.type);
+          if (!complementType) continue;
+          
+          const totalDays = complementType.daysPerBox * sale.quantity;
+          const expiryDate = addDays(new Date(sale.date), totalDays);
+          
+          if (isAfter(currentDate, expiryDate)) {
+            // Cette vente est expirée, ne pas compter sa quantité
+            continue;
+          }
+          remainingQuantity += sale.quantity;
+        }
+
+        // Si toutes les ventes sont expirées ou s'il n'y a plus de stock
+        if (remainingQuantity === 0 && typeSales.length > 0) {
+          // Vérifier si la vente la plus récente est expirée
+          const latestSale = sortedSales[0];
+          if (latestSale) {
+            const complementType = COMPLEMENT_TYPES.find(t => t.id === latestSale.type);
+            if (complementType) {
+              const totalDays = complementType.daysPerBox * latestSale.quantity;
+              const expiryDate = addDays(new Date(latestSale.date), totalDays);
+              if (isAfter(currentDate, expiryDate)) {
+                totals[type].isExpired = true;
+              }
+            }
+          }
+        }
+
+        totals[type].total = typeSales.reduce((sum, sale) => sum + sale.quantity, 0);
+      });
+
+      // Vérifier s'il y a au moins un complément expiré
+      const hasAnyExpired = Object.values(totals).some(total => total.isExpired);
+      setHasExpiredComplements(hasAnyExpired);
+    } catch (error) {
+      console.error('Error checking expired complements:', error);
+    }
+  };
 
   const fetchData = async () => {
     if (!id || !centerId) return;
@@ -93,6 +179,9 @@ const EditClientPage = () => {
 
       setMeasurements(measurementsData);
       setSessions(sessionsData);
+
+      // Vérifier les compléments expirés dès le chargement
+      await checkExpiredComplements();
     } catch (err) {
       console.error('Error fetching data:', err);
       setError('Erreur lors du chargement des données');
