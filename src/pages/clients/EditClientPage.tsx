@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   User, Scale, Ruler, FileDown, Activity, 
-  Sparkles, Zap, Heart, Coffee, ArrowLeft
+  Sparkles, Zap, Heart, Coffee, ArrowLeft, Pill
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import ClientForm from '../../components/clients/ClientForm';
@@ -16,6 +16,7 @@ import AdvanceLiftTab from '../../components/clients/AdvanceLiftTab';
 import PressodynamieTab from '../../components/clients/PressodynamieTab';
 import RelaxationTab from '../../components/clients/RelaxationTab';
 import MesojetTab from '../../components/clients/MesojetTab';
+import ComplementAlimentaireTab from '../../components/clients/ComplementAlimentaireTab';
 import { getFullClientData, getMeasurements, getSessions, updateClient } from '../../services/database';
 import { generateClientPDF } from '../../utils/pdfGenerator';
 import type { FullClientData } from '../../types/client';
@@ -52,6 +53,12 @@ const menuCategories = [
     tabs: [
       { id: 'advanceLift', name: 'Advance Lift', icon: Heart },
       { id: 'mesojet', name: 'Mésojet', icon: Sparkles }
+    ]
+  },
+  {
+    name: 'Compléments',
+    tabs: [
+      { id: 'complementAlimentaire', name: 'Complément Alimentaire', icon: Pill }
     ]
   }
 ];
@@ -265,6 +272,9 @@ const EditClientPage = () => {
         )}
         {currentTab === 'mesojet' && (
           <MesojetTab clientId={id!} centerId={centerId!} />
+        )}
+        {currentTab === 'complementAlimentaire' && (
+          <ComplementAlimentaireTab clientId={id!} centerId={centerId!} />
         )}
       </div>
     </div>
