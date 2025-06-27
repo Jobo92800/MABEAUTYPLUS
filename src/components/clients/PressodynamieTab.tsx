@@ -4,6 +4,8 @@ import { fr } from 'date-fns/locale';
 import { Plus, X, Pencil, Trash2 } from 'lucide-react';
 import { getSessions, addSession, updateSession, deleteSession } from '../../services/database';
 import { getTotalTreatmentSessions, updateTotalTreatmentSessions } from '../../services/database/operations/totalSessions';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../../services/firebase';
 import type { Session } from '../../types/session';
 import { toast } from 'react-hot-toast';
 
@@ -30,16 +32,43 @@ const PressodynamieTab: React.FC<PressodynamieTabProps> = ({ clientId, centerId 
     comment: ''
   });
 
+  // Fonction pour récupérer le nombre de séances depuis le formulaire Pressodynamie
+  const getSessionCountFromForm = async () => {
+    try {
+      const docRef = doc(db, 'curepresso', clientId);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        return parseInt(data.sessionCount) || 0;
+      }
+      return 0;
+    } catch (error) {
+      console.error('Error fetching session count from form:', error);
+      return 0;
+    }
+  };
+
   const fetchData = async () => {
     try {
       setLoading(true);
       setError(null);
-      const [sessionsData, totalSessionsData] = await Promise.all([
+      
+      const [sessionsData, storedTotalSessions, formSessionCount] = await Promise.all([
         getSessions(clientId, centerId, 'pressodynamie'),
-        getTotalTreatmentSessions(clientId, 'pressodynamie')
+        getTotalTreatmentSessions(clientId, 'pressodynamie'),
+        getSessionCountFromForm()
       ]);
+      
       setSessions(sessionsData);
-      setTotalSessions(totalSessionsData);
+      
+      // Si aucune valeur n'est stockée, utiliser la valeur du formulaire
+      if (storedTotalSessions === 0 && formSessionCount > 0) {
+        setTotalSessions(formSessionCount);
+        // Sauvegarder cette valeur pour la prochaine fois
+        await updateTotalTreatmentSessions(clientId, 'pressodynamie', formSessionCount);
+      } else {
+        setTotalSessions(storedTotalSessions);
+      }
     } catch (err: any) {
       console.error('Error fetching pressodynamie data:', err);
       setError('Erreur lors du chargement des données');
@@ -183,6 +212,11 @@ const PressodynamieTab: React.FC<PressodynamieTabProps> = ({ clientId, centerId 
             <span className="text-sm text-gray-500">séances</span>
           </div>
         </div>
+        {totalSessions > 0 && (
+          <div className="mt-2 text-sm text-gray-600">
+            Séances restantes : <span className="font-medium text-brand-blue">{Math.max(0, totalSessions - sessions.length)}</span>
+          </div>
+        )}
       </div>
 
       <div className="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl">
