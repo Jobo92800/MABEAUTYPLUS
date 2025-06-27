@@ -183,21 +183,21 @@ const ComplementAlimentaireTab: React.FC<ComplementAlimentaireTabProps> = ({
     return addDays(new Date(sale.date), totalDays);
   };
 
-  // Vérifier si un complément est expiré (SOS ne peut jamais être expiré)
-  const isExpired = (sale: ComplementSale) => {
-    if (sale.type === 'SOS') return false; // SOS ne peut jamais être expiré
+  // Vérifier si un complément est terminé (SOS ne peut jamais être terminé)
+  const isTerminated = (sale: ComplementSale) => {
+    if (sale.type === 'SOS') return false; // SOS ne peut jamais être terminé
     
     const expiryDate = calculateExpiryDate(sale);
     if (!expiryDate) return false;
     return isAfter(new Date(), expiryDate);
   };
 
-  // Calculer les totaux par type et vérifier l'expiration (SOS exclu du calcul d'expiration)
+  // Calculer les totaux par type et vérifier si terminé (SOS exclu du calcul de terminaison)
   const calculateTotalsWithExpiry = () => {
     const totals = COMPLEMENT_TYPES.reduce((acc, type) => {
-      acc[type.id] = { total: 0, isExpired: false, latestExpiryDate: null };
+      acc[type.id] = { total: 0, isTerminated: false, latestExpiryDate: null };
       return acc;
-    }, {} as Record<string, { total: number; isExpired: boolean; latestExpiryDate: Date | null }>);
+    }, {} as Record<string, { total: number; isTerminated: boolean; latestExpiryDate: Date | null }>);
 
     // Grouper les ventes par type et calculer les totaux
     const salesByType = sales.reduce((acc, sale) => {
@@ -206,15 +206,15 @@ const ComplementAlimentaireTab: React.FC<ComplementAlimentaireTabProps> = ({
       return acc;
     }, {} as Record<string, ComplementSale[]>);
 
-    // Pour chaque type, calculer le total et vérifier l'expiration
+    // Pour chaque type, calculer le total et vérifier si terminé
     Object.entries(salesByType).forEach(([type, typeSales]) => {
       if (!totals[type]) return;
 
-      // SOS n'a pas de calcul d'expiration
+      // SOS n'a pas de calcul de terminaison
       if (type === 'SOS') {
         totals[type] = {
           total: typeSales.reduce((sum, sale) => sum + sale.quantity, 0),
-          isExpired: false, // SOS ne peut jamais être expiré
+          isTerminated: false, // SOS ne peut jamais être terminé
           latestExpiryDate: null
         };
         return;
@@ -225,33 +225,33 @@ const ComplementAlimentaireTab: React.FC<ComplementAlimentaireTabProps> = ({
       
       let remainingQuantity = 0;
       let currentDate = new Date();
-      let isTypeExpired = false;
+      let isTypeTerminated = false;
 
       // Calculer la quantité restante en partant de la vente la plus récente
       for (const sale of sortedSales) {
         const expiryDate = calculateExpiryDate(sale);
         if (expiryDate && isAfter(currentDate, expiryDate)) {
-          // Cette vente est expirée, ne pas compter sa quantité
+          // Cette vente est terminée, ne pas compter sa quantité
           continue;
         }
         remainingQuantity += sale.quantity;
       }
 
-      // Si toutes les ventes sont expirées ou s'il n'y a plus de stock
+      // Si toutes les ventes sont terminées ou s'il n'y a plus de stock
       if (remainingQuantity === 0 && typeSales.length > 0) {
-        // Vérifier si la vente la plus récente est expirée
+        // Vérifier si la vente la plus récente est terminée
         const latestSale = sortedSales[0];
         if (latestSale) {
           const latestExpiryDate = calculateExpiryDate(latestSale);
           if (latestExpiryDate && isAfter(currentDate, latestExpiryDate)) {
-            isTypeExpired = true;
+            isTypeTerminated = true;
           }
         }
       }
 
       totals[type] = {
         total: typeSales.reduce((sum, sale) => sum + sale.quantity, 0),
-        isExpired: isTypeExpired,
+        isTerminated: isTypeTerminated,
         latestExpiryDate: null
       };
     });
@@ -267,13 +267,13 @@ const ComplementAlimentaireTab: React.FC<ComplementAlimentaireTabProps> = ({
 
   const totalsWithExpiry = calculateTotalsWithExpiry();
 
-  // Vérifier s'il y a au moins un complément expiré et notifier le parent (SOS exclu)
+  // Vérifier s'il y a au moins un complément terminé et notifier le parent (SOS exclu)
   useEffect(() => {
-    const hasAnyExpired = Object.entries(totalsWithExpiry)
+    const hasAnyTerminated = Object.entries(totalsWithExpiry)
       .filter(([type]) => type !== 'SOS') // Exclure SOS de la vérification
-      .some(([, total]) => total.isExpired);
+      .some(([, total]) => total.isTerminated);
     if (onExpiryStatusChange) {
-      onExpiryStatusChange(hasAnyExpired);
+      onExpiryStatusChange(hasAnyTerminated);
     }
   }, [totalsWithExpiry, onExpiryStatusChange]);
 
@@ -301,7 +301,7 @@ const ComplementAlimentaireTab: React.FC<ComplementAlimentaireTabProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Tableau récapitulatif avec gestion de l'expiration */}
+      {/* Tableau récapitulatif avec gestion de la terminaison */}
       <div className="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl">
         <div className="px-4 py-5 sm:p-6">
           <h2 className="text-base font-semibold leading-6 text-gray-900 mb-4">
@@ -309,36 +309,36 @@ const ComplementAlimentaireTab: React.FC<ComplementAlimentaireTabProps> = ({
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {COMPLEMENT_TYPES.map((type) => {
-              const typeData = totalsWithExpiry[type.id] || { total: 0, isExpired: false };
-              const isExpiredType = typeData.isExpired;
+              const typeData = totalsWithExpiry[type.id] || { total: 0, isTerminated: false };
+              const isTerminatedType = typeData.isTerminated;
               
               return (
                 <div 
                   key={type.id} 
                   className={`p-4 rounded-lg text-center border-l-4 transition-all duration-200 ${
-                    isExpiredType 
+                    isTerminatedType 
                       ? 'bg-red-50 border-red-500' 
                       : 'bg-gray-50 border-brand-blue'
                   }`}
                 >
                   <div className="flex items-center justify-center mb-2">
                     <div className={`text-lg font-semibold ${
-                      isExpiredType ? 'text-red-700' : 'text-gray-700'
+                      isTerminatedType ? 'text-red-700' : 'text-gray-700'
                     }`}>
                       {type.label}
                     </div>
-                    {isExpiredType && (
+                    {isTerminatedType && (
                       <AlertTriangle className="h-4 w-4 text-red-500 ml-2" />
                     )}
                   </div>
                   <div className={`text-2xl font-bold ${
-                    isExpiredType ? 'text-red-600' : 'text-brand-blue'
+                    isTerminatedType ? 'text-red-600' : 'text-brand-blue'
                   }`}>
                     {typeData.total}
                   </div>
-                  {isExpiredType && (
+                  {isTerminatedType && (
                     <div className="text-xs text-red-600 mt-1">
-                      Stock expiré
+                      Complément terminé
                     </div>
                   )}
                   {type.id === 'SOS' && (
@@ -508,10 +508,10 @@ const ComplementAlimentaireTab: React.FC<ComplementAlimentaireTabProps> = ({
                     {[...sales].reverse().map((sale) => {
                       const typeColors = getTypeColors(sale.type);
                       const expiryDate = calculateExpiryDate(sale);
-                      const expired = isExpired(sale);
+                      const terminated = isTerminated(sale);
                       
                       return (
-                        <tr key={sale.id} className={expired ? 'bg-red-50' : ''}>
+                        <tr key={sale.id} className={terminated ? 'bg-red-50' : ''}>
                           <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm text-gray-500">
                             {format(new Date(sale.date), 'dd MMMM yyyy', { locale: fr })}
                           </td>
@@ -537,10 +537,10 @@ const ComplementAlimentaireTab: React.FC<ComplementAlimentaireTabProps> = ({
                               <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">
                                 Pas d'échéance
                               </span>
-                            ) : expired ? (
+                            ) : terminated ? (
                               <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-700">
                                 <AlertTriangle className="h-3 w-3 mr-1" />
-                                Expiré
+                                Complément terminé
                               </span>
                             ) : (
                               <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
