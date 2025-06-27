@@ -74,6 +74,7 @@ const EditClientPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasExpiredComplements, setHasExpiredComplements] = useState(false); // Nouvel état
 
   const fetchData = async () => {
     if (!id || !centerId) return;
@@ -137,6 +138,11 @@ const EditClientPage = () => {
     } finally {
       setGeneratingPDF(false);
     }
+  };
+
+  // Fonction pour gérer le changement de statut d'expiration des compléments
+  const handleComplementExpiryChange = (hasExpired: boolean) => {
+    setHasExpiredComplements(hasExpired);
   };
 
   if (loading) {
@@ -211,6 +217,10 @@ const EditClientPage = () => {
                 <div className="flex flex-wrap gap-2">
                   {category.tabs.map((tab) => {
                     const Icon = tab.icon;
+                    // Vérifier si c'est l'onglet Complément Alimentaire et s'il y a des compléments expirés
+                    const isComplementTab = tab.id === 'complementAlimentaire';
+                    const shouldBeOrange = isComplementTab && hasExpiredComplements;
+                    
                     return (
                       <button
                         key={tab.id}
@@ -218,13 +228,22 @@ const EditClientPage = () => {
                         className={`
                           group inline-flex items-center px-4 py-2 text-sm font-medium rounded-full transition-all duration-200
                           ${currentTab === tab.id
-                            ? 'bg-brand-blue text-white shadow-sm'
-                            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                            ? shouldBeOrange 
+                              ? 'bg-orange-500 text-white shadow-sm'
+                              : 'bg-brand-blue text-white shadow-sm'
+                            : shouldBeOrange
+                              ? 'text-orange-600 hover:text-orange-700 hover:bg-orange-50'
+                              : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                           }
                         `}
                       >
                         <Icon className={`
-                          ${currentTab === tab.id ? 'text-white' : 'text-gray-400 group-hover:text-gray-500'}
+                          ${currentTab === tab.id 
+                            ? 'text-white' 
+                            : shouldBeOrange
+                              ? 'text-orange-500 group-hover:text-orange-600'
+                              : 'text-gray-400 group-hover:text-gray-500'
+                          }
                           -ml-0.5 mr-2 h-5 w-5
                         `} />
                         {tab.name}
@@ -274,7 +293,11 @@ const EditClientPage = () => {
           <MesojetTab clientId={id!} centerId={centerId!} />
         )}
         {currentTab === 'complementAlimentaire' && (
-          <ComplementAlimentaireTab clientId={id!} centerId={centerId!} />
+          <ComplementAlimentaireTab 
+            clientId={id!} 
+            centerId={centerId!} 
+            onExpiryStatusChange={handleComplementExpiryChange}
+          />
         )}
       </div>
     </div>

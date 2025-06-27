@@ -9,6 +9,7 @@ import { toast } from 'react-hot-toast';
 interface ComplementAlimentaireTabProps {
   clientId: string;
   centerId: string;
+  onExpiryStatusChange?: (hasExpired: boolean) => void; // Nouvelle prop pour communiquer le statut
 }
 
 interface ComplementSale {
@@ -56,7 +57,11 @@ const COMPLEMENT_TYPES = [
   }
 ];
 
-const ComplementAlimentaireTab: React.FC<ComplementAlimentaireTabProps> = ({ clientId, centerId }) => {
+const ComplementAlimentaireTab: React.FC<ComplementAlimentaireTabProps> = ({ 
+  clientId, 
+  centerId, 
+  onExpiryStatusChange 
+}) => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [sales, setSales] = useState<ComplementSale[]>([]);
   const [loading, setLoading] = useState(true);
@@ -248,6 +253,14 @@ const ComplementAlimentaireTab: React.FC<ComplementAlimentaireTabProps> = ({ cli
   };
 
   const totalsWithExpiry = calculateTotalsWithExpiry();
+
+  // Vérifier s'il y a au moins un complément expiré et notifier le parent
+  useEffect(() => {
+    const hasAnyExpired = Object.values(totalsWithExpiry).some(total => total.isExpired);
+    if (onExpiryStatusChange) {
+      onExpiryStatusChange(hasAnyExpired);
+    }
+  }, [totalsWithExpiry, onExpiryStatusChange]);
 
   if (loading) {
     return (
