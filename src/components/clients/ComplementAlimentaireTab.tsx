@@ -22,10 +22,10 @@ interface ComplementSale {
 }
 
 const COMPLEMENT_TYPES = [
-  { id: 'BURN', label: 'BURN' },
-  { id: 'SOS', label: 'S.O.S' },
-  { id: 'DETOX', label: 'DÉTOX' },
-  { id: 'SKIN', label: 'SKIN' }
+  { id: 'BURN', label: 'BURN', color: 'bg-yellow-500', bgColor: 'bg-yellow-50', textColor: 'text-yellow-700' },
+  { id: 'SOS', label: 'S.O.S', color: 'bg-red-500', bgColor: 'bg-red-50', textColor: 'text-red-700' },
+  { id: 'DETOX', label: 'DÉTOX', color: 'bg-green-500', bgColor: 'bg-green-50', textColor: 'text-green-700' },
+  { id: 'SKIN', label: 'SKIN', color: 'bg-blue-500', bgColor: 'bg-blue-50', textColor: 'text-blue-700' }
 ];
 
 const ComplementAlimentaireTab: React.FC<ComplementAlimentaireTabProps> = ({ clientId, centerId }) => {
@@ -156,6 +156,12 @@ const ComplementAlimentaireTab: React.FC<ComplementAlimentaireTabProps> = ({ cli
     return totals;
   };
 
+  // Fonction pour obtenir les couleurs d'un type
+  const getTypeColors = (typeId: string) => {
+    const type = COMPLEMENT_TYPES.find(t => t.id === typeId);
+    return type || { color: 'bg-gray-500', bgColor: 'bg-gray-50', textColor: 'text-gray-700' };
+  };
+
   const totals = calculateTotals();
 
   if (loading) {
@@ -190,9 +196,9 @@ const ComplementAlimentaireTab: React.FC<ComplementAlimentaireTabProps> = ({ cli
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {COMPLEMENT_TYPES.map((type) => (
-              <div key={type.id} className="bg-gradient-to-br from-brand-blue/10 to-brand-pink/10 p-4 rounded-lg text-center">
-                <div className="text-lg font-semibold text-brand-blue">{type.label}</div>
-                <div className="text-2xl font-bold text-brand-pink">{totals[type.id]}</div>
+              <div key={type.id} className={`${type.bgColor} p-4 rounded-lg text-center border-l-4 ${type.color}`}>
+                <div className={`text-lg font-semibold ${type.textColor}`}>{type.label}</div>
+                <div className={`text-2xl font-bold ${type.textColor}`}>{totals[type.id]}</div>
               </div>
             ))}
           </div>
@@ -315,37 +321,40 @@ const ComplementAlimentaireTab: React.FC<ComplementAlimentaireTabProps> = ({ cli
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {[...sales].reverse().map((sale) => (
-                      <tr key={sale.id}>
-                        <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm text-gray-500">
-                          {format(new Date(sale.date), 'dd MMMM yyyy', { locale: fr })}
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm">
-                          <span className="inline-flex items-center rounded-full bg-brand-blue/10 px-2 py-1 text-xs font-medium text-brand-blue">
-                            {sale.type}
-                          </span>
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                          {sale.quantity}
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-right">
-                          <div className="flex justify-end space-x-2">
-                            <button
-                              onClick={() => handleEdit(sale)}
-                              className="text-brand-blue hover:text-brand-blue/80"
-                            >
-                              <Pencil className="h-5 w-5" />
-                            </button>
-                            <button
-                              onClick={() => sale.id && handleDelete(sale.id)}
-                              className="text-red-600 hover:text-red-700"
-                            >
-                              <Trash2 className="h-5 w-5" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                    {[...sales].reverse().map((sale) => {
+                      const typeColors = getTypeColors(sale.type);
+                      return (
+                        <tr key={sale.id}>
+                          <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm text-gray-500">
+                            {format(new Date(sale.date), 'dd MMMM yyyy', { locale: fr })}
+                          </td>
+                          <td className="whitespace-nowrap px-3 py-4 text-sm">
+                            <span className={`inline-flex items-center rounded-full ${typeColors.bgColor} px-3 py-1 text-sm font-medium ${typeColors.textColor} border-l-2 ${typeColors.color}`}>
+                              {sale.type}
+                            </span>
+                          </td>
+                          <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                            {sale.quantity}
+                          </td>
+                          <td className="whitespace-nowrap px-3 py-4 text-sm text-right">
+                            <div className="flex justify-end space-x-2">
+                              <button
+                                onClick={() => handleEdit(sale)}
+                                className="text-brand-blue hover:text-brand-blue/80"
+                              >
+                                <Pencil className="h-5 w-5" />
+                              </button>
+                              <button
+                                onClick={() => sale.id && handleDelete(sale.id)}
+                                className="text-red-600 hover:text-red-700"
+                              >
+                                <Trash2 className="h-5 w-5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
