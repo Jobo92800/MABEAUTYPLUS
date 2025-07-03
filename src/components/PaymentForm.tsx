@@ -194,25 +194,23 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix })
     savePaymentData(newCategories);
   };
 
-  const getPaymentLineColor = (date: string, method: string, isPaid: boolean, isGiven: boolean) => {
-    if (!date) return '';
+  // Nouvelle logique simplifiée pour les couleurs
+  const getPaymentLineColor = (isPaid: boolean, isGiven: boolean, hasAmount: boolean) => {
+    // Si pas de montant, pas de couleur
+    if (!hasAmount) return '';
     
-    const paymentDate = new Date(date);
-    const today = new Date();
-    
+    // Si payé -> vert
     if (isPaid) {
-      return 'bg-green-50';
+      return 'bg-green-50 border-green-200';
     }
     
-    if (method === 'cheque' && !isGiven && !isPaid) {
-      return 'bg-red-500/10';
+    // Si donné -> gris
+    if (isGiven) {
+      return 'bg-gray-100 border-gray-300';
     }
     
-    if (paymentDate < today && !isGiven && !isPaid) {
-      return 'bg-red-500/10';
-    }
-    
-    return '';
+    // Si ni payé ni donné -> rouge
+    return 'bg-red-50 border-red-200';
   };
 
   if (loading) {
@@ -303,7 +301,11 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix })
             </div>
 
             {/* Deposit Section */}
-            <div className={`p-4 rounded-lg space-y-4 ${getPaymentLineColor(category.deposit?.date || '', category.deposit?.method || '', category.deposit?.isPaid || false, category.deposit?.isGiven || false)}`}>
+            <div className={`p-4 rounded-lg space-y-4 border-2 ${getPaymentLineColor(
+              category.deposit?.isPaid || false, 
+              category.deposit?.isGiven || false, 
+              !!(category.deposit?.amount && parseFloat(category.deposit.amount) > 0)
+            )}`}>
               <h4 className="text-sm font-medium text-gray-900">Acompte</h4>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -392,7 +394,11 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix })
                 {category.installments.map((line, index) => (
                   <div 
                     key={index} 
-                    className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-3 items-start p-3 rounded-lg ${getPaymentLineColor(line.date, line.method, line.isPaid, line.isGiven)}`}
+                    className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-3 items-start p-3 rounded-lg border-2 ${getPaymentLineColor(
+                      line.isPaid, 
+                      line.isGiven, 
+                      !!(line.amount && parseFloat(line.amount) > 0)
+                    )}`}
                   >
                     {/* Amount */}
                     <div className="relative">
