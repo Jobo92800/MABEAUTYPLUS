@@ -18,11 +18,43 @@ const LuxotherapyForm: React.FC<LuxotherapyFormProps> = ({ initialData }) => {
 
   const [weightGoal, setWeightGoal] = useState<number>(0);
 
+  // Charger le nombre total de séances au démarrage
+  useEffect(() => {
+    const fetchTotalSessions = async () => {
+      if (!initialData?.client.id) return;
+      try {
+        const total = await getTotalTreatmentSessions(initialData.client.id, 'luxotherapy');
+        setTotalSessions(total);
+      } catch (error) {
+        console.error('Error fetching total sessions:', error);
+      }
+    };
+    fetchTotalSessions();
+  }, [initialData?.client.id]);
+
+  // Synchroniser avec la valeur du formulaire si elle existe
+  useEffect(() => {
+    const sessionCountFromForm = parseInt(getFormValue(formData, 'objectives.sessionCount')) || 0;
+    if (sessionCountFromForm > 0 && sessionCountFromForm !== totalSessions) {
+      setTotalSessions(sessionCountFromForm);
+    }
+  }, [formData]);
+
   useEffect(() => {
     const currentWeight = parseFloat(getFormValue(formData, 'objectives.currentWeight')) || 0;
     const targetWeight = parseFloat(getFormValue(formData, 'objectives.targetWeight')) || 0;
     setWeightGoal(Number((currentWeight - targetWeight).toFixed(2)));
   }, [formData]);
+
+  const handleSessionCountChange = async (value: number) => {
+    if (!initialData?.client.id) return;
+    try {
+      await updateTotalTreatmentSessions(initialData.client.id, 'luxotherapy', value);
+      setTotalSessions(value);
+    } catch (error) {
+      console.error('Error updating total sessions:', error);
+    }
+  };
 
   if (loading) {
     return <div>Loading...</div>;
