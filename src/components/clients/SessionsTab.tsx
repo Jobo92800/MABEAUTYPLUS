@@ -4,6 +4,7 @@ import { fr } from 'date-fns/locale';
 import { Plus, X } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { getMeasurements, addMeasurement, updateTotalSessions, getTotalSessions } from '../../services/database';
+import { getTotalTreatmentSessions, updateTotalTreatmentSessions } from '../../services/database/operations/totalSessions';
 import type { Measurement } from '../../types/measurements';
 import SessionRow from '../sessions/SessionRow';
 
@@ -29,7 +30,7 @@ const SessionsTab: React.FC<SessionsTabProps> = ({ clientId, centerId }) => {
       setError(null);
       const [measurementsData, totalSessionsData] = await Promise.all([
         getMeasurements(clientId, centerId),
-        getTotalSessions(clientId)
+        getTotalTreatmentSessions(clientId, 'luxotherapy')
       ]);
       setMeasurements(measurementsData);
       setTotalSessions(totalSessionsData || 0);
@@ -59,7 +60,7 @@ const SessionsTab: React.FC<SessionsTabProps> = ({ clientId, centerId }) => {
       
       // Decrement total sessions count
       const newTotalSessions = Math.max(0, totalSessions - 1);
-      await updateTotalSessions(clientId, newTotalSessions);
+      await updateTotalTreatmentSessions(clientId, 'luxotherapy', newTotalSessions);
       setTotalSessions(newTotalSessions);
       
       setShowAddForm(false);
@@ -77,7 +78,7 @@ const SessionsTab: React.FC<SessionsTabProps> = ({ clientId, centerId }) => {
   const handleTotalSessionsChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value) || 0;
     try {
-      await updateTotalSessions(clientId, value);
+      await updateTotalTreatmentSessions(clientId, 'luxotherapy', value);
       setTotalSessions(value);
     } catch (error) {
       console.error('Error updating total sessions:', error);
