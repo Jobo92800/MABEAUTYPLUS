@@ -309,7 +309,8 @@ const LuxotherapyForm: React.FC<LuxotherapyFormProps> = ({ initialData }) => {
               type="number"
               name="objectives.sessionCount"
               id="sessionCount"
-              defaultValue={getFormValue(formData, 'objectives.sessionCount')}
+              value={totalSessions}
+              onChange={(e) => handleSessionCountChange(parseInt(e.target.value) || 0)}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring-brand-pink"
             />
           </div>
