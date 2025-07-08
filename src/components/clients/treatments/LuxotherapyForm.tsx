@@ -18,46 +18,11 @@ const LuxotherapyForm: React.FC<LuxotherapyFormProps> = ({ initialData }) => {
 
   const [weightGoal, setWeightGoal] = useState<number>(0);
 
-  // Charger le nombre total de séances
-  useEffect(() => {
-    const fetchTotalSessions = async () => {
-      if (!initialData?.client.id) return;
-      try {
-        const total = await getTotalTreatmentSessions(initialData.client.id, 'luxotherapy');
-        setTotalSessions(total);
-      } catch (error) {
-        console.error('Error fetching total sessions:', error);
-      }
-    };
-    fetchTotalSessions();
-  }, [initialData?.client.id]);
-
-  // Synchroniser avec le champ sessionCount du formulaire
-  useEffect(() => {
-    const sessionCountFromForm = parseInt(getFormValue(formData, 'objectives.sessionCount')) || 0;
-    if (sessionCountFromForm > 0 && sessionCountFromForm !== totalSessions) {
-      setTotalSessions(sessionCountFromForm);
-      if (initialData?.client.id) {
-        updateTotalTreatmentSessions(initialData.client.id, 'luxotherapy', sessionCountFromForm);
-      }
-    }
-  }, [formData, initialData?.client.id, totalSessions]);
-
   useEffect(() => {
     const currentWeight = parseFloat(getFormValue(formData, 'objectives.currentWeight')) || 0;
     const targetWeight = parseFloat(getFormValue(formData, 'objectives.targetWeight')) || 0;
     setWeightGoal(Number((currentWeight - targetWeight).toFixed(2)));
   }, [formData]);
-
-  const handleSessionCountChange = async (value: number) => {
-    if (!initialData?.client.id) return;
-    try {
-      await updateTotalTreatmentSessions(initialData.client.id, 'luxotherapy', value);
-      setTotalSessions(value);
-    } catch (error) {
-      console.error('Error updating total sessions:', error);
-    }
-  };
 
   if (loading) {
     return <div>Loading...</div>;
@@ -312,11 +277,7 @@ const LuxotherapyForm: React.FC<LuxotherapyFormProps> = ({ initialData }) => {
               type="number"
               name="objectives.sessionCount"
               id="sessionCount"
-              value={totalSessions || getFormValue(formData, 'objectives.sessionCount')}
-              onChange={(e) => {
-                const value = parseInt(e.target.value) || 0;
-                handleSessionCountChange(value);
-              }}
+              defaultValue={getFormValue(formData, 'objectives.sessionCount')}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring-brand-pink"
             />
           </div>
