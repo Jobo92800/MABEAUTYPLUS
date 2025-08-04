@@ -380,9 +380,9 @@ const PressodynamieTab: React.FC<PressodynamieTabProps> = ({ clientId, centerId 
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {[...sessions].reverse().map((session) => (
+                    {[...sessions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((session, index, sortedArray) => (
                       <tr key={session.id}>
-                        <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900">{session.number}</td>
+                        <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900">{index + 1}</td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                           {format(new Date(session.date), 'dd/MM/yyyy', { locale: fr })}
                         </td>
