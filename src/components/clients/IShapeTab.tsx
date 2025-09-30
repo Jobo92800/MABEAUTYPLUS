@@ -23,6 +23,7 @@ const IShapeTab: React.FC<IShapeTabProps> = ({ clientId, centerId }) => {
     date: format(new Date(), 'yyyy-MM-dd'),
     comment: '',
     photoTaken: false,
+    weight: '',
     measurements: {
       arms: { right: '', left: '' },
       navel: '',
@@ -96,6 +97,7 @@ const IShapeTab: React.FC<IShapeTabProps> = ({ clientId, centerId }) => {
           date: newSession.date,
           comment: newSession.comment,
           photoTaken: newSession.photoTaken,
+          weight: parseFloat(newSession.weight) || undefined,
           measurements: newSession.measurements,
           number: 0 // Temporary number, will be recalculated
         });
@@ -115,6 +117,8 @@ const IShapeTab: React.FC<IShapeTabProps> = ({ clientId, centerId }) => {
         date: format(new Date(), 'yyyy-MM-dd'),
         comment: '',
         photoTaken: false,
+        weight: '',
+        weight: '',
         measurements: {
           arms: { right: '', left: '' },
           navel: '',
@@ -136,6 +140,7 @@ const IShapeTab: React.FC<IShapeTabProps> = ({ clientId, centerId }) => {
       date: session.date,
       comment: session.comment || '',
       photoTaken: session.photoTaken || false,
+      weight: session.weight?.toString() || '',
       measurements: session.measurements || {
         arms: { right: '', left: '' },
         navel: '',
@@ -350,6 +355,24 @@ const IShapeTab: React.FC<IShapeTabProps> = ({ clientId, centerId }) => {
                     />
                   </div>
                   <div>
+                    <label htmlFor="weight" className="block text-sm font-medium text-gray-700">
+                      Poids (kg)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      name="weight"
+                      id="weight"
+                      value={newSession.weight}
+                      onChange={(e) => setNewSession({ ...newSession, weight: e.target.value })}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring-brand-pink sm:text-sm"
+                      placeholder="Ex: 65.5"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-1">
+                  <div>
                     <label htmlFor="comment" className="block text-sm font-medium text-gray-700">
                       Commentaire
                     </label>
@@ -546,6 +569,7 @@ const IShapeTab: React.FC<IShapeTabProps> = ({ clientId, centerId }) => {
                     <tr>
                       <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900">N°</th>
                       <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Date</th>
+                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Poids (kg)</th>
                       <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Commentaire</th>
                       <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Photo</th>
                       <th scope="col" className="px-3 py-3.5 text-right text-sm font-semibold text-gray-900">Actions</th>
@@ -557,6 +581,9 @@ const IShapeTab: React.FC<IShapeTabProps> = ({ clientId, centerId }) => {
                         <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900">{session.number}</td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                           {format(new Date(session.date), 'dd MMMM yyyy', { locale: fr })}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                          {session.weight ? `${session.weight} kg` : '-'}
                         </td>
                         <td className="px-3 py-4 text-sm text-gray-500">{session.comment}</td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
