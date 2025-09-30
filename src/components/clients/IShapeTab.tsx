@@ -614,7 +614,7 @@ const IShapeTab: React.FC<IShapeTabProps> = ({ clientId, centerId }) => {
           </div>
 
           {sessions.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
               <div className="bg-white p-4 rounded-lg shadow">
                 <h4 className="text-lg font-medium text-white bg-brand-blue p-3 rounded-lg shadow-sm mb-4">
                   Évolution Bras et Mollets
@@ -662,6 +662,34 @@ const IShapeTab: React.FC<IShapeTabProps> = ({ clientId, centerId }) => {
                       <Line type="monotone" dataKey="nombril" name="Nombril" stroke="#35aedc" connectNulls />
                       <Line type="monotone" dataKey="hanches" name="Hanches" stroke="#f42abe" connectNulls />
                       <Line type="monotone" dataKey="fesses" name="Fesses" stroke="#10B981" connectNulls />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              <div className="bg-white p-4 rounded-lg shadow">
+                <h4 className="text-lg font-medium text-white bg-brand-blue p-3 rounded-lg shadow-sm mb-4">
+                  Évolution du Poids
+                </h4>
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={sessions.filter(s => s.weight).map(s => ({
+                      date: format(new Date(s.date), 'dd/MM'),
+                      poids: s.weight
+                    }))}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" />
+                      <YAxis domain={['auto', 'auto']} />
+                      <Tooltip />
+                      <Legend />
+                      <Line 
+                        type="monotone" 
+                        dataKey="poids" 
+                        name="Poids (kg)" 
+                        stroke="#8B5CF6" 
+                        strokeWidth={3}
+                        dot={{ fill: '#8B5CF6', strokeWidth: 2, r: 4 }}
+                      />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
