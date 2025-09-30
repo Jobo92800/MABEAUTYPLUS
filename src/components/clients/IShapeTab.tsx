@@ -97,7 +97,7 @@ const IShapeTab: React.FC<IShapeTabProps> = ({ clientId, centerId }) => {
           date: newSession.date,
           comment: newSession.comment,
           photoTaken: newSession.photoTaken,
-          weight: parseFloat(newSession.weight) || undefined,
+          weight: newSession.weight && !isNaN(parseFloat(newSession.weight)) ? parseFloat(newSession.weight) : null,
           measurements: newSession.measurements,
           number: 0 // Temporary number, will be recalculated
         });
