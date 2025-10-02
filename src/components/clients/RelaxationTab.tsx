@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Plus, X, Trash2 } from 'lucide-react';
-import { getSessions, addSession, deleteSession } from '../../services/database';
+import { Plus, X, Trash2, Pencil } from 'lucide-react';
+import { getSessions, addSession, deleteSession, updateSession } from '../../services/database';
 import type { Session } from '../../types/session';
 import { toast } from 'react-hot-toast';
 
@@ -11,6 +11,7 @@ const RelaxationTab: React.FC<{ clientId: string; centerId: string }> = ({ clien
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [editingSession, setEditingSession] = useState<Session | null>(null);
   const [newSession, setNewSession] = useState({
     number: sessions.length + 1,
     date: format(new Date(), 'yyyy-MM-dd'),
@@ -38,31 +39,48 @@ const RelaxationTab: React.FC<{ clientId: string; centerId: string }> = ({ clien
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await addSession({
-        clientId,
-        centerId,
-        type: 'relaxation',
-        date: newSession.date,
-        comment: newSession.comment,
-        number: sessions.length + 1
-      });
+      if (editingSession) {
+        await updateSession({
+          ...editingSession,
+          date: newSession.date,
+          comment: newSession.comment
+        });
+        toast.success('Séance mise à jour avec succès');
+      } else {
+        await addSession({
+          clientId,
+          centerId,
+          type: 'relaxation',
+          date: newSession.date,
+          comment: newSession.comment,
+          number: sessions.length + 1
+        });
+        toast.success('Séance ajoutée avec succès');
+      }
 
-      // Rafraîchir la liste des séances
       await fetchSessions();
       
-      // Réinitialiser le formulaire
       setShowAddForm(false);
+      setEditingSession(null);
       setNewSession({
         number: sessions.length + 2,
         date: format(new Date(), 'yyyy-MM-dd'),
         comment: ''
       });
-      
-      toast.success('Séance ajoutée avec succès');
     } catch (error) {
       console.error('Error adding relaxation session:', error);
-      toast.error('Erreur lors de l\'ajout de la séance');
+      toast.error('Erreur lors de l\'enregistrement de la séance');
     }
+  };
+
+  const handleEdit = (session: Session) => {
+    setEditingSession(session);
+    setNewSession({
+      number: session.number || 0,
+      date: session.date,
+      comment: session.comment || ''
+    });
+    setShowAddForm(true);
   };
 
   const handleDelete = async (sessionId: string) => {
@@ -127,10 +145,15 @@ const RelaxationTab: React.FC<{ clientId: string; centerId: string }> = ({ clien
           {showAddForm && (
             <div className="mt-4 bg-gray-50 p-4 rounded-lg">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-sm font-medium text-gray-900">Nouvelle séance</h3>
+                <h3 className="text-sm font-medium text-gray-900">
+                  {editingSession ? 'Modifier la séance' : 'Nouvelle séance'}
+                </h3>
                 <button
                   type="button"
-                  onClick={() => setShowAddForm(false)}
+                  onClick={() => {
+                    setShowAddForm(false);
+                    setEditingSession(null);
+                  }}
                   className="text-gray-400 hover:text-gray-500"
                 >
                   <X className="h-5 w-5" />
@@ -171,7 +194,7 @@ const RelaxationTab: React.FC<{ clientId: string; centerId: string }> = ({ clien
                     type="submit"
                     className="rounded-full bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm hover:shadow-md transition-all duration-200"
                   >
-                    Enregistrer
+                    {editingSession ? 'Mettre à jour' : 'Enregistrer'}
                   </button>
                 </div>
               </form>
@@ -199,12 +222,20 @@ const RelaxationTab: React.FC<{ clientId: string; centerId: string }> = ({ clien
                         </td>
                         <td className="px-3 py-4 text-sm text-gray-500">{session.comment}</td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-right">
-                          <button
-                            onClick={() => session.id && handleDelete(session.id)}
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            <Trash2 className="h-5 w-5" />
-                          </button>
+                          <div className="flex justify-end space-x-2">
+                            <button
+                              onClick={() => handleEdit(session)}
+                              className="text-brand-blue hover:text-brand-blue/80"
+                            >
+                              <Pencil className="h-5 w-5" />
+                            </button>
+                            <button
+                              onClick={() => session.id && handleDelete(session.id)}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="h-5 w-5" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
