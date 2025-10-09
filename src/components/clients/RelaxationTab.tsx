@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Plus, X, Trash2, Pencil } from 'lucide-react';
 import { getSessions, addSession, deleteSession, updateSession } from '../../services/database';
+import { getTotalTreatmentSessions, updateTotalTreatmentSessions } from '../../services/database/operations/totalSessions';
 import type { Session } from '../../types/session';
 import { toast } from 'react-hot-toast';
 
@@ -12,6 +13,7 @@ const RelaxationTab: React.FC<{ clientId: string; centerId: string }> = ({ clien
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editingSession, setEditingSession] = useState<Session | null>(null);
+  const [totalSessions, setTotalSessions] = useState<number>(0);
   const [newSession, setNewSession] = useState({
     number: sessions.length + 1,
     date: format(new Date(), 'yyyy-MM-dd'),
@@ -22,8 +24,12 @@ const RelaxationTab: React.FC<{ clientId: string; centerId: string }> = ({ clien
     try {
       setLoading(true);
       setError(null);
-      const data = await getSessions(clientId, centerId, 'relaxation');
-      setSessions(data);
+      const [sessionsData, totalSessionsData] = await Promise.all([
+        getSessions(clientId, centerId, 'relaxation'),
+        getTotalTreatmentSessions(clientId, 'relaxation')
+      ]);
+      setSessions(sessionsData);
+      setTotalSessions(totalSessionsData || 0);
     } catch (err: any) {
       console.error('Error fetching relaxation sessions:', err);
       setError('Erreur lors du chargement des séances');
@@ -55,11 +61,16 @@ const RelaxationTab: React.FC<{ clientId: string; centerId: string }> = ({ clien
           comment: newSession.comment,
           number: sessions.length + 1
         });
+
+        const newTotalSessions = Math.max(0, totalSessions - 1);
+        await updateTotalTreatmentSessions(clientId, 'relaxation', newTotalSessions);
+        setTotalSessions(newTotalSessions);
+
         toast.success('Séance ajoutée avec succès');
       }
 
       await fetchSessions();
-      
+
       setShowAddForm(false);
       setEditingSession(null);
       setNewSession({
@@ -98,6 +109,17 @@ const RelaxationTab: React.FC<{ clientId: string; centerId: string }> = ({ clien
     }
   };
 
+  const handleTotalSessionsChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value) || 0;
+    try {
+      await updateTotalTreatmentSessions(clientId, 'relaxation', value);
+      setTotalSessions(value);
+    } catch (error) {
+      console.error('Error updating total sessions:', error);
+      toast.error('Erreur lors de la mise à jour du nombre total de séances.');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -122,6 +144,24 @@ const RelaxationTab: React.FC<{ clientId: string; centerId: string }> = ({ clien
 
   return (
     <div className="space-y-6">
+      <div className="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl p-6">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-gray-900">
+            Séance Relaxation
+          </h3>
+          <div className="flex items-center space-x-2">
+            <input
+              type="number"
+              value={totalSessions}
+              onChange={handleTotalSessionsChange}
+              className="w-20 rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue sm:text-sm"
+              min="0"
+            />
+            <span className="text-sm text-gray-500">séances</span>
+          </div>
+        </div>
+      </div>
+
       <div className="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl">
         <div className="px-4 py-5 sm:p-6">
           <div className="sm:flex sm:items-center">
