@@ -9,6 +9,7 @@ import RadiofrequencyMesojetForm from '../treatments/RadiofrequencyMesojetForm';
 import AdvanceLiftForm from '../treatments/AdvanceLiftForm';
 import PressodynamieForm from '../treatments/PressodynamieForm';
 import RelaxationForm from '../treatments/RelaxationForm';
+import PsioForm from '../treatments/PsioForm';
 
 export const treatmentCategories = [
   {
@@ -17,6 +18,7 @@ export const treatmentCategories = [
       { id: 'luxotherapy', label: 'Perte de Poids' },
       { id: 'relaxation', label: 'Relaxation' },
       { id: 'menopause', label: 'Ménopause' },
+      { id: 'psio', label: 'PSIO' },
     ]
   },
   {
@@ -49,4 +51,5 @@ export const treatmentForms: Record<Treatment, React.ComponentType<any>> = {
   'advance-lift': AdvanceLiftForm,
   pressodynamie: PressodynamieForm,
   relaxation: RelaxationForm,
+  psio: PsioForm,
 };

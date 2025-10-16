@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { 
-  User, Scale, Ruler, FileDown, Activity, 
-  Sparkles, Zap, Heart, Coffee, ArrowLeft, Pill
+import {
+  User, Scale, Ruler, FileDown, Activity,
+  Sparkles, Zap, Heart, Coffee, ArrowLeft, Pill, Brain
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import ClientForm from '../../components/clients/ClientForm';
@@ -17,6 +17,7 @@ import PressodynamieTab from '../../components/clients/PressodynamieTab';
 import RelaxationTab from '../../components/clients/RelaxationTab';
 import MesojetTab from '../../components/clients/MesojetTab';
 import ComplementAlimentaireTab from '../../components/clients/ComplementAlimentaireTab';
+import PsioTab from '../../components/clients/PsioTab';
 import { getFullClientData, getMeasurements, getSessions, updateClient } from '../../services/database';
 import { generateClientPDF } from '../../utils/pdfGenerator';
 import type { FullClientData } from '../../types/client';
@@ -37,7 +38,8 @@ const menuCategories = [
       { id: 'sessions', name: 'Suivi des séances', icon: Scale },
       { id: 'mensurations', name: 'Mensurations', icon: Ruler },
       { id: 'relaxation', name: 'Relaxation', icon: Coffee },
-      { id: 'menopause', name: 'Ménopause', icon: Activity }
+      { id: 'menopause', name: 'Ménopause', icon: Activity },
+      { id: 'psio', name: 'PSIO', icon: Brain }
     ]
   },
   {
@@ -388,13 +390,16 @@ const EditClientPage = () => {
         {currentTab === 'relaxation' && (
           <RelaxationTab clientId={id!} centerId={centerId!} />
         )}
+        {currentTab === 'psio' && (
+          <PsioTab clientId={id!} centerId={centerId!} />
+        )}
         {currentTab === 'mesojet' && (
           <MesojetTab clientId={id!} centerId={centerId!} />
         )}
         {currentTab === 'complementAlimentaire' && (
-          <ComplementAlimentaireTab 
-            clientId={id!} 
-            centerId={centerId!} 
+          <ComplementAlimentaireTab
+            clientId={id!}
+            centerId={centerId!}
             onExpiryStatusChange={handleComplementExpiryChange}
           />
         )}

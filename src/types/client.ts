@@ -17,14 +17,15 @@ export interface Client {
   updatedAt: string;
 }
 
-export type Treatment = 
-  | 'luxotherapy' 
-  | 'ishape' 
-  | 'adipology' 
-  | 'menopause' 
-  | 'mesojet' 
-  | 'cavitalyse' 
+export type Treatment =
+  | 'luxotherapy'
+  | 'ishape'
+  | 'adipology'
+  | 'menopause'
+  | 'mesojet'
+  | 'cavitalyse'
   | 'radiofrequency-mesojet'
   | 'advance-lift'
   | 'pressodynamie'
-  | 'relaxation';
+  | 'relaxation'
+  | 'psio';
