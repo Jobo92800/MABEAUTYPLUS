@@ -18,7 +18,6 @@ export const treatmentCategories = [
       { id: 'luxotherapy', label: 'Perte de Poids' },
       { id: 'relaxation', label: 'Relaxation' },
       { id: 'menopause', label: 'Ménopause' },
-      { id: 'psio', label: 'PSIO' },
     ]
   },
   {
@@ -36,6 +35,12 @@ export const treatmentCategories = [
     treatments: [
       { id: 'advance-lift', label: 'Advance Lift' },
       { id: 'mesojet', label: 'Mésojet' },
+    ]
+  },
+  {
+    name: 'Bien-être',
+    treatments: [
+      { id: 'psio', label: 'PSIO' },
     ]
   }
 ];

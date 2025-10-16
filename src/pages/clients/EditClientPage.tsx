@@ -38,8 +38,7 @@ const menuCategories = [
       { id: 'sessions', name: 'Suivi des séances', icon: Scale },
       { id: 'mensurations', name: 'Mensurations', icon: Ruler },
       { id: 'relaxation', name: 'Relaxation', icon: Coffee },
-      { id: 'menopause', name: 'Ménopause', icon: Activity },
-      { id: 'psio', name: 'PSIO', icon: Brain }
+      { id: 'menopause', name: 'Ménopause', icon: Activity }
     ]
   },
   {
@@ -56,6 +55,12 @@ const menuCategories = [
     tabs: [
       { id: 'advanceLift', name: 'Advance Lift', icon: Heart },
       { id: 'mesojet', name: 'Mésojet', icon: Sparkles }
+    ]
+  },
+  {
+    name: 'Bien-être',
+    tabs: [
+      { id: 'psio', name: 'PSIO', icon: Brain }
     ]
   },
   {
