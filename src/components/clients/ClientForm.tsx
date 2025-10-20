@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { useFormData } from '../../hooks/useFormData';
 import { useHasFormData } from '../../hooks/useHasFormData';
 import PaymentForm from '../PaymentForm';
+import ReferralSection from '../ReferralSection';
 import SectionTitle from '../SectionTitle';
 import SectionTitleRed from '../SectionTitleRed';
 import LuxotherapyForm from './treatments/LuxotherapyForm';
@@ -16,6 +17,7 @@ import RadiofrequencyMesojetForm from './treatments/RadiofrequencyMesojetForm';
 import AdvanceLiftForm from './treatments/AdvanceLiftForm';
 import PressodynamieForm from './treatments/PressodynamieForm';
 import RelaxationForm from './treatments/RelaxationForm';
+import PsioForm from './treatments/PsioForm';
 import { lookupCity, isValidPostalCode } from '../../services/postalCodes';
 import type { FullClientData } from '../../types/client';
 
@@ -48,6 +50,12 @@ const treatmentCategories = [
     treatments: [
       { id: 'advance-lift', label: 'Advance Lift' },
       { id: 'mesojet', label: 'Mésojet' },
+    ]
+  },
+  {
+    name: 'Bien-être',
+    treatments: [
+      { id: 'psio', label: 'PSIO' },
     ]
   }
 ];
@@ -100,6 +108,8 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, initialData }) => {
         return <PressodynamieForm initialData={initialData} />;
       case 'relaxation':
         return <RelaxationForm initialData={initialData} />;
+      case 'psio':
+        return <PsioForm initialData={initialData} />;
       default:
         return <LuxotherapyForm initialData={initialData} />;
     }
@@ -112,11 +122,16 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, initialData }) => {
           {/* Règlement */}
           <div className="space-y-6">
             <SectionTitleRed>Règlement</SectionTitleRed>
-            <PaymentForm 
-              formData={initialData} 
-              prefix="payment" 
+            <PaymentForm
+              formData={initialData}
+              prefix="payment"
               clientId={initialData?.client.id}
             />
+          </div>
+
+          {/* Parrain / Filleuil */}
+          <div className="mt-8">
+            <ReferralSection clientId={initialData?.client.id} />
           </div>
 
           {/* Treatment Selection */}

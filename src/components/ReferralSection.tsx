@@ -5,7 +5,7 @@ import { db } from '../services/firebase';
 
 interface Godchild {
   name: string;
-  date: string;
+  gains: string;
 }
 
 interface ReferralData {
@@ -81,7 +81,7 @@ const ReferralSection: React.FC<ReferralSectionProps> = ({ clientId }) => {
   };
 
   const addGodchild = () => {
-    const newGodchildren = [...godchildren, { name: '', date: '' }];
+    const newGodchildren = [...godchildren, { name: '', gains: '' }];
     setGodchildren(newGodchildren);
     saveReferralData(godfather, newGodchildren);
   };
@@ -162,12 +162,14 @@ const ReferralSection: React.FC<ReferralSectionProps> = ({ clientId }) => {
                     />
                   </div>
 
-                  {/* Date */}
+                  {/* Gains */}
                   <div className="flex items-center gap-2">
                     <input
-                      type="date"
-                      value={godchild.date}
-                      onChange={(e) => handleGodchildChange(index, 'date', e.target.value)}
+                      type="number"
+                      step="0.01"
+                      placeholder="Gains"
+                      value={godchild.gains}
+                      onChange={(e) => handleGodchildChange(index, 'gains', e.target.value)}
                       className="block w-full rounded-lg border-gray-200 shadow-sm focus:border-brand-blue focus:ring-brand-blue"
                     />
 
