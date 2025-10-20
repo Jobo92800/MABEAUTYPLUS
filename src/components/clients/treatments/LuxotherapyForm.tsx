@@ -3,6 +3,8 @@ import { useFormData } from '../../../hooks/useFormData';
 import { getFormValue, isFieldChecked } from '../../../services/formData';
 import { getTotalTreatmentSessions, updateTotalTreatmentSessions } from '../../../services/database/operations/totalSessions';
 import SectionTitle from '../../SectionTitle';
+import PaymentForm from '../../PaymentForm';
+import ReferralSection from '../../ReferralSection';
 import type { FullClientData } from '../../../types/client';
 
 interface LuxotherapyFormProps {
@@ -315,6 +317,16 @@ const LuxotherapyForm: React.FC<LuxotherapyFormProps> = ({ initialData }) => {
             />
           </div>
         </div>
+      </div>
+
+      {/* Payment Form */}
+      <div className="mt-8">
+        <PaymentForm clientId={initialData?.client.id} initialData={initialData} />
+      </div>
+
+      {/* Referral Section */}
+      <div className="mt-8">
+        <ReferralSection clientId={initialData?.client.id} />
       </div>
     </>
   );

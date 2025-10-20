@@ -1,5 +1,6 @@
 import React from 'react';
 import PaymentForm from '../../PaymentForm';
+import ReferralSection from '../../ReferralSection';
 import type { FullClientData } from '../../../types/client';
 
 interface PsioFormProps {
@@ -48,7 +49,11 @@ const PsioForm: React.FC<PsioFormProps> = ({ initialData }) => {
         </div>
       </div>
 
-      <PaymentForm initialData={initialData} />
+      <PaymentForm clientId={initialData?.client.id} initialData={initialData} />
+
+      <div className="mt-8">
+        <ReferralSection clientId={initialData?.client.id} />
+      </div>
     </div>
   );
 };
