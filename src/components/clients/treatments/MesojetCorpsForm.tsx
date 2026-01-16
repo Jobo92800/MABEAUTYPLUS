@@ -7,25 +7,25 @@ import SectionTitlePink from '../../SectionTitlePink';
 import type { FullClientData } from '../../../types/client';
 
 interface BodyZone {
-  brasHautDroit: boolean;
-  brasHautGauche: boolean;
-  brasMilieuDroit: boolean;
-  brasMilieuGauche: boolean;
-  brasBasDroit: boolean;
-  brasBasGauche: boolean;
-  ventre: boolean;
-  hanche: boolean;
-  taille: boolean;
-  fesses: boolean;
-  sousFessier: boolean;
-  cuisseHautDroit: boolean;
-  cuisseHautGauche: boolean;
-  cuisseMilieuDroit: boolean;
-  cuisseMilieuGauche: boolean;
-  cuisseBasDroit: boolean;
-  cuisseBasGauche: boolean;
-  molletDroit: boolean;
-  molletGauche: boolean;
+  brasHautDroit: string;
+  brasHautGauche: string;
+  brasMilieuDroit: string;
+  brasMilieuGauche: string;
+  brasBasDroit: string;
+  brasBasGauche: string;
+  ventre: string;
+  hanche: string;
+  taille: string;
+  fesses: string;
+  sousFessier: string;
+  cuisseHautDroit: string;
+  cuisseHautGauche: string;
+  cuisseMilieuDroit: string;
+  cuisseMilieuGauche: string;
+  cuisseBasDroit: string;
+  cuisseBasGauche: string;
+  molletDroit: string;
+  molletGauche: string;
 }
 
 interface MesojetCorpsSession {
@@ -50,25 +50,25 @@ const MesojetCorpsForm: React.FC<MesojetCorpsFormProps> = ({ initialData }) => {
     sessionNumber: 1,
     comments: '',
     zones: {
-      brasHautDroit: false,
-      brasHautGauche: false,
-      brasMilieuDroit: false,
-      brasMilieuGauche: false,
-      brasBasDroit: false,
-      brasBasGauche: false,
-      ventre: false,
-      hanche: false,
-      taille: false,
-      fesses: false,
-      sousFessier: false,
-      cuisseHautDroit: false,
-      cuisseHautGauche: false,
-      cuisseMilieuDroit: false,
-      cuisseMilieuGauche: false,
-      cuisseBasDroit: false,
-      cuisseBasGauche: false,
-      molletDroit: false,
-      molletGauche: false,
+      brasHautDroit: '',
+      brasHautGauche: '',
+      brasMilieuDroit: '',
+      brasMilieuGauche: '',
+      brasBasDroit: '',
+      brasBasGauche: '',
+      ventre: '',
+      hanche: '',
+      taille: '',
+      fesses: '',
+      sousFessier: '',
+      cuisseHautDroit: '',
+      cuisseHautGauche: '',
+      cuisseMilieuDroit: '',
+      cuisseMilieuGauche: '',
+      cuisseBasDroit: '',
+      cuisseBasGauche: '',
+      molletDroit: '',
+      molletGauche: '',
     }
   });
 
@@ -134,25 +134,25 @@ const MesojetCorpsForm: React.FC<MesojetCorpsFormProps> = ({ initialData }) => {
         sessionNumber: newSession.sessionNumber + 1,
         comments: '',
         zones: {
-          brasHautDroit: false,
-          brasHautGauche: false,
-          brasMilieuDroit: false,
-          brasMilieuGauche: false,
-          brasBasDroit: false,
-          brasBasGauche: false,
-          ventre: false,
-          hanche: false,
-          taille: false,
-          fesses: false,
-          sousFessier: false,
-          cuisseHautDroit: false,
-          cuisseHautGauche: false,
-          cuisseMilieuDroit: false,
-          cuisseMilieuGauche: false,
-          cuisseBasDroit: false,
-          cuisseBasGauche: false,
-          molletDroit: false,
-          molletGauche: false,
+          brasHautDroit: '',
+          brasHautGauche: '',
+          brasMilieuDroit: '',
+          brasMilieuGauche: '',
+          brasBasDroit: '',
+          brasBasGauche: '',
+          ventre: '',
+          hanche: '',
+          taille: '',
+          fesses: '',
+          sousFessier: '',
+          cuisseHautDroit: '',
+          cuisseHautGauche: '',
+          cuisseMilieuDroit: '',
+          cuisseMilieuGauche: '',
+          cuisseBasDroit: '',
+          cuisseBasGauche: '',
+          molletDroit: '',
+          molletGauche: '',
         }
       });
       setShowAddForm(false);
@@ -172,14 +172,33 @@ const MesojetCorpsForm: React.FC<MesojetCorpsFormProps> = ({ initialData }) => {
     }
   };
 
-  const handleZoneChange = (zone: keyof BodyZone) => {
+  const handleZoneChange = (zone: keyof BodyZone, value: string) => {
     setNewSession(prev => ({
       ...prev,
       zones: {
         ...prev.zones,
-        [zone]: !prev.zones[zone]
+        [zone]: value
       }
     }));
+  };
+
+  const renderZoneInput = (label: string, zoneKey: keyof BodyZone) => {
+    return (
+      <div className="flex items-center gap-2">
+        <label className="flex-1 text-sm">{label}</label>
+        <div className="flex items-center gap-1">
+          <input
+            type="number"
+            step="0.1"
+            value={newSession.zones[zoneKey]}
+            onChange={(e) => handleZoneChange(zoneKey, e.target.value)}
+            className="w-20 px-2 py-1 text-sm rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring-brand-pink"
+            placeholder="cm"
+          />
+          <span className="text-xs text-gray-500">cm</span>
+        </div>
+      </div>
+    );
   };
 
   if (loading) {
@@ -244,209 +263,57 @@ const MesojetCorpsForm: React.FC<MesojetCorpsFormProps> = ({ initialData }) => {
           </div>
 
           <div className="mb-6">
-            <h4 className="text-md font-semibold text-gray-900 mb-4">Zones traitées</h4>
+            <h4 className="text-md font-semibold text-gray-900 mb-4">Zones traitées et mesures (cm)</h4>
 
             <div className="space-y-6">
               <div>
                 <h5 className="text-sm font-semibold text-brand-pink mb-3">Bras</h5>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={newSession.zones.brasHautDroit}
-                        onChange={() => handleZoneChange('brasHautDroit')}
-                        className="h-4 w-4 text-brand-pink rounded focus:ring-brand-pink"
-                      />
-                      <span className="ml-2 text-sm">Zone 1 - Haut (épaule) Droit</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={newSession.zones.brasMilieuDroit}
-                        onChange={() => handleZoneChange('brasMilieuDroit')}
-                        className="h-4 w-4 text-brand-pink rounded focus:ring-brand-pink"
-                      />
-                      <span className="ml-2 text-sm">Zone 2 - Milieu Droit</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={newSession.zones.brasBasDroit}
-                        onChange={() => handleZoneChange('brasBasDroit')}
-                        className="h-4 w-4 text-brand-pink rounded focus:ring-brand-pink"
-                      />
-                      <span className="ml-2 text-sm">Zone 3 - Bas (coude) Droit</span>
-                    </label>
+                    {renderZoneInput('Zone 1 - Haut (épaule) Droit', 'brasHautDroit')}
+                    {renderZoneInput('Zone 2 - Milieu Droit', 'brasMilieuDroit')}
+                    {renderZoneInput('Zone 3 - Bas (coude) Droit', 'brasBasDroit')}
                   </div>
                   <div className="space-y-2">
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={newSession.zones.brasHautGauche}
-                        onChange={() => handleZoneChange('brasHautGauche')}
-                        className="h-4 w-4 text-brand-pink rounded focus:ring-brand-pink"
-                      />
-                      <span className="ml-2 text-sm">Zone 1 - Haut (épaule) Gauche</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={newSession.zones.brasMilieuGauche}
-                        onChange={() => handleZoneChange('brasMilieuGauche')}
-                        className="h-4 w-4 text-brand-pink rounded focus:ring-brand-pink"
-                      />
-                      <span className="ml-2 text-sm">Zone 2 - Milieu Gauche</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={newSession.zones.brasBasGauche}
-                        onChange={() => handleZoneChange('brasBasGauche')}
-                        className="h-4 w-4 text-brand-pink rounded focus:ring-brand-pink"
-                      />
-                      <span className="ml-2 text-sm">Zone 3 - Bas (coude) Gauche</span>
-                    </label>
+                    {renderZoneInput('Zone 1 - Haut (épaule) Gauche', 'brasHautGauche')}
+                    {renderZoneInput('Zone 2 - Milieu Gauche', 'brasMilieuGauche')}
+                    {renderZoneInput('Zone 3 - Bas (coude) Gauche', 'brasBasGauche')}
                   </div>
                 </div>
               </div>
 
               <div>
                 <h5 className="text-sm font-semibold text-brand-pink mb-3">Tronc</h5>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={newSession.zones.ventre}
-                      onChange={() => handleZoneChange('ventre')}
-                      className="h-4 w-4 text-brand-pink rounded focus:ring-brand-pink"
-                    />
-                    <span className="ml-2 text-sm">Ventre</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={newSession.zones.hanche}
-                      onChange={() => handleZoneChange('hanche')}
-                      className="h-4 w-4 text-brand-pink rounded focus:ring-brand-pink"
-                    />
-                    <span className="ml-2 text-sm">Hanche</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={newSession.zones.taille}
-                      onChange={() => handleZoneChange('taille')}
-                      className="h-4 w-4 text-brand-pink rounded focus:ring-brand-pink"
-                    />
-                    <span className="ml-2 text-sm">Taille</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={newSession.zones.fesses}
-                      onChange={() => handleZoneChange('fesses')}
-                      className="h-4 w-4 text-brand-pink rounded focus:ring-brand-pink"
-                    />
-                    <span className="ml-2 text-sm">Fesses</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={newSession.zones.sousFessier}
-                      onChange={() => handleZoneChange('sousFessier')}
-                      className="h-4 w-4 text-brand-pink rounded focus:ring-brand-pink"
-                    />
-                    <span className="ml-2 text-sm">Sous-fessier</span>
-                  </label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {renderZoneInput('Ventre', 'ventre')}
+                  {renderZoneInput('Hanche', 'hanche')}
+                  {renderZoneInput('Taille', 'taille')}
+                  {renderZoneInput('Fesses', 'fesses')}
+                  {renderZoneInput('Sous-fessier', 'sousFessier')}
                 </div>
               </div>
 
               <div>
                 <h5 className="text-sm font-semibold text-brand-pink mb-3">Cuisses</h5>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={newSession.zones.cuisseHautDroit}
-                        onChange={() => handleZoneChange('cuisseHautDroit')}
-                        className="h-4 w-4 text-brand-pink rounded focus:ring-brand-pink"
-                      />
-                      <span className="ml-2 text-sm">Zone 1 - Haut cuisse Droit</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={newSession.zones.cuisseMilieuDroit}
-                        onChange={() => handleZoneChange('cuisseMilieuDroit')}
-                        className="h-4 w-4 text-brand-pink rounded focus:ring-brand-pink"
-                      />
-                      <span className="ml-2 text-sm">Zone 2 - Milieu cuisse Droit</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={newSession.zones.cuisseBasDroit}
-                        onChange={() => handleZoneChange('cuisseBasDroit')}
-                        className="h-4 w-4 text-brand-pink rounded focus:ring-brand-pink"
-                      />
-                      <span className="ml-2 text-sm">Zone 3 - Bas cuisse (genoux) Droit</span>
-                    </label>
+                    {renderZoneInput('Zone 1 - Haut cuisse Droit', 'cuisseHautDroit')}
+                    {renderZoneInput('Zone 2 - Milieu cuisse Droit', 'cuisseMilieuDroit')}
+                    {renderZoneInput('Zone 3 - Bas cuisse (genoux) Droit', 'cuisseBasDroit')}
                   </div>
                   <div className="space-y-2">
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={newSession.zones.cuisseHautGauche}
-                        onChange={() => handleZoneChange('cuisseHautGauche')}
-                        className="h-4 w-4 text-brand-pink rounded focus:ring-brand-pink"
-                      />
-                      <span className="ml-2 text-sm">Zone 1 - Haut cuisse Gauche</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={newSession.zones.cuisseMilieuGauche}
-                        onChange={() => handleZoneChange('cuisseMilieuGauche')}
-                        className="h-4 w-4 text-brand-pink rounded focus:ring-brand-pink"
-                      />
-                      <span className="ml-2 text-sm">Zone 2 - Milieu cuisse Gauche</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={newSession.zones.cuisseBasGauche}
-                        onChange={() => handleZoneChange('cuisseBasGauche')}
-                        className="h-4 w-4 text-brand-pink rounded focus:ring-brand-pink"
-                      />
-                      <span className="ml-2 text-sm">Zone 3 - Bas cuisse (genoux) Gauche</span>
-                    </label>
+                    {renderZoneInput('Zone 1 - Haut cuisse Gauche', 'cuisseHautGauche')}
+                    {renderZoneInput('Zone 2 - Milieu cuisse Gauche', 'cuisseMilieuGauche')}
+                    {renderZoneInput('Zone 3 - Bas cuisse (genoux) Gauche', 'cuisseBasGauche')}
                   </div>
                 </div>
               </div>
 
               <div>
                 <h5 className="text-sm font-semibold text-brand-pink mb-3">Mollets</h5>
-                <div className="grid grid-cols-2 gap-4">
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={newSession.zones.molletDroit}
-                      onChange={() => handleZoneChange('molletDroit')}
-                      className="h-4 w-4 text-brand-pink rounded focus:ring-brand-pink"
-                    />
-                    <span className="ml-2 text-sm">Mollet Droit</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={newSession.zones.molletGauche}
-                      onChange={() => handleZoneChange('molletGauche')}
-                      className="h-4 w-4 text-brand-pink rounded focus:ring-brand-pink"
-                    />
-                    <span className="ml-2 text-sm">Mollet Gauche</span>
-                  </label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {renderZoneInput('Mollet Droit', 'molletDroit')}
+                  {renderZoneInput('Mollet Gauche', 'molletGauche')}
                 </div>
               </div>
             </div>
@@ -479,57 +346,74 @@ const MesojetCorpsForm: React.FC<MesojetCorpsFormProps> = ({ initialData }) => {
             <p className="text-gray-500 text-center py-8">Aucune séance enregistrée</p>
           ) : (
             <div className="space-y-4">
-              {sessions.map((session) => (
-                <div key={session.id} className="border border-gray-200 rounded-lg p-4">
-                  <div className="flex justify-between items-start mb-3">
-                    <div>
-                      <div className="flex items-center gap-4 mb-2">
-                        <span className="text-sm font-semibold text-gray-900">
-                          Séance #{session.sessionNumber}
-                        </span>
-                        <span className="text-sm text-gray-600">
-                          {format(new Date(session.date), 'dd/MM/yyyy')}
-                        </span>
-                      </div>
-                      {session.comments && (
-                        <p className="text-sm text-gray-600">{session.comments}</p>
-                      )}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => session.id && handleDeleteSession(session.id)}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
+              {sessions.map((session) => {
+                const zonesWithMeasurements = Object.entries(session.zones).filter(([_, value]) => value && value !== '');
 
-                  <div className="mt-3 pt-3 border-t border-gray-100">
-                    <h6 className="text-xs font-semibold text-gray-700 mb-2">Zones traitées:</h6>
-                    <div className="flex flex-wrap gap-2">
-                      {session.zones.brasHautDroit && <span className="text-xs bg-pink-100 text-pink-800 px-2 py-1 rounded">Bras haut D</span>}
-                      {session.zones.brasHautGauche && <span className="text-xs bg-pink-100 text-pink-800 px-2 py-1 rounded">Bras haut G</span>}
-                      {session.zones.brasMilieuDroit && <span className="text-xs bg-pink-100 text-pink-800 px-2 py-1 rounded">Bras milieu D</span>}
-                      {session.zones.brasMilieuGauche && <span className="text-xs bg-pink-100 text-pink-800 px-2 py-1 rounded">Bras milieu G</span>}
-                      {session.zones.brasBasDroit && <span className="text-xs bg-pink-100 text-pink-800 px-2 py-1 rounded">Bras bas D</span>}
-                      {session.zones.brasBasGauche && <span className="text-xs bg-pink-100 text-pink-800 px-2 py-1 rounded">Bras bas G</span>}
-                      {session.zones.ventre && <span className="text-xs bg-pink-100 text-pink-800 px-2 py-1 rounded">Ventre</span>}
-                      {session.zones.hanche && <span className="text-xs bg-pink-100 text-pink-800 px-2 py-1 rounded">Hanche</span>}
-                      {session.zones.taille && <span className="text-xs bg-pink-100 text-pink-800 px-2 py-1 rounded">Taille</span>}
-                      {session.zones.fesses && <span className="text-xs bg-pink-100 text-pink-800 px-2 py-1 rounded">Fesses</span>}
-                      {session.zones.sousFessier && <span className="text-xs bg-pink-100 text-pink-800 px-2 py-1 rounded">Sous-fessier</span>}
-                      {session.zones.cuisseHautDroit && <span className="text-xs bg-pink-100 text-pink-800 px-2 py-1 rounded">Cuisse haut D</span>}
-                      {session.zones.cuisseHautGauche && <span className="text-xs bg-pink-100 text-pink-800 px-2 py-1 rounded">Cuisse haut G</span>}
-                      {session.zones.cuisseMilieuDroit && <span className="text-xs bg-pink-100 text-pink-800 px-2 py-1 rounded">Cuisse milieu D</span>}
-                      {session.zones.cuisseMilieuGauche && <span className="text-xs bg-pink-100 text-pink-800 px-2 py-1 rounded">Cuisse milieu G</span>}
-                      {session.zones.cuisseBasDroit && <span className="text-xs bg-pink-100 text-pink-800 px-2 py-1 rounded">Cuisse bas D</span>}
-                      {session.zones.cuisseBasGauche && <span className="text-xs bg-pink-100 text-pink-800 px-2 py-1 rounded">Cuisse bas G</span>}
-                      {session.zones.molletDroit && <span className="text-xs bg-pink-100 text-pink-800 px-2 py-1 rounded">Mollet D</span>}
-                      {session.zones.molletGauche && <span className="text-xs bg-pink-100 text-pink-800 px-2 py-1 rounded">Mollet G</span>}
+                return (
+                  <div key={session.id} className="border border-gray-200 rounded-lg p-4">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <div className="flex items-center gap-4 mb-2">
+                          <span className="text-sm font-semibold text-gray-900">
+                            Séance #{session.sessionNumber}
+                          </span>
+                          <span className="text-sm text-gray-600">
+                            {format(new Date(session.date), 'dd/MM/yyyy')}
+                          </span>
+                        </div>
+                        {session.comments && (
+                          <p className="text-sm text-gray-600">{session.comments}</p>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => session.id && handleDeleteSession(session.id)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </div>
+
+                    {zonesWithMeasurements.length > 0 && (
+                      <div className="mt-3 pt-3 border-t border-gray-100">
+                        <h6 className="text-xs font-semibold text-gray-700 mb-2">Mesures (cm):</h6>
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                          {zonesWithMeasurements.map(([zone, measurement]) => {
+                            const zoneLabels: Record<string, string> = {
+                              brasHautDroit: 'Bras haut D',
+                              brasHautGauche: 'Bras haut G',
+                              brasMilieuDroit: 'Bras milieu D',
+                              brasMilieuGauche: 'Bras milieu G',
+                              brasBasDroit: 'Bras bas D',
+                              brasBasGauche: 'Bras bas G',
+                              ventre: 'Ventre',
+                              hanche: 'Hanche',
+                              taille: 'Taille',
+                              fesses: 'Fesses',
+                              sousFessier: 'Sous-fessier',
+                              cuisseHautDroit: 'Cuisse haut D',
+                              cuisseHautGauche: 'Cuisse haut G',
+                              cuisseMilieuDroit: 'Cuisse milieu D',
+                              cuisseMilieuGauche: 'Cuisse milieu G',
+                              cuisseBasDroit: 'Cuisse bas D',
+                              cuisseBasGauche: 'Cuisse bas G',
+                              molletDroit: 'Mollet D',
+                              molletGauche: 'Mollet G'
+                            };
+
+                            return (
+                              <div key={zone} className="text-xs bg-pink-50 text-pink-800 px-2 py-1 rounded flex items-center justify-between">
+                                <span className="font-medium">{zoneLabels[zone]}</span>
+                                <span className="ml-2 font-semibold">{measurement} cm</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
