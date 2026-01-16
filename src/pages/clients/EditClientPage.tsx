@@ -16,6 +16,7 @@ import AdvanceLiftTab from '../../components/clients/AdvanceLiftTab';
 import PressodynamieTab from '../../components/clients/PressodynamieTab';
 import RelaxationTab from '../../components/clients/RelaxationTab';
 import MesojetTab from '../../components/clients/MesojetTab';
+import MesojetCorpsTab from '../../components/clients/MesojetCorpsTab';
 import ComplementAlimentaireTab from '../../components/clients/ComplementAlimentaireTab';
 import PsioTab from '../../components/clients/PsioTab';
 import { getFullClientData, getMeasurements, getSessions, updateClient } from '../../services/database';
@@ -47,14 +48,15 @@ const menuCategories = [
       { id: 'cavitalyse', name: 'Cavita-Lyse', icon: Sparkles },
       { id: 'adipology', name: 'Adipologie', icon: Activity },
       { id: 'ishape', name: 'I-Shape', icon: Activity },
-      { id: 'pressodynamie', name: 'Pressodynamie', icon: Zap }
+      { id: 'pressodynamie', name: 'Pressodynamie', icon: Zap },
+      { id: 'mesojet-corps', name: 'Mésojet Corps', icon: Sparkles }
     ]
   },
   {
     name: 'Anti-âge',
     tabs: [
       { id: 'advanceLift', name: 'Advance Lift', icon: Heart },
-      { id: 'mesojet', name: 'Mésojet', icon: Sparkles }
+      { id: 'mesojet', name: 'Mésojet Visage', icon: Sparkles }
     ]
   },
   {
@@ -400,6 +402,9 @@ const EditClientPage = () => {
         )}
         {currentTab === 'mesojet' && (
           <MesojetTab clientId={id!} centerId={centerId!} />
+        )}
+        {currentTab === 'mesojet-corps' && (
+          <MesojetCorpsTab clientId={id!} centerId={centerId!} />
         )}
         {currentTab === 'complementAlimentaire' && (
           <ComplementAlimentaireTab
