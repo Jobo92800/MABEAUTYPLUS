@@ -12,6 +12,7 @@ import IShapeForm from './treatments/IShapeForm';
 import AdipologyForm from './treatments/AdipologyForm';
 import MenopauseForm from './treatments/MenopauseForm';
 import MesojetForm from './treatments/MesojetForm';
+import MesojetCorpsForm from './treatments/MesojetCorpsForm';
 import CavitalyseForm from './treatments/CavitalyseForm';
 import RadiofrequencyMesojetForm from './treatments/RadiofrequencyMesojetForm';
 import AdvanceLiftForm from './treatments/AdvanceLiftForm';
@@ -43,13 +44,14 @@ const treatmentCategories = [
       { id: 'adipology', label: 'Adipologie' },
       { id: 'ishape', label: 'I-Shape' },
       { id: 'pressodynamie', label: 'Pressodynamie' },
+      { id: 'mesojet-corps', label: 'Mésojet Corps' },
     ]
   },
   {
     name: 'Anti-Âge',
     treatments: [
       { id: 'advance-lift', label: 'Advance Lift' },
-      { id: 'mesojet', label: 'Mésojet' },
+      { id: 'mesojet', label: 'Mésojet Visage' },
     ]
   },
   {
@@ -98,6 +100,8 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, initialData }) => {
         return <MenopauseForm initialData={initialData} />;
       case 'mesojet':
         return <MesojetForm initialData={initialData} />;
+      case 'mesojet-corps':
+        return <MesojetCorpsForm initialData={initialData} />;
       case 'cavitalyse':
         return <CavitalyseForm initialData={initialData} />;
       case 'radiofrequency-mesojet':

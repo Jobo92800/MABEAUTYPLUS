@@ -23,6 +23,7 @@ export type Treatment =
   | 'adipology'
   | 'menopause'
   | 'mesojet'
+  | 'mesojet-corps'
   | 'cavitalyse'
   | 'radiofrequency-mesojet'
   | 'advance-lift'
