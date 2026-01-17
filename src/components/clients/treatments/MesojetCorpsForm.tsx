@@ -313,8 +313,8 @@ const MesojetCorpsForm: React.FC<MesojetCorpsFormProps> = ({ initialData }) => {
       }
     };
 
-    const brasZones = ['brasHautD', 'brasHautG', 'brasBasD', 'brasBasG', 'brasMilieuD', 'brasMilieuG'];
-    const jambesZones = ['cuisseHautD', 'cuisseHautG', 'cuisseMilieuD', 'cuisseMilieuG', 'cuisseBasD', 'cuisseBasG', 'molletD', 'molletG'];
+    const brasZones = ['brasHautDroit', 'brasHautGauche', 'brasBasDroit', 'brasBasGauche', 'brasMilieuDroit', 'brasMilieuGauche'];
+    const jambesZones = ['cuisseHautDroit', 'cuisseHautGauche', 'cuisseMilieuDroit', 'cuisseMilieuGauche', 'cuisseBasDroit', 'cuisseBasGauche', 'molletDroit', 'molletGauche'];
     const ventreZones = ['ventre', 'hanche', 'taille'];
     const fessesZones = ['fesses', 'sousFessier'];
 
