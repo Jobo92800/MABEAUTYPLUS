@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, TrendingDown, TrendingUp } from 'lucide-react';
 import { doc, getDoc, setDoc, collection, addDoc, query, orderBy, getDocs, deleteDoc } from 'firebase/firestore';
 import { db } from '../../../services/firebase';
 import { format } from 'date-fns';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import SectionTitlePink from '../../SectionTitlePink';
 import type { FullClientData } from '../../../types/client';
 
@@ -39,6 +40,28 @@ interface MesojetCorpsSession {
 interface MesojetCorpsFormProps {
   initialData?: FullClientData;
 }
+
+const zoneLabels: Record<keyof BodyZone, string> = {
+  brasHautDroit: 'Bras haut D',
+  brasHautGauche: 'Bras haut G',
+  brasMilieuDroit: 'Bras milieu D',
+  brasMilieuGauche: 'Bras milieu G',
+  brasBasDroit: 'Bras bas D',
+  brasBasGauche: 'Bras bas G',
+  ventre: 'Ventre',
+  hanche: 'Hanche',
+  taille: 'Taille',
+  fesses: 'Fesses',
+  sousFessier: 'Sous-fessier',
+  cuisseHautDroit: 'Cuisse haut D',
+  cuisseHautGauche: 'Cuisse haut G',
+  cuisseMilieuDroit: 'Cuisse milieu D',
+  cuisseMilieuGauche: 'Cuisse milieu G',
+  cuisseBasDroit: 'Cuisse bas D',
+  cuisseBasGauche: 'Cuisse bas G',
+  molletDroit: 'Mollet D',
+  molletGauche: 'Mollet G'
+};
 
 const MesojetCorpsForm: React.FC<MesojetCorpsFormProps> = ({ initialData }) => {
   const [sessions, setSessions] = useState<MesojetCorpsSession[]>([]);
@@ -84,7 +107,7 @@ const MesojetCorpsForm: React.FC<MesojetCorpsFormProps> = ({ initialData }) => {
         const sessionsRef = collection(db, 'mesojetCorpsSessions');
         const q = query(
           sessionsRef,
-          orderBy('sessionNumber', 'desc')
+          orderBy('sessionNumber', 'asc')
         );
         const querySnapshot = await getDocs(q);
 
@@ -104,7 +127,7 @@ const MesojetCorpsForm: React.FC<MesojetCorpsFormProps> = ({ initialData }) => {
         if (loadedSessions.length > 0) {
           setNewSession(prev => ({
             ...prev,
-            sessionNumber: loadedSessions[0].sessionNumber + 1
+            sessionNumber: loadedSessions[loadedSessions.length - 1].sessionNumber + 1
           }));
         }
       } catch (error) {
@@ -122,13 +145,15 @@ const MesojetCorpsForm: React.FC<MesojetCorpsFormProps> = ({ initialData }) => {
 
     try {
       const sessionsRef = collection(db, 'mesojetCorpsSessions');
-      await addDoc(sessionsRef, {
+      const docRef = await addDoc(sessionsRef, {
         ...newSession,
         clientId: initialData.client.id,
         createdAt: new Date().toISOString()
       });
 
-      setSessions([newSession, ...sessions]);
+      const newSessionWithId = { ...newSession, id: docRef.id };
+      setSessions([...sessions, newSessionWithId]);
+
       setNewSession({
         date: format(new Date(), 'yyyy-MM-dd'),
         sessionNumber: newSession.sessionNumber + 1,
@@ -201,9 +226,77 @@ const MesojetCorpsForm: React.FC<MesojetCorpsFormProps> = ({ initialData }) => {
     );
   };
 
+  const getChartData = (zoneKey: keyof BodyZone) => {
+    return sessions
+      .filter(session => session.zones[zoneKey] && session.zones[zoneKey] !== '')
+      .map(session => ({
+        session: `S${session.sessionNumber}`,
+        date: format(new Date(session.date), 'dd/MM'),
+        valeur: parseFloat(session.zones[zoneKey])
+      }));
+  };
+
+  const calculateDifferences = (session: MesojetCorpsSession, index: number) => {
+    const differences: Array<{
+      zone: keyof BodyZone;
+      label: string;
+      current: number;
+      diffFromFirst: number;
+      diffFromPrevious: number;
+    }> = [];
+
+    const currentSession = session;
+    const firstSession = sessions[0];
+    const previousSession = index > 0 ? sessions[index - 1] : null;
+
+    Object.keys(session.zones).forEach((key) => {
+      const zoneKey = key as keyof BodyZone;
+      const currentValue = parseFloat(currentSession.zones[zoneKey]);
+
+      if (!isNaN(currentValue) && currentValue > 0) {
+        const firstValue = firstSession ? parseFloat(firstSession.zones[zoneKey]) : null;
+        const previousValue = previousSession ? parseFloat(previousSession.zones[zoneKey]) : null;
+
+        const diffFromFirst = firstValue ? currentValue - firstValue : 0;
+        const diffFromPrevious = previousValue ? currentValue - previousValue : 0;
+
+        differences.push({
+          zone: zoneKey,
+          label: zoneLabels[zoneKey],
+          current: currentValue,
+          diffFromFirst: diffFromFirst,
+          diffFromPrevious: diffFromPrevious
+        });
+      }
+    });
+
+    return differences;
+  };
+
+  const renderDifferenceValue = (diff: number) => {
+    if (diff === 0) {
+      return <span className="text-gray-500">0 cm</span>;
+    }
+
+    const isPositive = diff > 0;
+    const colorClass = isPositive ? 'text-red-600' : 'text-green-600';
+    const Icon = isPositive ? TrendingUp : TrendingDown;
+
+    return (
+      <span className={`${colorClass} font-semibold flex items-center gap-1`}>
+        <Icon className="h-3 w-3" />
+        {diff > 0 ? '+' : ''}{diff.toFixed(1)} cm
+      </span>
+    );
+  };
+
   if (loading) {
     return <div>Chargement...</div>;
   }
+
+  const zonesWithData = Object.keys(sessions[0]?.zones || {}).filter((key) => {
+    return sessions.some(s => s.zones[key as keyof BodyZone] && s.zones[key as keyof BodyZone] !== '');
+  }) as Array<keyof BodyZone>;
 
   return (
     <div className="space-y-8 mt-8">
@@ -338,6 +431,41 @@ const MesojetCorpsForm: React.FC<MesojetCorpsFormProps> = ({ initialData }) => {
         </div>
       )}
 
+      {sessions.length > 1 && zonesWithData.length > 0 && (
+        <div className="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-6">Évolution des mesures</h3>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {zonesWithData.map((zoneKey) => {
+              const chartData = getChartData(zoneKey);
+
+              if (chartData.length < 2) return null;
+
+              return (
+                <div key={zoneKey} className="border border-gray-200 rounded-lg p-4">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-3">{zoneLabels[zoneKey]}</h4>
+                  <ResponsiveContainer width="100%" height={200}>
+                    <LineChart data={chartData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                      <YAxis tick={{ fontSize: 12 }} domain={['dataMin - 2', 'dataMax + 2']} />
+                      <Tooltip />
+                      <Line
+                        type="monotone"
+                        dataKey="valeur"
+                        stroke="#ec4899"
+                        strokeWidth={2}
+                        dot={{ fill: '#ec4899', r: 4 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <div className="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl overflow-hidden">
         <div className="px-4 py-5 sm:p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Historique des séances</h3>
@@ -346,8 +474,8 @@ const MesojetCorpsForm: React.FC<MesojetCorpsFormProps> = ({ initialData }) => {
             <p className="text-gray-500 text-center py-8">Aucune séance enregistrée</p>
           ) : (
             <div className="space-y-4">
-              {sessions.map((session) => {
-                const zonesWithMeasurements = Object.entries(session.zones).filter(([_, value]) => value && value !== '');
+              {sessions.map((session, index) => {
+                const differences = calculateDifferences(session, index);
 
                 return (
                   <div key={session.id} className="border border-gray-200 rounded-lg p-4">
@@ -374,40 +502,41 @@ const MesojetCorpsForm: React.FC<MesojetCorpsFormProps> = ({ initialData }) => {
                       </button>
                     </div>
 
-                    {zonesWithMeasurements.length > 0 && (
+                    {differences.length > 0 && (
                       <div className="mt-3 pt-3 border-t border-gray-100">
-                        <h6 className="text-xs font-semibold text-gray-700 mb-2">Mesures (cm):</h6>
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                          {zonesWithMeasurements.map(([zone, measurement]) => {
-                            const zoneLabels: Record<string, string> = {
-                              brasHautDroit: 'Bras haut D',
-                              brasHautGauche: 'Bras haut G',
-                              brasMilieuDroit: 'Bras milieu D',
-                              brasMilieuGauche: 'Bras milieu G',
-                              brasBasDroit: 'Bras bas D',
-                              brasBasGauche: 'Bras bas G',
-                              ventre: 'Ventre',
-                              hanche: 'Hanche',
-                              taille: 'Taille',
-                              fesses: 'Fesses',
-                              sousFessier: 'Sous-fessier',
-                              cuisseHautDroit: 'Cuisse haut D',
-                              cuisseHautGauche: 'Cuisse haut G',
-                              cuisseMilieuDroit: 'Cuisse milieu D',
-                              cuisseMilieuGauche: 'Cuisse milieu G',
-                              cuisseBasDroit: 'Cuisse bas D',
-                              cuisseBasGauche: 'Cuisse bas G',
-                              molletDroit: 'Mollet D',
-                              molletGauche: 'Mollet G'
-                            };
-
-                            return (
-                              <div key={zone} className="text-xs bg-pink-50 text-pink-800 px-2 py-1 rounded flex items-center justify-between">
-                                <span className="font-medium">{zoneLabels[zone]}</span>
-                                <span className="ml-2 font-semibold">{measurement} cm</span>
-                              </div>
-                            );
-                          })}
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full text-xs">
+                            <thead className="bg-gray-50">
+                              <tr>
+                                <th className="px-2 py-2 text-left font-semibold text-gray-700">Zone</th>
+                                <th className="px-2 py-2 text-center font-semibold text-gray-700">Mesure actuelle</th>
+                                {index > 0 && (
+                                  <>
+                                    <th className="px-2 py-2 text-center font-semibold text-gray-700">Diff. vs début</th>
+                                    <th className="px-2 py-2 text-center font-semibold text-gray-700">Diff. vs précédent</th>
+                                  </>
+                                )}
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-200">
+                              {differences.map((diff) => (
+                                <tr key={diff.zone}>
+                                  <td className="px-2 py-2 font-medium text-gray-900">{diff.label}</td>
+                                  <td className="px-2 py-2 text-center text-gray-700">{diff.current.toFixed(1)} cm</td>
+                                  {index > 0 && (
+                                    <>
+                                      <td className="px-2 py-2 text-center">
+                                        {renderDifferenceValue(diff.diffFromFirst)}
+                                      </td>
+                                      <td className="px-2 py-2 text-center">
+                                        {renderDifferenceValue(diff.diffFromPrevious)}
+                                      </td>
+                                    </>
+                                  )}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
                         </div>
                       </div>
                     )}
