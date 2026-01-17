@@ -67,6 +67,7 @@ const MesojetCorpsForm: React.FC<MesojetCorpsFormProps> = ({ initialData }) => {
   const [sessions, setSessions] = useState<MesojetCorpsSession[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [displayLimit, setDisplayLimit] = useState(3);
 
   const [newSession, setNewSession] = useState<MesojetCorpsSession>({
     date: format(new Date(), 'yyyy-MM-dd'),
@@ -473,77 +474,104 @@ const MesojetCorpsForm: React.FC<MesojetCorpsFormProps> = ({ initialData }) => {
           {sessions.length === 0 ? (
             <p className="text-gray-500 text-center py-8">Aucune séance enregistrée</p>
           ) : (
-            <div className="space-y-4">
-              {sessions.map((session, index) => {
-                const differences = calculateDifferences(session, index);
+            <>
+              <div className="space-y-4">
+                {[...sessions].reverse().slice(0, displayLimit).map((session) => {
+                  const index = sessions.findIndex(s => s.id === session.id);
+                  const differences = calculateDifferences(session, index);
 
-                return (
-                  <div key={session.id} className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <div className="flex items-center gap-4 mb-2">
-                          <span className="text-sm font-semibold text-gray-900">
-                            Séance #{session.sessionNumber}
-                          </span>
-                          <span className="text-sm text-gray-600">
-                            {format(new Date(session.date), 'dd/MM/yyyy')}
-                          </span>
+                  return (
+                    <div key={session.id} className="border border-gray-200 rounded-lg p-4">
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <div className="flex items-center gap-4 mb-2">
+                            <span className="text-sm font-semibold text-gray-900">
+                              Séance #{session.sessionNumber}
+                            </span>
+                            <span className="text-sm text-gray-600">
+                              {format(new Date(session.date), 'dd/MM/yyyy')}
+                            </span>
+                          </div>
+                          {session.comments && (
+                            <p className="text-sm text-gray-600">{session.comments}</p>
+                          )}
                         </div>
-                        {session.comments && (
-                          <p className="text-sm text-gray-600">{session.comments}</p>
-                        )}
+                        <button
+                          type="button"
+                          onClick={() => session.id && handleDeleteSession(session.id)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => session.id && handleDeleteSession(session.id)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
 
-                    {differences.length > 0 && (
-                      <div className="mt-3 pt-3 border-t border-gray-100">
-                        <div className="overflow-x-auto">
-                          <table className="min-w-full text-xs">
-                            <thead className="bg-gray-50">
-                              <tr>
-                                <th className="px-2 py-2 text-left font-semibold text-gray-700">Zone</th>
-                                <th className="px-2 py-2 text-center font-semibold text-gray-700">Mesure actuelle</th>
-                                {index > 0 && (
-                                  <>
-                                    <th className="px-2 py-2 text-center font-semibold text-gray-700">Diff. vs début</th>
-                                    <th className="px-2 py-2 text-center font-semibold text-gray-700">Diff. vs précédent</th>
-                                  </>
-                                )}
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200">
-                              {differences.map((diff) => (
-                                <tr key={diff.zone}>
-                                  <td className="px-2 py-2 font-medium text-gray-900">{diff.label}</td>
-                                  <td className="px-2 py-2 text-center text-gray-700">{diff.current.toFixed(1)} cm</td>
+                      {differences.length > 0 && (
+                        <div className="mt-3 pt-3 border-t border-gray-100">
+                          <div className="overflow-x-auto">
+                            <table className="min-w-full text-xs">
+                              <thead className="bg-gray-50">
+                                <tr>
+                                  <th className="px-2 py-2 text-left font-semibold text-gray-700">Zone</th>
+                                  <th className="px-2 py-2 text-center font-semibold text-gray-700">Mesure actuelle</th>
                                   {index > 0 && (
                                     <>
-                                      <td className="px-2 py-2 text-center">
-                                        {renderDifferenceValue(diff.diffFromFirst)}
-                                      </td>
-                                      <td className="px-2 py-2 text-center">
-                                        {renderDifferenceValue(diff.diffFromPrevious)}
-                                      </td>
+                                      <th className="px-2 py-2 text-center font-semibold text-gray-700">Diff. vs début</th>
+                                      <th className="px-2 py-2 text-center font-semibold text-gray-700">Diff. vs précédent</th>
                                     </>
                                   )}
                                 </tr>
-                              ))}
-                            </tbody>
-                          </table>
+                              </thead>
+                              <tbody className="divide-y divide-gray-200">
+                                {differences.map((diff) => (
+                                  <tr key={diff.zone}>
+                                    <td className="px-2 py-2 font-medium text-gray-900">{diff.label}</td>
+                                    <td className="px-2 py-2 text-center text-gray-700">{diff.current.toFixed(1)} cm</td>
+                                    {index > 0 && (
+                                      <>
+                                        <td className="px-2 py-2 text-center">
+                                          {renderDifferenceValue(diff.diffFromFirst)}
+                                        </td>
+                                        <td className="px-2 py-2 text-center">
+                                          {renderDifferenceValue(diff.diffFromPrevious)}
+                                        </td>
+                                      </>
+                                    )}
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {sessions.length > displayLimit && (
+                <div className="mt-6 text-center">
+                  <button
+                    type="button"
+                    onClick={() => setDisplayLimit(prev => prev + 3)}
+                    className="px-6 py-2 text-sm font-medium text-brand-pink border border-brand-pink rounded-lg hover:bg-pink-50 transition-colors"
+                  >
+                    Voir plus de séances ({sessions.length - displayLimit} restantes)
+                  </button>
+                </div>
+              )}
+
+              {displayLimit > 3 && sessions.length > 3 && (
+                <div className="mt-3 text-center">
+                  <button
+                    type="button"
+                    onClick={() => setDisplayLimit(3)}
+                    className="px-6 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 transition-colors"
+                  >
+                    Voir moins
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
