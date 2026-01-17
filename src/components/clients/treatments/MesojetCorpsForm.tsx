@@ -570,7 +570,7 @@ const MesojetCorpsForm: React.FC<MesojetCorpsFormProps> = ({ initialData }) => {
                         const displayCategories = isExpanded ? categories : categories.slice(0, 2);
                         const totalZonesCount = differences.length;
                         const visibleZonesCount = displayCategories.reduce((sum, cat) => sum + cat.zones.length, 0);
-                        const hasMoreCategories = categories.length > 2;
+                        const hasHiddenContent = categories.length > displayCategories.length;
 
                         return (
                           <div className="mt-3 pt-3 border-t border-gray-100">
@@ -616,7 +616,7 @@ const MesojetCorpsForm: React.FC<MesojetCorpsFormProps> = ({ initialData }) => {
                               ))}
                             </div>
 
-                            {hasMoreCategories && (
+                            {hasHiddenContent && (
                               <div className="mt-4 text-center">
                                 <button
                                   type="button"
