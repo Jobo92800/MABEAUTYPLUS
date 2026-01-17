@@ -68,6 +68,7 @@ const MesojetCorpsForm: React.FC<MesojetCorpsFormProps> = ({ initialData }) => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [displayLimit, setDisplayLimit] = useState(3);
+  const [expandedSessions, setExpandedSessions] = useState<Set<string>>(new Set());
 
   const [newSession, setNewSession] = useState<MesojetCorpsSession>({
     date: format(new Date(), 'yyyy-MM-dd'),
@@ -196,6 +197,18 @@ const MesojetCorpsForm: React.FC<MesojetCorpsFormProps> = ({ initialData }) => {
     } catch (error) {
       console.error('Error deleting session:', error);
     }
+  };
+
+  const toggleSessionExpanded = (sessionId: string) => {
+    setExpandedSessions(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(sessionId)) {
+        newSet.delete(sessionId);
+      } else {
+        newSet.add(sessionId);
+      }
+      return newSet;
+    });
   };
 
   const handleZoneChange = (zone: keyof BodyZone, value: string) => {
@@ -522,7 +535,7 @@ const MesojetCorpsForm: React.FC<MesojetCorpsFormProps> = ({ initialData }) => {
                                 </tr>
                               </thead>
                               <tbody className="divide-y divide-gray-200">
-                                {differences.map((diff) => (
+                                {(expandedSessions.has(session.id || '') ? differences : differences.slice(0, 5)).map((diff) => (
                                   <tr key={diff.zone}>
                                     <td className="px-2 py-2 font-medium text-gray-900">{diff.label}</td>
                                     <td className="px-2 py-2 text-center text-gray-700">{diff.current.toFixed(1)} cm</td>
@@ -541,6 +554,22 @@ const MesojetCorpsForm: React.FC<MesojetCorpsFormProps> = ({ initialData }) => {
                               </tbody>
                             </table>
                           </div>
+
+                          {differences.length > 5 && (
+                            <div className="mt-3 text-center">
+                              <button
+                                type="button"
+                                onClick={() => session.id && toggleSessionExpanded(session.id)}
+                                className="text-sm text-brand-pink hover:text-pink-700 font-medium"
+                              >
+                                {expandedSessions.has(session.id || '') ? (
+                                  <>Voir moins de zones</>
+                                ) : (
+                                  <>Voir plus de zones ({differences.length - 5} autres)</>
+                                )}
+                              </button>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
