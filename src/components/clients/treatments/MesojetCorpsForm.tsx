@@ -287,6 +287,52 @@ const MesojetCorpsForm: React.FC<MesojetCorpsFormProps> = ({ initialData }) => {
     return differences;
   };
 
+  const groupDifferencesByCategory = (differences: Array<{
+    zone: keyof BodyZone;
+    label: string;
+    current: number;
+    diffFromFirst: number;
+    diffFromPrevious: number;
+  }>) => {
+    const categories = {
+      bras: {
+        title: 'Bras',
+        zones: [] as typeof differences
+      },
+      jambes: {
+        title: 'Jambes',
+        zones: [] as typeof differences
+      },
+      ventre: {
+        title: 'Ventre',
+        zones: [] as typeof differences
+      },
+      fesses: {
+        title: 'Fesses',
+        zones: [] as typeof differences
+      }
+    };
+
+    const brasZones = ['brasHautD', 'brasHautG', 'brasBasD', 'brasBasG', 'brasMilieuD', 'brasMilieuG'];
+    const jambesZones = ['cuisseHautD', 'cuisseHautG', 'cuisseMilieuD', 'cuisseMilieuG', 'cuisseBasD', 'cuisseBasG', 'molletD', 'molletG'];
+    const ventreZones = ['ventre', 'hanche', 'taille'];
+    const fessesZones = ['fesses', 'sousFessier'];
+
+    differences.forEach(diff => {
+      if (brasZones.includes(diff.zone)) {
+        categories.bras.zones.push(diff);
+      } else if (jambesZones.includes(diff.zone)) {
+        categories.jambes.zones.push(diff);
+      } else if (ventreZones.includes(diff.zone)) {
+        categories.ventre.zones.push(diff);
+      } else if (fessesZones.includes(diff.zone)) {
+        categories.fesses.zones.push(diff);
+      }
+    });
+
+    return Object.values(categories).filter(cat => cat.zones.length > 0);
+  };
+
   const renderDifferenceValue = (diff: number) => {
     if (diff === 0) {
       return <span className="text-gray-500">0 cm</span>;
@@ -518,60 +564,83 @@ const MesojetCorpsForm: React.FC<MesojetCorpsFormProps> = ({ initialData }) => {
                         </button>
                       </div>
 
-                      {differences.length > 0 && (
-                        <div className="mt-3 pt-3 border-t border-gray-100">
-                          <div className="overflow-x-auto">
-                            <table className="min-w-full text-xs">
-                              <thead className="bg-gray-50">
-                                <tr>
-                                  <th className="px-2 py-2 text-left font-semibold text-gray-700">Zone</th>
-                                  <th className="px-2 py-2 text-center font-semibold text-gray-700">Mesure actuelle</th>
-                                  {index > 0 && (
-                                    <>
-                                      <th className="px-2 py-2 text-center font-semibold text-gray-700">Diff. vs début</th>
-                                      <th className="px-2 py-2 text-center font-semibold text-gray-700">Diff. vs précédent</th>
-                                    </>
-                                  )}
-                                </tr>
-                              </thead>
-                              <tbody className="divide-y divide-gray-200">
-                                {(expandedSessions.has(session.id || '') ? differences : differences.slice(0, 5)).map((diff) => (
-                                  <tr key={diff.zone}>
-                                    <td className="px-2 py-2 font-medium text-gray-900">{diff.label}</td>
-                                    <td className="px-2 py-2 text-center text-gray-700">{diff.current.toFixed(1)} cm</td>
-                                    {index > 0 && (
-                                      <>
-                                        <td className="px-2 py-2 text-center">
-                                          {renderDifferenceValue(diff.diffFromFirst)}
-                                        </td>
-                                        <td className="px-2 py-2 text-center">
-                                          {renderDifferenceValue(diff.diffFromPrevious)}
-                                        </td>
-                                      </>
-                                    )}
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
+                      {differences.length > 0 && (() => {
+                        const categories = groupDifferencesByCategory(differences);
+                        const isExpanded = expandedSessions.has(session.id || '');
+                        const displayCategories = isExpanded ? categories : categories.slice(0, 2);
+                        const totalZonesCount = differences.length;
+                        const visibleZonesCount = displayCategories.reduce((sum, cat) => sum + cat.zones.length, 0);
 
-                          {differences.length > 5 && (
-                            <div className="mt-3 text-center">
-                              <button
-                                type="button"
-                                onClick={() => session.id && toggleSessionExpanded(session.id)}
-                                className="text-sm text-brand-pink hover:text-pink-700 font-medium"
-                              >
-                                {expandedSessions.has(session.id || '') ? (
-                                  <>Voir moins de zones</>
-                                ) : (
-                                  <>Voir plus de zones ({differences.length - 5} autres)</>
-                                )}
-                              </button>
+                        return (
+                          <div className="mt-3 pt-3 border-t border-gray-100">
+                            <div className="space-y-4">
+                              {displayCategories.map((category, catIndex) => (
+                                <div key={catIndex}>
+                                  <h4 className="text-xs font-bold text-gray-700 uppercase mb-2 px-2">{category.title}</h4>
+                                  <div className="overflow-x-auto">
+                                    <table className="min-w-full text-xs">
+                                      <thead className="bg-gray-50">
+                                        <tr>
+                                          <th className="px-2 py-2 text-left font-semibold text-gray-700">Zone</th>
+                                          <th className="px-2 py-2 text-center font-semibold text-gray-700">Mesure actuelle</th>
+                                          {index > 0 && (
+                                            <>
+                                              <th className="px-2 py-2 text-center font-semibold text-gray-700">Diff. vs début</th>
+                                              <th className="px-2 py-2 text-center font-semibold text-gray-700">Diff. vs précédent</th>
+                                            </>
+                                          )}
+                                        </tr>
+                                      </thead>
+                                      <tbody className="divide-y divide-gray-200">
+                                        {category.zones.map((diff) => (
+                                          <tr key={diff.zone}>
+                                            <td className="px-2 py-2 font-medium text-gray-900">{diff.label}</td>
+                                            <td className="px-2 py-2 text-center text-gray-700">{diff.current.toFixed(1)} cm</td>
+                                            {index > 0 && (
+                                              <>
+                                                <td className="px-2 py-2 text-center">
+                                                  {renderDifferenceValue(diff.diffFromFirst)}
+                                                </td>
+                                                <td className="px-2 py-2 text-center">
+                                                  {renderDifferenceValue(diff.diffFromPrevious)}
+                                                </td>
+                                              </>
+                                            )}
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                </div>
+                              ))}
                             </div>
-                          )}
-                        </div>
-                      )}
+
+                            {totalZonesCount > visibleZonesCount && (
+                              <div className="mt-4 text-center">
+                                <button
+                                  type="button"
+                                  onClick={() => session.id && toggleSessionExpanded(session.id)}
+                                  className="text-sm text-brand-pink hover:text-pink-700 font-medium"
+                                >
+                                  Voir plus de zones ({totalZonesCount - visibleZonesCount} autres)
+                                </button>
+                              </div>
+                            )}
+
+                            {isExpanded && categories.length > 2 && (
+                              <div className="mt-2 text-center">
+                                <button
+                                  type="button"
+                                  onClick={() => session.id && toggleSessionExpanded(session.id)}
+                                  className="text-sm text-brand-pink hover:text-pink-700 font-medium"
+                                >
+                                  Voir moins de zones
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
                   );
                 })}
