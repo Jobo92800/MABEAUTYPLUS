@@ -570,6 +570,7 @@ const MesojetCorpsForm: React.FC<MesojetCorpsFormProps> = ({ initialData }) => {
                         const displayCategories = isExpanded ? categories : categories.slice(0, 2);
                         const totalZonesCount = differences.length;
                         const visibleZonesCount = displayCategories.reduce((sum, cat) => sum + cat.zones.length, 0);
+                        const hasMoreCategories = categories.length > 2;
 
                         return (
                           <div className="mt-3 pt-3 border-t border-gray-100">
@@ -615,26 +616,18 @@ const MesojetCorpsForm: React.FC<MesojetCorpsFormProps> = ({ initialData }) => {
                               ))}
                             </div>
 
-                            {totalZonesCount > visibleZonesCount && (
+                            {hasMoreCategories && (
                               <div className="mt-4 text-center">
                                 <button
                                   type="button"
                                   onClick={() => session.id && toggleSessionExpanded(session.id)}
                                   className="text-sm text-brand-pink hover:text-pink-700 font-medium"
                                 >
-                                  Voir plus de zones ({totalZonesCount - visibleZonesCount} autres)
-                                </button>
-                              </div>
-                            )}
-
-                            {isExpanded && categories.length > 2 && (
-                              <div className="mt-2 text-center">
-                                <button
-                                  type="button"
-                                  onClick={() => session.id && toggleSessionExpanded(session.id)}
-                                  className="text-sm text-brand-pink hover:text-pink-700 font-medium"
-                                >
-                                  Voir moins de zones
+                                  {isExpanded ? (
+                                    'Voir moins de zones'
+                                  ) : (
+                                    `Voir plus de zones (${totalZonesCount - visibleZonesCount} autres)`
+                                  )}
                                 </button>
                               </div>
                             )}
