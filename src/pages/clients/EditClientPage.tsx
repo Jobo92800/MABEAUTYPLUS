@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   User, Scale, Ruler, FileDown, Activity,
-  Sparkles, Zap, Heart, Coffee, ArrowLeft, Pill, Brain
+  Sparkles, Zap, Heart, Coffee, ArrowLeft, Pill, Brain, Droplet
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import ClientForm from '../../components/clients/ClientForm';
@@ -19,6 +19,7 @@ import MesojetTab from '../../components/clients/MesojetTab';
 import MesojetCorpsTab from '../../components/clients/MesojetCorpsTab';
 import ComplementAlimentaireTab from '../../components/clients/ComplementAlimentaireTab';
 import PsioTab from '../../components/clients/PsioTab';
+import DomeTab from '../../components/clients/DomeTab';
 import { getFullClientData, getMeasurements, getSessions, updateClient } from '../../services/database';
 import { generateClientPDF } from '../../utils/pdfGenerator';
 import type { FullClientData } from '../../types/client';
@@ -49,7 +50,8 @@ const menuCategories = [
       { id: 'adipology', name: 'Adipologie', icon: Activity },
       { id: 'ishape', name: 'I-Shape', icon: Activity },
       { id: 'pressodynamie', name: 'Pressodynamie', icon: Zap },
-      { id: 'mesojet-corps', name: 'Mésojet Corps', icon: Sparkles }
+      { id: 'mesojet-corps', name: 'Mésojet Corps', icon: Sparkles },
+      { id: 'dome', name: 'Dôme', icon: Droplet }
     ]
   },
   {
@@ -412,6 +414,9 @@ const EditClientPage = () => {
             centerId={centerId!}
             onExpiryStatusChange={handleComplementExpiryChange}
           />
+        )}
+        {currentTab === 'dome' && (
+          <DomeTab initialData={clientData} />
         )}
       </div>
     </div>
