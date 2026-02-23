@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, TrendingDown, TrendingUp } from 'lucide-react';
-import { doc, getDoc, setDoc, collection, addDoc, query, orderBy, getDocs, deleteDoc } from 'firebase/firestore';
+import { Plus, Trash2, TrendingDown, TrendingUp, Edit2, Save, X } from 'lucide-react';
+import { doc, getDoc, setDoc, collection, addDoc, query, orderBy, getDocs, deleteDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../../services/firebase';
 import { format } from 'date-fns';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -69,6 +69,8 @@ const MesojetCorpsForm: React.FC<MesojetCorpsFormProps> = ({ initialData }) => {
   const [loading, setLoading] = useState(true);
   const [displayLimit, setDisplayLimit] = useState(3);
   const [expandedSessions, setExpandedSessions] = useState<Set<string>>(new Set());
+  const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
+  const [editingSession, setEditingSession] = useState<MesojetCorpsSession | null>(null);
 
   const [newSession, setNewSession] = useState<MesojetCorpsSession>({
     date: format(new Date(), 'yyyy-MM-dd'),
@@ -199,6 +201,47 @@ const MesojetCorpsForm: React.FC<MesojetCorpsFormProps> = ({ initialData }) => {
     }
   };
 
+  const handleEditSession = (session: MesojetCorpsSession) => {
+    setEditingSessionId(session.id || null);
+    setEditingSession({ ...session });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingSessionId(null);
+    setEditingSession(null);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingSession || !editingSessionId) return;
+
+    try {
+      const sessionRef = doc(db, 'mesojetCorpsSessions', editingSessionId);
+      await updateDoc(sessionRef, {
+        date: editingSession.date,
+        sessionNumber: editingSession.sessionNumber,
+        comments: editingSession.comments,
+        zones: editingSession.zones
+      });
+
+      setSessions(sessions.map(s => s.id === editingSessionId ? editingSession : s));
+      setEditingSessionId(null);
+      setEditingSession(null);
+    } catch (error) {
+      console.error('Error updating session:', error);
+    }
+  };
+
+  const handleEditZoneChange = (zone: keyof BodyZone, value: string) => {
+    if (!editingSession) return;
+    setEditingSession({
+      ...editingSession,
+      zones: {
+        ...editingSession.zones,
+        [zone]: value
+      }
+    });
+  };
+
   const toggleSessionExpanded = (sessionId: string) => {
     setExpandedSessions(prev => {
       const newSet = new Set(prev);
@@ -285,6 +328,28 @@ const MesojetCorpsForm: React.FC<MesojetCorpsFormProps> = ({ initialData }) => {
     });
 
     return differences;
+  };
+
+  const calculateTotalDifference = () => {
+    if (sessions.length < 2) return { total: 0, count: 0 };
+
+    const lastSession = sessions[sessions.length - 1];
+    const firstSession = sessions[0];
+    let totalDiff = 0;
+    let count = 0;
+
+    Object.keys(lastSession.zones).forEach((key) => {
+      const zoneKey = key as keyof BodyZone;
+      const lastValue = parseFloat(lastSession.zones[zoneKey]);
+      const firstValue = parseFloat(firstSession.zones[zoneKey]);
+
+      if (!isNaN(lastValue) && !isNaN(firstValue) && lastValue > 0 && firstValue > 0) {
+        totalDiff += (lastValue - firstValue);
+        count++;
+      }
+    });
+
+    return { total: totalDiff, count };
   };
 
   const groupDifferencesByCategory = (differences: Array<{
@@ -534,34 +599,132 @@ const MesojetCorpsForm: React.FC<MesojetCorpsFormProps> = ({ initialData }) => {
             <p className="text-gray-500 text-center py-8">Aucune séance enregistrée</p>
           ) : (
             <>
+              {sessions.length >= 2 && (() => {
+                const { total, count } = calculateTotalDifference();
+                if (count > 0) {
+                  const isPositive = total > 0;
+                  const Icon = isPositive ? TrendingUp : TrendingDown;
+                  const colorClass = isPositive ? 'text-red-600 bg-red-50' : 'text-green-600 bg-green-50';
+
+                  return (
+                    <div className={`mb-4 p-4 rounded-lg border ${isPositive ? 'border-red-200' : 'border-green-200'} ${colorClass}`}>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium">Évolution totale depuis le début</p>
+                          <p className="text-xs text-gray-600 mt-1">Basé sur {count} zone{count > 1 ? 's' : ''} mesurée{count > 1 ? 's' : ''}</p>
+                        </div>
+                        <div className={`flex items-center gap-2 text-2xl font-bold ${isPositive ? 'text-red-600' : 'text-green-600'}`}>
+                          <Icon className="h-6 w-6" />
+                          <span>{total > 0 ? '+' : ''}{total.toFixed(1)} cm</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
+
               <div className="space-y-4">
                 {[...sessions].reverse().slice(0, displayLimit).map((session) => {
                   const index = sessions.findIndex(s => s.id === session.id);
                   const differences = calculateDifferences(session, index);
 
+                  const isEditing = editingSessionId === session.id;
+                  const displaySession = isEditing ? editingSession! : session;
+
                   return (
                     <div key={session.id} className="border border-gray-200 rounded-lg p-4">
                       <div className="flex justify-between items-start mb-3">
-                        <div>
-                          <div className="flex items-center gap-4 mb-2">
-                            <span className="text-sm font-semibold text-gray-900">
-                              Séance #{session.sessionNumber}
-                            </span>
-                            <span className="text-sm text-gray-600">
-                              {format(new Date(session.date), 'dd/MM/yyyy')}
-                            </span>
-                          </div>
-                          {session.comments && (
-                            <p className="text-sm text-gray-600">{session.comments}</p>
+                        <div className="flex-1">
+                          {isEditing ? (
+                            <div className="space-y-3">
+                              <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-700 mb-1">Date</label>
+                                  <input
+                                    type="date"
+                                    value={editingSession?.date}
+                                    onChange={(e) => setEditingSession({ ...editingSession!, date: e.target.value })}
+                                    className="w-full text-xs rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring-brand-pink"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-700 mb-1">N° de séance</label>
+                                  <input
+                                    type="number"
+                                    value={editingSession?.sessionNumber}
+                                    onChange={(e) => setEditingSession({ ...editingSession!, sessionNumber: parseInt(e.target.value) })}
+                                    className="w-full text-xs rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring-brand-pink"
+                                  />
+                                </div>
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1">Commentaires</label>
+                                <textarea
+                                  value={editingSession?.comments}
+                                  onChange={(e) => setEditingSession({ ...editingSession!, comments: e.target.value })}
+                                  rows={2}
+                                  className="w-full text-xs rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring-brand-pink"
+                                />
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="flex items-center gap-4 mb-2">
+                                <span className="text-sm font-semibold text-gray-900">
+                                  Séance #{session.sessionNumber}
+                                </span>
+                                <span className="text-sm text-gray-600">
+                                  {format(new Date(session.date), 'dd/MM/yyyy')}
+                                </span>
+                              </div>
+                              {session.comments && (
+                                <p className="text-sm text-gray-600">{session.comments}</p>
+                              )}
+                            </>
                           )}
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => session.id && handleDeleteSession(session.id)}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        <div className="flex gap-2">
+                          {isEditing ? (
+                            <>
+                              <button
+                                type="button"
+                                onClick={handleSaveEdit}
+                                className="text-green-600 hover:text-green-700"
+                                title="Enregistrer"
+                              >
+                                <Save className="h-4 w-4" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={handleCancelEdit}
+                                className="text-gray-500 hover:text-gray-700"
+                                title="Annuler"
+                              >
+                                <X className="h-4 w-4" />
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => handleEditSession(session)}
+                                className="text-blue-500 hover:text-blue-700"
+                                title="Modifier"
+                              >
+                                <Edit2 className="h-4 w-4" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => session.id && handleDeleteSession(session.id)}
+                                className="text-red-500 hover:text-red-700"
+                                title="Supprimer"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </div>
 
                       {differences.length > 0 && (() => {
@@ -596,8 +759,20 @@ const MesojetCorpsForm: React.FC<MesojetCorpsFormProps> = ({ initialData }) => {
                                         {category.zones.map((diff) => (
                                           <tr key={diff.zone}>
                                             <td className="px-2 py-2 font-medium text-gray-900">{diff.label}</td>
-                                            <td className="px-2 py-2 text-center text-gray-700">{diff.current.toFixed(1)} cm</td>
-                                            {index > 0 && (
+                                            <td className="px-2 py-2 text-center">
+                                              {isEditing ? (
+                                                <input
+                                                  type="text"
+                                                  value={editingSession?.zones[diff.zone] || ''}
+                                                  onChange={(e) => handleEditZoneChange(diff.zone, e.target.value)}
+                                                  className="w-20 text-xs text-center rounded border-gray-300 shadow-sm focus:border-brand-pink focus:ring-brand-pink"
+                                                  placeholder="cm"
+                                                />
+                                              ) : (
+                                                <span className="text-gray-700">{diff.current.toFixed(1)} cm</span>
+                                              )}
+                                            </td>
+                                            {index > 0 && !isEditing && (
                                               <>
                                                 <td className="px-2 py-2 text-center">
                                                   {renderDifferenceValue(diff.diffFromFirst)}
