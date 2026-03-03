@@ -22,6 +22,7 @@ interface CareService {
 interface PaymentCategory {
   id: string;
   name: string;
+  ruleName: string;
   careServices: CareService[];
   totalAmount: string;
   deposit?: {
@@ -67,6 +68,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
     {
       id: '1',
       name: '',
+      ruleName: '',
       careServices: [],
       totalAmount: '',
       deposit: {
@@ -99,6 +101,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
           if (Array.isArray(data.categories) && data.categories.length > 0) {
             const updatedCategories = data.categories.map((cat: any) => ({
               ...cat,
+              ruleName: cat.ruleName || '',
               careServices: cat.careServices || []
             }));
             setCategories(updatedCategories);
@@ -202,12 +205,24 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
     savePaymentData(newCategories);
   };
 
+  const handleRuleNameChange = (categoryId: string, ruleName: string) => {
+    const newCategories = categories.map(cat => {
+      if (cat.id === categoryId) {
+        return { ...cat, ruleName };
+      }
+      return cat;
+    });
+    setCategories(newCategories);
+    savePaymentData(newCategories);
+  };
+
   const addCategory = () => {
     const newCategories = [
       ...categories,
       {
         id: (categories.length + 1).toString(),
         name: '',
+        ruleName: '',
         careServices: [],
         totalAmount: '',
         deposit: {
@@ -357,8 +372,24 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
               )}
             </div>
           </div>
-          
+
           <div className="p-6 space-y-6">
+            {/* Rule Name */}
+            <div>
+              <label htmlFor={`ruleName-${category.id}`} className="block text-sm font-medium text-gray-700 mb-2">
+                Nom de règlement
+              </label>
+              <input
+                type="text"
+                name={`ruleName-${category.id}`}
+                id={`ruleName-${category.id}`}
+                value={category.ruleName}
+                onChange={(e) => handleRuleNameChange(category.id, e.target.value)}
+                placeholder="Ex: Prénom Nom - Luxo PDP"
+                className="w-full rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue"
+              />
+            </div>
+
             {/* Care Services */}
             <div className="bg-gray-50 p-4 rounded-lg">
               <label className="block text-sm font-medium text-gray-700 mb-3">
