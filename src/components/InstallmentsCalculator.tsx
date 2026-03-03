@@ -195,9 +195,10 @@ interface InstallmentsCalculatorProps {
   isOpen: boolean;
   onClose: () => void;
   clientName?: string;
+  onValidate?: (data: { total: number; installments: number[] }) => void;
 }
 
-export const InstallmentsCalculator: React.FC<InstallmentsCalculatorProps> = ({ isOpen, onClose, clientName = "" }) => {
+export const InstallmentsCalculator: React.FC<InstallmentsCalculatorProps> = ({ isOpen, onClose, clientName = "", onValidate }) => {
   const [inputs, setInputs] = useState<Record<string, number>>({});
   const [nbEch, setNbEch] = useState(3);
   const [client, setClient] = useState(clientName);
@@ -221,6 +222,13 @@ export const InstallmentsCalculator: React.FC<InstallmentsCalculatorProps> = ({ 
       label: it.label, qty: inputs[it.key], price: it.price, cat: c
     }))
   );
+
+  const handleValidate = () => {
+    if (onValidate && total > 0) {
+      onValidate({ total, installments: payments });
+      onClose();
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -406,6 +414,37 @@ export const InstallmentsCalculator: React.FC<InstallmentsCalculatorProps> = ({ 
                   <div style={{ color: "rgba(255,255,255,.7)", fontSize: 13, marginTop: 6 }}>
                     Réparti sur {nbEch} échéances
                   </div>
+                )}
+                {total > 0 && onValidate && (
+                  <button
+                    type="button"
+                    onClick={handleValidate}
+                    style={{
+                      marginTop: 16,
+                      width: "100%",
+                      background: "white",
+                      color: "#0d9488",
+                      border: "2px solid white",
+                      padding: "12px 24px",
+                      borderRadius: 12,
+                      fontSize: 15,
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      letterSpacing: ".05em",
+                      transition: "all .2s ease",
+                      fontFamily: "inherit"
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "rgba(255,255,255,.9)";
+                      e.currentTarget.style.transform = "translateY(-2px)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "white";
+                      e.currentTarget.style.transform = "translateY(0)";
+                    }}
+                  >
+                    ✓ Valider et remplir le formulaire
+                  </button>
                 )}
               </div>
 

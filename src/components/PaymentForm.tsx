@@ -321,19 +321,36 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
   const getPaymentLineColor = (isPaid: boolean, isGiven: boolean, hasAmount: boolean) => {
     // Si pas de montant, pas de couleur
     if (!hasAmount) return '';
-    
+
     // Si payé -> vert
     if (isPaid) {
       return 'bg-green-50 border-green-200';
     }
-    
+
     // Si donné -> gris
     if (isGiven) {
       return 'bg-gray-100 border-gray-300';
     }
-    
+
     // Si ni payé ni donné -> rouge
     return 'bg-red-50 border-red-200';
+  };
+
+  const handleCalculatorValidate = (data: { total: number; installments: number[] }) => {
+    const updatedCategories = [...categories];
+    if (updatedCategories.length > 0) {
+      updatedCategories[0].totalAmount = data.total.toString();
+      updatedCategories[0].installments = data.installments.map((amount, index) => ({
+        amount: amount.toString(),
+        date: '',
+        purpose: index === 0 ? 'Première échéance' : `Échéance ${index + 1}`,
+        method: '',
+        isPaid: false,
+        isGiven: false
+      }));
+      setCategories(updatedCategories);
+      savePaymentData(updatedCategories);
+    }
   };
 
   if (loading) {
@@ -348,6 +365,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
         isOpen={showCalculator}
         onClose={() => setShowCalculator(false)}
         clientName={formData?.name || ''}
+        onValidate={handleCalculatorValidate}
       />
 
       {/* Therapist Field */}
