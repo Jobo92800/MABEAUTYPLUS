@@ -244,20 +244,26 @@ export const InstallmentsCalculator: React.FC<InstallmentsCalculatorProps> = ({ 
     }
   };
 
+  const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
+  const stopPropagation = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+
   if (!isOpen) return null;
 
   return (
     <div
       style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '20px' }}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) {
-          onClose();
-        }
-      }}
+      onClick={handleOverlayClick}
     >
       <div
         style={{ backgroundColor: 'white', borderRadius: '16px', maxWidth: '1400px', width: '100%', maxHeight: '90vh', overflow: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}
-        onClick={(e) => e.stopPropagation()}
+        onClick={stopPropagation}
       >
         <style>{`
           @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Raleway:wght@300;400;500;600;700&display=swap');
@@ -294,8 +300,8 @@ export const InstallmentsCalculator: React.FC<InstallmentsCalculatorProps> = ({ 
               <div style={{ background: "rgba(255,255,255,.15)", borderRadius: 12, padding: "7px 14px", color: "rgba(255,255,255,.85)", fontSize: 12 }}>
                 {activeTreatments.length > 0 ? `${activeTreatments.length} soin${activeTreatments.length>1?"s":""} sélectionné${activeTreatments.length>1?"s":""}` : "Aucun soin sélectionné"}
               </div>
-              <button onClick={reset} style={{ background: "rgba(255,255,255,.2)", border: "1px solid rgba(255,255,255,.4)", color: "white", padding: "8px 18px", borderRadius: 20, fontSize: 13, cursor: "pointer", letterSpacing: ".05em", fontFamily: "inherit", fontWeight: 500 }}>Réinitialiser</button>
-              <button onClick={onClose} style={{ background: "rgba(255,255,255,.2)", border: "1px solid rgba(255,255,255,.4)", color: "white", padding: "8px 12px", borderRadius: 20, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <button onClick={(e)=>{e.stopPropagation();reset();}} style={{ background: "rgba(255,255,255,.2)", border: "1px solid rgba(255,255,255,.4)", color: "white", padding: "8px 18px", borderRadius: 20, fontSize: 13, cursor: "pointer", letterSpacing: ".05em", fontFamily: "inherit", fontWeight: 500 }}>Réinitialiser</button>
+              <button onClick={(e)=>{e.stopPropagation();onClose();}} style={{ background: "rgba(255,255,255,.2)", border: "1px solid rgba(255,255,255,.4)", color: "white", padding: "8px 12px", borderRadius: 20, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -306,13 +312,13 @@ export const InstallmentsCalculator: React.FC<InstallmentsCalculatorProps> = ({ 
               <div style={{ background: "white", borderRadius: 16, padding: "18px 20px", marginBottom: 16, boxShadow: "0 2px 12px rgba(0,0,0,.06)", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
                 <div>
                   <label style={{ display: "block", fontSize: 10, letterSpacing: ".12em", textTransform: "uppercase", color: "#6b7280", marginBottom: 7 }}>Nom du client</label>
-                  <input type="text" value={client || clientName} onChange={e=>setClient(e.target.value)} placeholder="Ex : Marie Dupont"
+                  <input type="text" value={client || clientName} onChange={e=>setClient(e.target.value)} onClick={(e)=>e.stopPropagation()} placeholder="Ex : Marie Dupont"
                     style={{ width: "100%", border: "1.5px solid #e5e7eb", borderRadius: 10, padding: "9px 13px", fontSize: 14, outline: "none", fontFamily: "inherit" }}
                     onFocus={(e: any)=>e.target.style.borderColor="#0d9488"} onBlur={(e: any)=>e.target.style.borderColor="#e5e7eb"} />
                 </div>
                 <div>
                   <label style={{ display: "block", fontSize: 10, letterSpacing: ".12em", textTransform: "uppercase", color: "#6b7280", marginBottom: 7 }}>Rechercher un soin</label>
-                  <input type="text" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Ex : mésojet, adipologie…"
+                  <input type="text" value={search} onChange={e=>setSearch(e.target.value)} onClick={(e)=>e.stopPropagation()} placeholder="Ex : mésojet, adipologie…"
                     style={{ width: "100%", border: "1.5px solid #e5e7eb", borderRadius: 10, padding: "9px 13px", fontSize: 14, outline: "none", fontFamily: "inherit" }}
                     onFocus={(e: any)=>e.target.style.borderColor="#0891b2"} onBlur={(e: any)=>e.target.style.borderColor="#e5e7eb"} />
                 </div>
@@ -329,7 +335,7 @@ export const InstallmentsCalculator: React.FC<InstallmentsCalculatorProps> = ({ 
                 const catTotal = cat.items.reduce((s,it) => s+(Number(inputs[it.key])||0)*it.price, 0);
                 return (
                   <div key={cat.id} style={{ background: "white", borderRadius: 16, marginBottom: 11, boxShadow: "0 2px 12px rgba(0,0,0,.06)", overflow: "hidden" }}>
-                    <div className="sh" onClick={()=>toggleSection(cat.id)}
+                    <div className="sh" onClick={(e)=>{e.stopPropagation();toggleSection(cat.id);}}
                       style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "13px 18px", borderLeft: `4px solid ${cat.color}` }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                         <span style={{ fontSize: 15, color: cat.color }}>{cat.icon}</span>
@@ -357,11 +363,11 @@ export const InstallmentsCalculator: React.FC<InstallmentsCalculatorProps> = ({ 
                                 </div>
                               </div>
                               <div style={{ display: "flex", alignItems: "center", border: "1.5px solid #e5e7eb", borderRadius: 10, overflow: "hidden", flexShrink: 0 }}>
-                                <button className="cb" onClick={()=>set(it.key,qty-1)}
+                                <button className="cb" onClick={(e)=>{e.stopPropagation();set(it.key,qty-1);}}
                                   style={{ background: qty>0?"#f3f4f6":"#fafafa", border: "none", width: 32, height: 32, fontSize: 17, color: qty>0?"#374151":"#d1d5db", display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
-                                <input type="number" min="0" value={qty||""} placeholder="0" onChange={e=>set(it.key,e.target.value)}
+                                <input type="number" min="0" value={qty||""} placeholder="0" onChange={e=>set(it.key,e.target.value)} onClick={(e)=>e.stopPropagation()}
                                   style={{ width: 42, height: 32, textAlign: "center", border: "none", borderLeft: "1px solid #e5e7eb", borderRight: "1px solid #e5e7eb", fontSize: 14, fontWeight: 700, color: qty>0?cat.color:"#9ca3af", fontFamily: "inherit", background: "white", outline: "none" }} />
-                                <button className="cb" onClick={()=>set(it.key,qty+1)}
+                                <button className="cb" onClick={(e)=>{e.stopPropagation();set(it.key,qty+1);}}
                                   style={{ background: "#f3f4f6", border: "none", width: 32, height: 32, fontSize: 17, color: "#374151", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
                               </div>
                             </div>
@@ -379,7 +385,7 @@ export const InstallmentsCalculator: React.FC<InstallmentsCalculatorProps> = ({ 
                 <div style={{ fontSize: 10, letterSpacing: ".12em", textTransform: "uppercase", color: "#6b7280", marginBottom: 10 }}>Nombre d'échéances</div>
                 <div style={{ display: "flex", gap: 7 }}>
                   {[1,2,3,4,5,6].map(n => (
-                    <button key={n} className="pb" onClick={()=>setNbEch(n)}
+                    <button key={n} className="pb" onClick={(e)=>{e.stopPropagation();setNbEch(n);}}
                       style={{ flex: 1, padding: "10px 4px", borderRadius: 10, border: "2px solid", borderColor: nbEch===n?"#0d9488":"#e5e7eb", background: nbEch===n?"#0d9488":"white", color: nbEch===n?"white":"#374151", fontWeight: 700, fontSize: 15, fontFamily: "inherit", cursor: "pointer" }}>
                       {n}×
                     </button>
@@ -412,7 +418,7 @@ export const InstallmentsCalculator: React.FC<InstallmentsCalculatorProps> = ({ 
                 {total > 0 && onValidate && (
                   <button
                     type="button"
-                    onClick={handleValidate}
+                    onClick={(e)=>{e.stopPropagation();handleValidate();}}
                     style={{
                       marginTop: 16,
                       width: "100%",
