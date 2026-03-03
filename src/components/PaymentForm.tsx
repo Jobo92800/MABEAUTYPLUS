@@ -13,9 +13,16 @@ interface PaymentLine {
   isGiven: boolean;
 }
 
+interface CareService {
+  id: string;
+  name: string;
+  sessions: string;
+}
+
 interface PaymentCategory {
   id: string;
   name: string;
+  careServices: CareService[];
   totalAmount: string;
   deposit?: {
     amount: string;
@@ -31,13 +38,36 @@ interface PaymentFormProps {
   clientId?: string;
   formData?: any;
   prefix?: string;
+  centerId?: string;
 }
 
-const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix }) => {
+const CARE_SERVICES = [
+  { id: 'luxo-pdp', name: 'Luxo - PDP' },
+  { id: 'luxo-relax', name: 'Luxo - Relax' },
+  { id: 'luxo-meno', name: 'Luxo - Méno' },
+  { id: 'ishape', name: 'I-Shape' },
+  { id: 'cavitalyse', name: 'Cavitalyse' },
+  { id: 'adipologie', name: 'Adipologie' },
+  { id: 'presso', name: 'Presso' },
+  { id: 'meso-corps', name: 'Méso Corps' },
+  { id: 'meso-visage', name: 'Méso Visage' },
+  { id: 'advance-lift', name: 'Advance Lift' },
+  { id: 'psio', name: 'Psio' }
+];
+
+const THERAPISTS_BY_CENTER: Record<string, string[]> = {
+  'le-grau-du-roi': ['Marie', 'Fanny', 'Nadia', 'Stéphanie'],
+  'le-cres': ['Alexandra', 'Paola', 'Malvina'],
+  'serignan': ['Caroll', 'Aude', 'Marie-san'],
+  'cabestany': ['Audrey', 'Caroline', 'Sara']
+};
+
+const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, centerId }) => {
   const [categories, setCategories] = useState<PaymentCategory[]>([
     {
       id: '1',
       name: '',
+      careServices: [],
       totalAmount: '',
       deposit: {
         amount: '',
@@ -50,7 +80,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix })
     }
   ]);
   const [loading, setLoading] = useState(true);
-  const [therapist, setTherapist] = useState('');
+  const [therapists, setTherapists] = useState<string[]>([]);
 
   useEffect(() => {
     const loadPaymentData = async () => {
@@ -67,10 +97,16 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix })
         if (docSnap.exists()) {
           const data = docSnap.data();
           if (Array.isArray(data.categories) && data.categories.length > 0) {
-            setCategories(data.categories);
+            const updatedCategories = data.categories.map((cat: any) => ({
+              ...cat,
+              careServices: cat.careServices || []
+            }));
+            setCategories(updatedCategories);
           }
-          if (data.therapist) {
-            setTherapist(data.therapist);
+          if (data.therapists) {
+            setTherapists(data.therapists);
+          } else if (data.therapist) {
+            setTherapists([data.therapist]);
           }
         }
       } catch (error) {
@@ -83,14 +119,14 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix })
     loadPaymentData();
   }, [clientId]);
 
-  const savePaymentData = async (newCategories: PaymentCategory[]) => {
+  const savePaymentData = async (newCategories?: PaymentCategory[], newTherapists?: string[]) => {
     if (!clientId) return;
 
     try {
       const docRef = doc(db, PAYMENT_COLLECTION, clientId);
       await setDoc(docRef, {
-        categories: newCategories,
-        therapist,
+        categories: newCategories || categories,
+        therapists: newTherapists !== undefined ? newTherapists : therapists,
         updatedAt: new Date().toISOString()
       }, { merge: true });
     } catch (error) {
@@ -172,6 +208,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix })
       {
         id: (categories.length + 1).toString(),
         name: '',
+        careServices: [],
         totalAmount: '',
         deposit: {
           amount: '',
@@ -185,6 +222,52 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix })
     ];
     setCategories(newCategories);
     savePaymentData(newCategories);
+  };
+
+  const handleCareServiceToggle = (categoryId: string, serviceId: string) => {
+    const newCategories = categories.map(cat => {
+      if (cat.id === categoryId) {
+        const existingService = cat.careServices.find(cs => cs.id === serviceId);
+        if (existingService) {
+          return {
+            ...cat,
+            careServices: cat.careServices.filter(cs => cs.id !== serviceId)
+          };
+        } else {
+          return {
+            ...cat,
+            careServices: [...cat.careServices, { id: serviceId, name: CARE_SERVICES.find(cs => cs.id === serviceId)?.name || '', sessions: '' }]
+          };
+        }
+      }
+      return cat;
+    });
+    setCategories(newCategories);
+    savePaymentData(newCategories);
+  };
+
+  const handleCareServiceSessionsChange = (categoryId: string, serviceId: string, sessions: string) => {
+    const newCategories = categories.map(cat => {
+      if (cat.id === categoryId) {
+        return {
+          ...cat,
+          careServices: cat.careServices.map(cs =>
+            cs.id === serviceId ? { ...cs, sessions } : cs
+          )
+        };
+      }
+      return cat;
+    });
+    setCategories(newCategories);
+    savePaymentData(newCategories);
+  };
+
+  const handleTherapistToggle = (therapistName: string) => {
+    const newTherapists = therapists.includes(therapistName)
+      ? therapists.filter(t => t !== therapistName)
+      : [...therapists, therapistName];
+    setTherapists(newTherapists);
+    savePaymentData(undefined, newTherapists);
   };
 
   const removeCategory = (categoryId: string) => {
@@ -217,25 +300,42 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix })
     return <div>Chargement...</div>;
   }
 
+  const availableTherapists = centerId ? THERAPISTS_BY_CENTER[centerId] || [] : [];
+
   return (
     <div className="space-y-8">
       {/* Therapist Field */}
       <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-        <label htmlFor="therapist" className="block text-lg font-medium text-gray-900 mb-4">
-          Thérapeute
+        <label className="block text-lg font-medium text-gray-900 mb-4">
+          Thérapeute{therapists.length > 1 ? 's' : ''}
         </label>
-        <input
-          type="text"
-          name="therapist"
-          id="therapist"
-          value={therapist}
-          onChange={(e) => {
-            setTherapist(e.target.value);
-            savePaymentData(categories);
-          }}
-          className="mt-1 block w-full rounded-lg border-gray-200 bg-gray-50 shadow-sm focus:border-brand-blue focus:ring-brand-blue transition-colors"
-          placeholder="Nom du thérapeute"
-        />
+        {availableTherapists.length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            {availableTherapists.map((therapist) => (
+              <label key={therapist} className="flex items-center gap-2 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={therapists.includes(therapist)}
+                  onChange={() => handleTherapistToggle(therapist)}
+                  className="w-4 h-4 text-brand-blue rounded border-gray-300 focus:ring-brand-blue"
+                />
+                <span className="text-sm text-gray-700">{therapist}</span>
+              </label>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-gray-500 italic">Aucun centre sélectionné ou thérapeutes disponibles</p>
+        )}
+        {therapists.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            <span className="text-sm text-gray-600">Sélectionné{therapists.length > 1 ? 's' : ''} :</span>
+            {therapists.map((t) => (
+              <span key={t} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-brand-blue text-white">
+                {t}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       {categories.map((category, categoryIndex) => (
@@ -259,25 +359,48 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix })
           </div>
           
           <div className="p-6 space-y-6">
-            {/* Payment Name */}
+            {/* Care Services */}
             <div className="bg-gray-50 p-4 rounded-lg">
-              <label htmlFor={`name-${category.id}`} className="block text-sm font-medium text-gray-700 mb-2">
-                Nom du règlement
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Soins Appliqués
               </label>
-              <input
-                type="text"
-                id={`name-${category.id}`}
-                value={category.name}
-                onChange={(e) => {
-                  const newCategories = categories.map(cat => 
-                    cat.id === category.id ? { ...cat, name: e.target.value } : cat
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {CARE_SERVICES.map((service) => {
+                  const isChecked = category.careServices.some(cs => cs.id === service.id);
+                  const careService = category.careServices.find(cs => cs.id === service.id);
+
+                  return (
+                    <div key={service.id} className="space-y-2">
+                      <label className="flex items-center gap-2 p-2 border border-gray-200 rounded-lg cursor-pointer hover:bg-white transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => handleCareServiceToggle(category.id, service.id)}
+                          className="w-4 h-4 text-brand-blue rounded border-gray-300 focus:ring-brand-blue"
+                        />
+                        <span className="text-sm text-gray-700">{service.name}</span>
+                      </label>
+                      {isChecked && (
+                        <input
+                          type="text"
+                          value={careService?.sessions || ''}
+                          onChange={(e) => handleCareServiceSessionsChange(category.id, service.id, e.target.value)}
+                          placeholder="Nb de séances"
+                          className="w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue"
+                        />
+                      )}
+                    </div>
                   );
-                  setCategories(newCategories);
-                  savePaymentData(newCategories);
-                }}
-                className="block w-full rounded-lg border-gray-200 shadow-sm focus:border-brand-blue focus:ring-brand-blue"
-                placeholder="ex: 12 luxo + 9 i-shape"
-              />
+                })}
+              </div>
+              {category.careServices.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-gray-200">
+                  <p className="text-sm text-gray-600 font-medium">Résumé :</p>
+                  <p className="text-sm text-gray-700 mt-1">
+                    {category.careServices.map(cs => `${cs.sessions || '?'} ${cs.name}`).join(' + ')}
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Total Amount */}
