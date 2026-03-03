@@ -101,6 +101,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
   ]);
   const [loading, setLoading] = useState(true);
   const [therapists, setTherapists] = useState<string[]>([]);
+  const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
 
   useEffect(() => {
     const loadPaymentData = async () => {
@@ -337,20 +338,28 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
   };
 
   const handleCalculatorValidate = (data: { total: number; installments: number[] }) => {
-    const updatedCategories = [...categories];
-    if (updatedCategories.length > 0) {
-      updatedCategories[0].totalAmount = data.total.toString();
-      updatedCategories[0].installments = data.installments.map((amount, index) => ({
-        amount: amount.toString(),
-        date: '',
-        purpose: index === 0 ? 'Première échéance' : `Échéance ${index + 1}`,
-        method: '',
-        isPaid: false,
-        isGiven: false
-      }));
-      setCategories(updatedCategories);
-      savePaymentData(updatedCategories);
-    }
+    const categoryIdToUpdate = activeCategoryId || categories[0]?.id;
+
+    const updatedCategories = categories.map(cat => {
+      if (cat.id === categoryIdToUpdate) {
+        return {
+          ...cat,
+          totalAmount: data.total.toString(),
+          installments: data.installments.map((amount, index) => ({
+            amount: amount.toString(),
+            date: '',
+            purpose: index === 0 ? 'Première échéance' : `Échéance ${index + 1}`,
+            method: '',
+            isPaid: false,
+            isGiven: false
+          }))
+        };
+      }
+      return cat;
+    });
+
+    setCategories(updatedCategories);
+    savePaymentData(updatedCategories);
   };
 
   if (loading) {
@@ -431,7 +440,10 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
                 </label>
                 <button
                   type="button"
-                  onClick={() => setShowCalculator(true)}
+                  onClick={() => {
+                    setActiveCategoryId(category.id);
+                    setShowCalculator(true);
+                  }}
                   className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-brand-blue bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
                 >
                   <Calculator className="h-4 w-4" />
