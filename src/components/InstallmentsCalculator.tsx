@@ -337,7 +337,7 @@ export const InstallmentsCalculator: React.FC<InstallmentsCalculatorProps> = ({ 
                           const qty = Number(inputs[it.key])||0;
                           const isPkg = it.type==="package";
                           return (
-                            <div key={it.key} onClick={(e)=>e.stopPropagation()} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 0", borderBottom: "1px solid #f3f4f6" }}>
+                            <div key={it.key} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 0", borderBottom: "1px solid #f3f4f6" }}>
                               <div style={{ flex: 1, paddingRight: 10 }}>
                                 <div style={{ fontSize: 13, color: "#374151", fontWeight: 500, display: "flex", alignItems: "center", flexWrap: "wrap", gap: 4 }}>
                                   {it.label}
@@ -348,12 +348,11 @@ export const InstallmentsCalculator: React.FC<InstallmentsCalculatorProps> = ({ 
                                 </div>
                               </div>
                               <div style={{ display: "flex", alignItems: "center", border: "1.5px solid #e5e7eb", borderRadius: 10, overflow: "hidden", flexShrink: 0 }}>
-                                <button className="cb" onClick={(e)=>{e.stopPropagation();set(it.key,qty-1);}}
+                                <button className="cb" onClick={()=>set(it.key,qty-1)}
                                   style={{ background: qty>0?"#f3f4f6":"#fafafa", border: "none", width: 32, height: 32, fontSize: 17, color: qty>0?"#374151":"#d1d5db", display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
                                 <input type="number" min="0" value={qty||""} placeholder="0" onChange={e=>set(it.key,e.target.value)}
-                                  onClick={(e)=>e.stopPropagation()}
                                   style={{ width: 42, height: 32, textAlign: "center", border: "none", borderLeft: "1px solid #e5e7eb", borderRight: "1px solid #e5e7eb", fontSize: 14, fontWeight: 700, color: qty>0?cat.color:"#9ca3af", fontFamily: "inherit", background: "white", outline: "none" }} />
-                                <button className="cb" onClick={(e)=>{e.stopPropagation();set(it.key,qty+1);}}
+                                <button className="cb" onClick={()=>set(it.key,qty+1)}
                                   style={{ background: "#f3f4f6", border: "none", width: 32, height: 32, fontSize: 17, color: "#374151", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
                               </div>
                             </div>
