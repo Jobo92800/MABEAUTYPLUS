@@ -259,11 +259,11 @@ export const InstallmentsCalculator: React.FC<InstallmentsCalculatorProps> = ({ 
   return (
     <div
       style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '20px' }}
-      onClick={handleOverlayClick}
+      onMouseDown={handleOverlayClick}
     >
       <div
         style={{ backgroundColor: 'white', borderRadius: '16px', maxWidth: '1400px', width: '100%', maxHeight: '90vh', overflow: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}
-        onClick={stopPropagation}
+        onMouseDown={stopPropagation}
       >
         <style>{`
           @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Raleway:wght@300;400;500;600;700&display=swap');
