@@ -122,31 +122,24 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
 
         if (docSnap.exists()) {
           const data = docSnap.data();
+          console.log('Firebase payment data for client:', clientId, data);
+
           if (Array.isArray(data.categories) && data.categories.length > 0) {
-            const updatedCategories = data.categories.map((cat: any) => ({
-              ...cat,
-              ruleName: cat.ruleName || '',
-              careServices: cat.careServices || []
-            }));
+            const updatedCategories = data.categories.map((cat: any) => {
+              console.log('Category data:', cat);
+              return {
+                ...cat,
+                ruleName: cat.ruleName || cat.name || '',
+                name: cat.name || '',
+                careServices: cat.careServices || []
+              };
+            });
             setCategories(updatedCategories);
           }
           if (data.therapists) {
             setTherapists(data.therapists);
           } else if (data.therapist) {
             setTherapists([data.therapist]);
-          }
-        } else if (formData?.client) {
-          const { firstName, lastName } = formData.client;
-          if (firstName && lastName && centerId) {
-            const airtableData = await getClientPaymentDataFromAirtable(firstName, lastName, centerId);
-            if (airtableData && airtableData.ruleName) {
-              const updatedCategories = [{
-                ...categories[0],
-                ruleName: airtableData.ruleName,
-                totalAmount: airtableData.totalAmount || categories[0].totalAmount
-              }];
-              setCategories(updatedCategories);
-            }
           }
         }
       } catch (error) {
