@@ -79,18 +79,19 @@ const THERAPISTS_BY_CENTER: Record<string, string[]> = {
 };
 
 const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, centerId }) => {
-  const getDefaultRuleName = () => {
-    if (!formData?.client) return '';
-    const { firstName, lastName, treatment } = formData.client;
-    const treatmentLabel = TREATMENT_LABELS[treatment] || treatment;
-    return `${firstName || ''} ${lastName || ''} - ${treatmentLabel}`.trim();
+  const generateRuleNameFromCareServices = (careServices: CareService[]): string => {
+    if (!careServices || careServices.length === 0) return '';
+    return careServices
+      .map(cs => `${cs.sessions || '?'} ${cs.name}`)
+      .join(' + ')
+      .toUpperCase();
   };
 
   const [categories, setCategories] = useState<PaymentCategory[]>([
     {
       id: '1',
       name: '',
-      ruleName: getDefaultRuleName(),
+      ruleName: '',
       careServices: [],
       totalAmount: '',
       deposit: {
@@ -121,9 +122,9 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
         if (docSnap.exists()) {
           const data = docSnap.data();
           if (Array.isArray(data.categories) && data.categories.length > 0) {
-            const updatedCategories = data.categories.map((cat: any, index: number) => ({
+            const updatedCategories = data.categories.map((cat: any) => ({
               ...cat,
-              ruleName: cat.ruleName || (index === 0 ? getDefaultRuleName() : ''),
+              ruleName: cat.ruleName || '',
               careServices: cat.careServices || []
             }));
             setCategories(updatedCategories);
@@ -265,17 +266,19 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
     const newCategories = categories.map(cat => {
       if (cat.id === categoryId) {
         const existingService = cat.careServices.find(cs => cs.id === serviceId);
+        let updatedCareServices;
+
         if (existingService) {
-          return {
-            ...cat,
-            careServices: cat.careServices.filter(cs => cs.id !== serviceId)
-          };
+          updatedCareServices = cat.careServices.filter(cs => cs.id !== serviceId);
         } else {
-          return {
-            ...cat,
-            careServices: [...cat.careServices, { id: serviceId, name: CARE_SERVICES.find(cs => cs.id === serviceId)?.name || '', sessions: '' }]
-          };
+          updatedCareServices = [...cat.careServices, { id: serviceId, name: CARE_SERVICES.find(cs => cs.id === serviceId)?.name || '', sessions: '' }];
         }
+
+        return {
+          ...cat,
+          careServices: updatedCareServices,
+          ruleName: generateRuleNameFromCareServices(updatedCareServices)
+        };
       }
       return cat;
     });
@@ -286,11 +289,14 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
   const handleCareServiceSessionsChange = (categoryId: string, serviceId: string, sessions: string) => {
     const newCategories = categories.map(cat => {
       if (cat.id === categoryId) {
+        const updatedCareServices = cat.careServices.map(cs =>
+          cs.id === serviceId ? { ...cs, sessions } : cs
+        );
+
         return {
           ...cat,
-          careServices: cat.careServices.map(cs =>
-            cs.id === serviceId ? { ...cs, sessions } : cs
-          )
+          careServices: updatedCareServices,
+          ruleName: generateRuleNameFromCareServices(updatedCareServices)
         };
       }
       return cat;
