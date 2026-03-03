@@ -56,9 +56,9 @@ const CARE_SERVICES = [
 ];
 
 const THERAPISTS_BY_CENTER: Record<string, string[]> = {
-  'le-grau-du-roi': ['Marie', 'Fanny', 'Nadia', 'Stéphanie'],
+  'grau-du-roi': ['Marie', 'Fanny', 'Nadia', 'Stéphanie'],
   'le-cres': ['Alexandra', 'Paola', 'Malvina'],
-  'serignan': ['Caroll', 'Aude', 'Marie-san'],
+  'serignant': ['Caroll', 'Aude', 'Marie-san'],
   'cabestany': ['Audrey', 'Caroline', 'Sara']
 };
 

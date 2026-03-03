@@ -37,7 +37,7 @@ const NewClientPage = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-gray-900">Nouveau Client</h1>
       </div>
-      <ClientForm onSubmit={handleSubmit} isSubmitting={isSubmitting} />
+      <ClientForm onSubmit={handleSubmit} centerId={centerId} />
     </div>
   );
 };

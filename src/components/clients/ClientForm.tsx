@@ -25,6 +25,7 @@ import type { FullClientData } from '../../types/client';
 interface ClientFormProps {
   onSubmit: (data: FormData) => void;
   initialData?: FullClientData;
+  centerId?: string;
 }
 
 const treatmentCategories = [
@@ -62,10 +63,12 @@ const treatmentCategories = [
   }
 ];
 
-const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, initialData }) => {
+const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, initialData, centerId }) => {
   const navigate = useNavigate();
   const [selectedTreatment, setSelectedTreatment] = useState(initialData?.client.treatment || 'luxotherapy');
   const [city, setCity] = useState(initialData?.client.city || '');
+
+  const currentCenterId = centerId || initialData?.client.centerId;
 
   const handlePostalCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const postalCode = e.target.value;
@@ -130,7 +133,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, initialData }) => {
               formData={initialData}
               prefix="payment"
               clientId={initialData?.client.id}
-              centerId={initialData?.client.centerId}
+              centerId={currentCenterId}
             />
           </div>
 
