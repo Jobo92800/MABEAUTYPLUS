@@ -3,6 +3,7 @@ import { Plus, X, CreditCard, Calendar, Euro, Trash2 } from 'lucide-react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { PAYMENT_COLLECTION } from '../services/collections';
+import { getClientPaymentDataFromAirtable } from '../services/airtable';
 
 interface PaymentLine {
   amount: string;
@@ -133,6 +134,19 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
             setTherapists(data.therapists);
           } else if (data.therapist) {
             setTherapists([data.therapist]);
+          }
+        } else if (formData?.client) {
+          const { firstName, lastName } = formData.client;
+          if (firstName && lastName && centerId) {
+            const airtableData = await getClientPaymentDataFromAirtable(firstName, lastName, centerId);
+            if (airtableData && airtableData.ruleName) {
+              const updatedCategories = [{
+                ...categories[0],
+                ruleName: airtableData.ruleName,
+                totalAmount: airtableData.totalAmount || categories[0].totalAmount
+              }];
+              setCategories(updatedCategories);
+            }
           }
         }
       } catch (error) {
