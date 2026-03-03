@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, X, CreditCard, Calendar, Euro, Trash2 } from 'lucide-react';
+import { Plus, X, CreditCard, Calendar, Euro, Trash2, Calculator } from 'lucide-react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { PAYMENT_COLLECTION } from '../services/collections';
 import { getClientPaymentDataFromAirtable } from '../services/airtable';
+import { InstallmentsCalculator } from './InstallmentsCalculator';
 
 interface PaymentLine {
   amount: string;
@@ -80,6 +81,7 @@ const THERAPISTS_BY_CENTER: Record<string, string[]> = {
 };
 
 const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, centerId }) => {
+  const [showCalculator, setShowCalculator] = useState(false);
   const [categories, setCategories] = useState<PaymentCategory[]>([
     {
       id: '1',
@@ -342,6 +344,12 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
 
   return (
     <div className="space-y-8">
+      <InstallmentsCalculator
+        isOpen={showCalculator}
+        onClose={() => setShowCalculator(false)}
+        clientName={formData?.name || ''}
+      />
+
       {/* Therapist Field */}
       <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
         <label className="block text-lg font-medium text-gray-900 mb-4">
@@ -397,11 +405,21 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
           </div>
 
           <div className="p-6 space-y-6">
-            {/* Rule Name */}
+            {/* Rule Name with Calculator Button */}
             <div>
-              <label htmlFor={`ruleName-${category.id}`} className="block text-sm font-medium text-gray-700 mb-2">
-                Nom de règlement
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label htmlFor={`ruleName-${category.id}`} className="block text-sm font-medium text-gray-700">
+                  Nom de règlement
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowCalculator(true)}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-brand-blue bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                >
+                  <Calculator className="h-4 w-4" />
+                  Calcul des échéances
+                </button>
+              </div>
               <input
                 type="text"
                 name={`ruleName-${category.id}`}
