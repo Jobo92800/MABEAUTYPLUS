@@ -337,7 +337,7 @@ export const InstallmentsCalculator: React.FC<InstallmentsCalculatorProps> = ({ 
                           const qty = Number(inputs[it.key])||0;
                           const isPkg = it.type==="package";
                           return (
-                            <div key={it.key} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 0", borderBottom: "1px solid #f3f4f6" }}>
+                            <div key={it.key} onClick={(e)=>e.stopPropagation()} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 0", borderBottom: "1px solid #f3f4f6" }}>
                               <div style={{ flex: 1, paddingRight: 10 }}>
                                 <div style={{ fontSize: 13, color: "#374151", fontWeight: 500, display: "flex", alignItems: "center", flexWrap: "wrap", gap: 4 }}>
                                   {it.label}
