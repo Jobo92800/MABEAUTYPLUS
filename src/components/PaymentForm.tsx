@@ -80,14 +80,6 @@ const THERAPISTS_BY_CENTER: Record<string, string[]> = {
 };
 
 const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, centerId }) => {
-  const generateRuleNameFromCareServices = (careServices: CareService[]): string => {
-    if (!careServices || careServices.length === 0) return '';
-    return careServices
-      .map(cs => `${cs.sessions || '?'} ${cs.name}`)
-      .join(' + ')
-      .toUpperCase();
-  };
-
   const [categories, setCategories] = useState<PaymentCategory[]>([
     {
       id: '1',
@@ -122,11 +114,9 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
 
         if (docSnap.exists()) {
           const data = docSnap.data();
-          console.log('Firebase payment data for client:', clientId, data);
 
           if (Array.isArray(data.categories) && data.categories.length > 0) {
             const updatedCategories = data.categories.map((cat: any) => {
-              console.log('Category data:', cat);
               return {
                 ...cat,
                 ruleName: cat.ruleName || cat.name || '',
@@ -283,8 +273,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
 
         return {
           ...cat,
-          careServices: updatedCareServices,
-          ruleName: generateRuleNameFromCareServices(updatedCareServices)
+          careServices: updatedCareServices
         };
       }
       return cat;
@@ -302,8 +291,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
 
         return {
           ...cat,
-          careServices: updatedCareServices,
-          ruleName: generateRuleNameFromCareServices(updatedCareServices)
+          careServices: updatedCareServices
         };
       }
       return cat;
