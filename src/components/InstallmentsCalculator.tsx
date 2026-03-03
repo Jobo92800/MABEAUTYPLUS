@@ -348,11 +348,11 @@ export const InstallmentsCalculator: React.FC<InstallmentsCalculatorProps> = ({ 
                                 </div>
                               </div>
                               <div style={{ display: "flex", alignItems: "center", border: "1.5px solid #e5e7eb", borderRadius: 10, overflow: "hidden", flexShrink: 0 }}>
-                                <button className="cb" onClick={()=>set(it.key,qty-1)}
+                                <button type="button" className="cb" onClick={()=>set(it.key,qty-1)}
                                   style={{ background: qty>0?"#f3f4f6":"#fafafa", border: "none", width: 32, height: 32, fontSize: 17, color: qty>0?"#374151":"#d1d5db", display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
                                 <input type="number" min="0" value={qty||""} placeholder="0" onChange={e=>set(it.key,e.target.value)}
                                   style={{ width: 42, height: 32, textAlign: "center", border: "none", borderLeft: "1px solid #e5e7eb", borderRight: "1px solid #e5e7eb", fontSize: 14, fontWeight: 700, color: qty>0?cat.color:"#9ca3af", fontFamily: "inherit", background: "white", outline: "none" }} />
-                                <button className="cb" onClick={()=>set(it.key,qty+1)}
+                                <button type="button" className="cb" onClick={()=>set(it.key,qty+1)}
                                   style={{ background: "#f3f4f6", border: "none", width: 32, height: 32, fontSize: 17, color: "#374151", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
                               </div>
                             </div>
@@ -370,7 +370,7 @@ export const InstallmentsCalculator: React.FC<InstallmentsCalculatorProps> = ({ 
                 <div style={{ fontSize: 10, letterSpacing: ".12em", textTransform: "uppercase", color: "#6b7280", marginBottom: 10 }}>Nombre d'échéances</div>
                 <div style={{ display: "flex", gap: 7 }}>
                   {[1,2,3,4,5,6].map(n => (
-                    <button key={n} className="pb" onClick={()=>setNbEch(n)}
+                    <button type="button" key={n} className="pb" onClick={()=>setNbEch(n)}
                       style={{ flex: 1, padding: "10px 4px", borderRadius: 10, border: "2px solid", borderColor: nbEch===n?"#0d9488":"#e5e7eb", background: nbEch===n?"#0d9488":"white", color: nbEch===n?"white":"#374151", fontWeight: 700, fontSize: 15, fontFamily: "inherit", cursor: "pointer" }}>
                       {n}×
                     </button>
