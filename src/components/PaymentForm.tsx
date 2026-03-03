@@ -56,6 +56,21 @@ const CARE_SERVICES = [
   { id: 'psio', name: 'Psio' }
 ];
 
+const TREATMENT_LABELS: Record<string, string> = {
+  'luxotherapy': 'Luxo - PDP',
+  'relaxation': 'Luxo - Relax',
+  'menopause': 'Luxo - Méno',
+  'ishape': 'I-Shape',
+  'cavitalyse': 'Cavitalyse',
+  'adipology': 'Adipologie',
+  'pressodynamie': 'Presso',
+  'mesojet-corps': 'Méso Corps',
+  'mesojet': 'Méso Visage',
+  'radiofrequency-mesojet': 'RF Mésojet',
+  'advance-lift': 'Advance Lift',
+  'psio': 'Psio'
+};
+
 const THERAPISTS_BY_CENTER: Record<string, string[]> = {
   'grau-du-roi': ['Marie', 'Fanny', 'Nadia', 'Stéphanie'],
   'le-cres': ['Alexandra', 'Paola', 'Malvina'],
@@ -64,11 +79,18 @@ const THERAPISTS_BY_CENTER: Record<string, string[]> = {
 };
 
 const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, centerId }) => {
+  const getDefaultRuleName = () => {
+    if (!formData?.client) return '';
+    const { firstName, lastName, treatment } = formData.client;
+    const treatmentLabel = TREATMENT_LABELS[treatment] || treatment;
+    return `${firstName || ''} ${lastName || ''} - ${treatmentLabel}`.trim();
+  };
+
   const [categories, setCategories] = useState<PaymentCategory[]>([
     {
       id: '1',
       name: '',
-      ruleName: '',
+      ruleName: getDefaultRuleName(),
       careServices: [],
       totalAmount: '',
       deposit: {
@@ -99,9 +121,9 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
         if (docSnap.exists()) {
           const data = docSnap.data();
           if (Array.isArray(data.categories) && data.categories.length > 0) {
-            const updatedCategories = data.categories.map((cat: any) => ({
+            const updatedCategories = data.categories.map((cat: any, index: number) => ({
               ...cat,
-              ruleName: cat.ruleName || '',
+              ruleName: cat.ruleName || (index === 0 ? getDefaultRuleName() : ''),
               careServices: cat.careServices || []
             }));
             setCategories(updatedCategories);
