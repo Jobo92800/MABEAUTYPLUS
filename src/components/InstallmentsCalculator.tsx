@@ -258,10 +258,10 @@ export const InstallmentsCalculator: React.FC<InstallmentsCalculatorProps> = ({ 
               </div>
             </div>
             <div style={{ display: "flex", gap: 10 }}>
-              <button onClick={reset} style={{ background: "rgba(255,255,255,.2)", border: "1px solid rgba(255,255,255,.4)", color: "white", padding: "8px 18px", borderRadius: 20, fontSize: 13, cursor: "pointer", letterSpacing: ".05em" }}>
+              <button type="button" onClick={reset} style={{ background: "rgba(255,255,255,.2)", border: "1px solid rgba(255,255,255,.4)", color: "white", padding: "8px 18px", borderRadius: 20, fontSize: 13, cursor: "pointer", letterSpacing: ".05em" }}>
                 Réinitialiser
               </button>
-              <button onClick={onClose} style={{ background: "rgba(255,255,255,.2)", border: "1px solid rgba(255,255,255,.4)", color: "white", padding: "8px 12px", borderRadius: 20, fontSize: 13, cursor: "pointer", display: 'flex', alignItems: 'center', gap: 6 }}>
+              <button type="button" onClick={onClose} style={{ background: "rgba(255,255,255,.2)", border: "1px solid rgba(255,255,255,.4)", color: "white", padding: "8px 12px", borderRadius: 20, fontSize: 13, cursor: "pointer", display: 'flex', alignItems: 'center', gap: 6 }}>
                 <X size={16} /> Fermer
               </button>
             </div>
@@ -321,6 +321,7 @@ export const InstallmentsCalculator: React.FC<InstallmentsCalculatorProps> = ({ 
                               </div>
                               <div style={{ display: "flex", alignItems: "center", gap: 0, border: "1.5px solid #e5e7eb", borderRadius: 10, overflow: "hidden" }}>
                                 <button
+                                  type="button"
                                   className="counter-btn"
                                   onClick={() => set(it.key, qty - 1)}
                                   style={{ background: qty > 0 ? "#f3f4f6" : "#fafafa", border: "none", width: 36, height: 36, fontSize: 18, color: qty > 0 ? "#374151" : "#d1d5db", display: "flex", alignItems: "center", justifyContent: "center" }}
@@ -334,6 +335,7 @@ export const InstallmentsCalculator: React.FC<InstallmentsCalculatorProps> = ({ 
                                   style={{ width: 52, height: 36, textAlign: "center", border: "none", borderLeft: "1px solid #e5e7eb", borderRight: "1px solid #e5e7eb", fontSize: 15, fontWeight: 600, color: qty > 0 ? cat.color : "#9ca3af", fontFamily: "inherit", background: "white", outline: "none" }}
                                 />
                                 <button
+                                  type="button"
                                   className="counter-btn"
                                   onClick={() => set(it.key, qty + 1)}
                                   style={{ background: "#f3f4f6", border: "none", width: 36, height: 36, fontSize: 18, color: "#374151", display: "flex", alignItems: "center", justifyContent: "center" }}
@@ -358,6 +360,7 @@ export const InstallmentsCalculator: React.FC<InstallmentsCalculatorProps> = ({ 
                   {[1, 2, 3, 4, 5, 6].map(n => (
                     <button
                       key={n}
+                      type="button"
                       className="pill-btn"
                       onClick={() => setNbEch(n)}
                       style={{
