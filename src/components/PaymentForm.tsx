@@ -55,7 +55,9 @@ const CARE_SERVICES = [
   { id: 'meso-corps', name: 'Méso Corps' },
   { id: 'meso-visage', name: 'Méso Visage' },
   { id: 'advance-lift', name: 'Advance Lift' },
-  { id: 'psio', name: 'Psio' }
+  { id: 'psio', name: 'Psio' },
+  { id: 'guide', name: 'Guide' },
+  { id: 'tenue', name: 'Tenue' }
 ];
 
 const TREATMENT_LABELS: Record<string, string> = {
