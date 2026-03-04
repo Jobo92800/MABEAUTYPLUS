@@ -118,7 +118,6 @@ const IShapeTab: React.FC<IShapeTabProps> = ({ clientId, centerId }) => {
         comment: '',
         photoTaken: false,
         weight: '',
-        weight: '',
         measurements: {
           arms: { right: '', left: '' },
           navel: '',
