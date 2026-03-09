@@ -574,6 +574,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
                     <option value="cheque">Chèque</option>
                     <option value="especes">Espèces</option>
                     <option value="cb">Carte bancaire</option>
+                    <option value="alma">Alma</option>
                   </select>
                 </div>
 
@@ -674,6 +675,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
                         <option value="cheque">Chèque</option>
                         <option value="especes">Espèces</option>
                         <option value="cb">Carte bancaire</option>
+                        <option value="alma">Alma</option>
                       </select>
                     </div>
 
