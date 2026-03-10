@@ -88,11 +88,38 @@ export const addClientToAirtable = async (clientData: AirtableClientData): Promi
   }
 };
 
-export const updateClientTherapistInAirtable = async (
+interface PaymentDataForAirtable {
+  therapists?: string[];
+  categories?: Array<{
+    ruleName: string;
+    totalAmount: string;
+    careServices: Array<{
+      id: string;
+      name: string;
+      sessions: string;
+    }>;
+    deposit?: {
+      amount: string;
+      date: string;
+      method: string;
+      isPaid: boolean;
+    };
+    installments?: Array<{
+      amount: string;
+      date: string;
+      purpose: string;
+      method: string;
+      isPaid: boolean;
+      isGiven: boolean;
+    }>;
+  }>;
+}
+
+export const updateClientPaymentDataInAirtable = async (
   firstName: string,
   lastName: string,
   centerId: string,
-  therapists: string[]
+  paymentData: PaymentDataForAirtable
 ): Promise<void> => {
   try {
     const centerNames: Record<string, string> = {
@@ -126,7 +153,49 @@ export const updateClientTherapistInAirtable = async (
     }
 
     const recordId = data.records[0].id;
-    const therapistValue = therapists.length > 0 ? therapists.join(', ') : '';
+    const fields: Record<string, any> = {};
+
+    if (paymentData.therapists && paymentData.therapists.length > 0) {
+      fields['Thérapeute'] = paymentData.therapists.join(', ');
+    }
+
+    if (paymentData.categories && paymentData.categories.length > 0) {
+      const firstCategory = paymentData.categories[0];
+
+      if (firstCategory.ruleName) {
+        fields['Nom du règlement'] = firstCategory.ruleName;
+      }
+
+      if (firstCategory.totalAmount) {
+        fields['Tarif total cure 1'] = parseFloat(firstCategory.totalAmount);
+      }
+
+      if (firstCategory.careServices && firstCategory.careServices.length > 0) {
+        const servicesText = firstCategory.careServices
+          .map(service => `${service.name} (${service.sessions} séances)`)
+          .join(', ');
+        fields['Soins appliqués'] = servicesText;
+      }
+
+      if (firstCategory.installments && firstCategory.installments.length > 0) {
+        const installmentsText = firstCategory.installments
+          .map((inst, idx) => {
+            const parts: string[] = [];
+            if (inst.date) parts.push(`Date: ${inst.date}`);
+            if (inst.amount) parts.push(`Montant: ${inst.amount}€`);
+            if (inst.method) parts.push(`Méthode: ${inst.method}`);
+            if (inst.purpose) parts.push(`Objet: ${inst.purpose}`);
+            parts.push(`Payé: ${inst.isPaid ? 'Oui' : 'Non'}`);
+            return `Règlement ${idx + 1}: ${parts.join(' | ')}`;
+          })
+          .join('\n');
+        fields['Règlements en plusieurs fois'] = installmentsText;
+      }
+    }
+
+    if (Object.keys(fields).length === 0) {
+      return;
+    }
 
     const updateResponse = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_ID}/${recordId}`, {
       method: 'PATCH',
@@ -135,9 +204,7 @@ export const updateClientTherapistInAirtable = async (
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        fields: {
-          'Thérapeute': therapistValue
-        }
+        fields
       })
     });
 
@@ -145,6 +212,20 @@ export const updateClientTherapistInAirtable = async (
       const errorData = await updateResponse.json();
       throw new Error(`Airtable API error: ${JSON.stringify(errorData)}`);
     }
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour des données de paiement dans Airtable:', error);
+    throw error;
+  }
+};
+
+export const updateClientTherapistInAirtable = async (
+  firstName: string,
+  lastName: string,
+  centerId: string,
+  therapists: string[]
+): Promise<void> => {
+  try {
+    await updateClientPaymentDataInAirtable(firstName, lastName, centerId, { therapists });
   } catch (error) {
     console.error('Erreur lors de la mise à jour du thérapeute dans Airtable:', error);
     throw error;
