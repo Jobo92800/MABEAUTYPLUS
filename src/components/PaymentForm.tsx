@@ -3,7 +3,7 @@ import { Plus, X, CreditCard, Calendar, Euro, Trash2, Calculator } from 'lucide-
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { PAYMENT_COLLECTION } from '../services/collections';
-import { getClientPaymentDataFromAirtable, updateClientPaymentDataInAirtable } from '../services/airtable';
+import { getClientPaymentDataFromAirtable, updateClientTherapistInAirtable } from '../services/airtable';
 import { InstallmentsCalculator } from './InstallmentsCalculator';
 
 interface PaymentLine {
@@ -153,31 +153,12 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
     if (!clientId) return;
 
     try {
-      const categoriesToSave = newCategories || categories;
-      const therapistsToSave = newTherapists !== undefined ? newTherapists : therapists;
-
       const docRef = doc(db, PAYMENT_COLLECTION, clientId);
       await setDoc(docRef, {
-        categories: categoriesToSave,
-        therapists: therapistsToSave,
+        categories: newCategories || categories,
+        therapists: newTherapists !== undefined ? newTherapists : therapists,
         updatedAt: new Date().toISOString()
       }, { merge: true });
-
-      if (clientFirstName && clientLastName && centerId) {
-        try {
-          await updateClientPaymentDataInAirtable(
-            clientFirstName,
-            clientLastName,
-            centerId,
-            {
-              therapists: therapistsToSave,
-              categories: categoriesToSave
-            }
-          );
-        } catch (airtableError) {
-          console.warn('Échec de la mise à jour des données de paiement dans Airtable:', airtableError);
-        }
-      }
     } catch (error) {
       console.error('Error saving payment data:', error);
     }
@@ -332,6 +313,14 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
       : [...therapists, therapistName];
     setTherapists(newTherapists);
     await savePaymentData(undefined, newTherapists);
+
+    if (clientFirstName && clientLastName && centerId) {
+      try {
+        await updateClientTherapistInAirtable(clientFirstName, clientLastName, centerId, newTherapists);
+      } catch (error) {
+        console.warn('Échec de la mise à jour du thérapeute dans Airtable:', error);
+      }
+    }
   };
 
   const removeCategory = (categoryId: string) => {
