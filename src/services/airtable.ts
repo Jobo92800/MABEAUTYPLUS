@@ -158,6 +158,8 @@ export const updateClientMontantCureInAirtable = async (
   montantCure: number
 ): Promise<void> => {
   try {
+    console.log('[Airtable] Début mise à jour Montant Cure:', { firstName, lastName, centerId, montantCure });
+
     const centerNames: Record<string, string> = {
       'grau-du-roi': 'Le Grau-du-Roi',
       'le-cres': 'Le Crès',
@@ -169,6 +171,8 @@ export const updateClientMontantCureInAirtable = async (
     const filterFormula = `AND({Prénom}='${firstName}', {Nom}='${lastName}', {Centre}='${centerName}')`;
     const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_ID}?filterByFormula=${encodeURIComponent(filterFormula)}`;
 
+    console.log('[Airtable] Recherche client avec formule:', filterFormula);
+
     const getResponse = await fetch(url, {
       method: 'GET',
       headers: {
@@ -178,17 +182,28 @@ export const updateClientMontantCureInAirtable = async (
     });
 
     if (!getResponse.ok) {
-      console.error('Erreur lors de la récupération du client dans Airtable');
+      const errorData = await getResponse.json();
+      console.error('[Airtable] Erreur GET:', errorData);
       return;
     }
 
     const data = await getResponse.json();
+    console.log('[Airtable] Résultat recherche:', { recordsFound: data.records?.length || 0 });
+
     if (!data.records || data.records.length === 0) {
-      console.warn('Client non trouvé dans Airtable');
+      console.warn('[Airtable] Client non trouvé');
       return;
     }
 
     const recordId = data.records[0].id;
+    console.log('[Airtable] Record trouvé, ID:', recordId);
+
+    const updatePayload = {
+      fields: {
+        'Montant Cure': montantCure
+      }
+    };
+    console.log('[Airtable] Payload de mise à jour:', updatePayload);
 
     const updateResponse = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_ID}/${recordId}`, {
       method: 'PATCH',
@@ -196,19 +211,19 @@ export const updateClientMontantCureInAirtable = async (
         'Authorization': `Bearer ${AIRTABLE_ACCESS_TOKEN}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        fields: {
-          'Montant Cure': montantCure
-        }
-      })
+      body: JSON.stringify(updatePayload)
     });
 
     if (!updateResponse.ok) {
       const errorData = await updateResponse.json();
+      console.error('[Airtable] Erreur PATCH:', errorData);
       throw new Error(`Airtable API error: ${JSON.stringify(errorData)}`);
     }
+
+    const updateResult = await updateResponse.json();
+    console.log('[Airtable] ✓ Mise à jour réussie:', updateResult);
   } catch (error) {
-    console.error('Erreur lors de la mise à jour du Montant Cure dans Airtable:', error);
+    console.error('[Airtable] Erreur lors de la mise à jour du Montant Cure:', error);
     throw error;
   }
 };

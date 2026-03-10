@@ -171,15 +171,31 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
     setCategories(newCategories);
     await savePaymentData(newCategories);
 
-    if (clientFirstName && clientLastName && centerId && value) {
-      const montantCure = parseFloat(value);
-      if (!isNaN(montantCure)) {
+    // Calculer le montant total de toutes les catégories
+    if (clientFirstName && clientLastName && centerId) {
+      const totalMontantCure = newCategories.reduce((sum, cat) => {
+        const amount = parseFloat(cat.totalAmount || '0');
+        return sum + (isNaN(amount) ? 0 : amount);
+      }, 0);
+
+      console.log('Mise à jour Montant Cure:', {
+        clientFirstName,
+        clientLastName,
+        centerId,
+        totalMontantCure,
+        categories: newCategories.map(c => ({ id: c.id, amount: c.totalAmount }))
+      });
+
+      if (totalMontantCure > 0) {
         try {
-          await updateClientMontantCureInAirtable(clientFirstName, clientLastName, centerId, montantCure);
+          await updateClientMontantCureInAirtable(clientFirstName, clientLastName, centerId, totalMontantCure);
+          console.log('✓ Montant Cure mis à jour avec succès dans Airtable');
         } catch (error) {
-          console.warn('Échec de la mise à jour du Montant Cure dans Airtable:', error);
+          console.error('✗ Échec de la mise à jour du Montant Cure dans Airtable:', error);
         }
       }
+    } else {
+      console.log('Informations client manquantes:', { clientFirstName, clientLastName, centerId });
     }
   };
 
