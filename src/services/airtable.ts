@@ -151,6 +151,68 @@ export const updateClientTherapistInAirtable = async (
   }
 };
 
+export const updateClientMontantCureInAirtable = async (
+  firstName: string,
+  lastName: string,
+  centerId: string,
+  montantCure: number
+): Promise<void> => {
+  try {
+    const centerNames: Record<string, string> = {
+      'grau-du-roi': 'Le Grau-du-Roi',
+      'le-cres': 'Le Crès',
+      'serignant': 'Sérignan',
+      'cabestany': 'Cabestany'
+    };
+
+    const centerName = centerNames[centerId as keyof typeof centerNames] || centerId;
+    const filterFormula = `AND({Prénom}='${firstName}', {Nom}='${lastName}', {Centre}='${centerName}')`;
+    const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_ID}?filterByFormula=${encodeURIComponent(filterFormula)}`;
+
+    const getResponse = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${AIRTABLE_ACCESS_TOKEN}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!getResponse.ok) {
+      console.error('Erreur lors de la récupération du client dans Airtable');
+      return;
+    }
+
+    const data = await getResponse.json();
+    if (!data.records || data.records.length === 0) {
+      console.warn('Client non trouvé dans Airtable');
+      return;
+    }
+
+    const recordId = data.records[0].id;
+
+    const updateResponse = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_ID}/${recordId}`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${AIRTABLE_ACCESS_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        fields: {
+          'Montant Cure': montantCure
+        }
+      })
+    });
+
+    if (!updateResponse.ok) {
+      const errorData = await updateResponse.json();
+      throw new Error(`Airtable API error: ${JSON.stringify(errorData)}`);
+    }
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour du Montant Cure dans Airtable:', error);
+    throw error;
+  }
+};
+
 export const getClientPaymentDataFromAirtable = async (
   firstName: string,
   lastName: string,

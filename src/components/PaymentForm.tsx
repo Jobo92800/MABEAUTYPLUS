@@ -3,7 +3,7 @@ import { Plus, X, CreditCard, Calendar, Euro, Trash2, Calculator } from 'lucide-
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { PAYMENT_COLLECTION } from '../services/collections';
-import { getClientPaymentDataFromAirtable, updateClientTherapistInAirtable } from '../services/airtable';
+import { getClientPaymentDataFromAirtable, updateClientTherapistInAirtable, updateClientMontantCureInAirtable } from '../services/airtable';
 import { InstallmentsCalculator } from './InstallmentsCalculator';
 
 interface PaymentLine {
@@ -164,12 +164,23 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
     }
   };
 
-  const handleTotalAmountChange = (categoryId: string, value: string) => {
-    const newCategories = categories.map(cat => 
+  const handleTotalAmountChange = async (categoryId: string, value: string) => {
+    const newCategories = categories.map(cat =>
       cat.id === categoryId ? { ...cat, totalAmount: value } : cat
     );
     setCategories(newCategories);
-    savePaymentData(newCategories);
+    await savePaymentData(newCategories);
+
+    if (clientFirstName && clientLastName && centerId && value) {
+      const montantCure = parseFloat(value);
+      if (!isNaN(montantCure)) {
+        try {
+          await updateClientMontantCureInAirtable(clientFirstName, clientLastName, centerId, montantCure);
+        } catch (error) {
+          console.warn('Échec de la mise à jour du Montant Cure dans Airtable:', error);
+        }
+      }
+    }
   };
 
   const handleDepositChange = (categoryId: string, field: keyof PaymentCategory['deposit'], value: any) => {
