@@ -134,6 +134,8 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, initialData, centerId
               prefix="payment"
               clientId={initialData?.client.id}
               centerId={currentCenterId}
+              clientFirstName={initialData?.client.firstName}
+              clientLastName={initialData?.client.lastName}
             />
           </div>
 

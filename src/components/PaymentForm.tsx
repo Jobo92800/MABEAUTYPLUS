@@ -3,7 +3,7 @@ import { Plus, X, CreditCard, Calendar, Euro, Trash2, Calculator } from 'lucide-
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { PAYMENT_COLLECTION } from '../services/collections';
-import { getClientPaymentDataFromAirtable } from '../services/airtable';
+import { getClientPaymentDataFromAirtable, updateClientTherapistInAirtable } from '../services/airtable';
 import { InstallmentsCalculator } from './InstallmentsCalculator';
 
 interface PaymentLine {
@@ -42,6 +42,8 @@ interface PaymentFormProps {
   formData?: any;
   prefix?: string;
   centerId?: string;
+  clientFirstName?: string;
+  clientLastName?: string;
 }
 
 const CARE_SERVICES = [
@@ -82,7 +84,7 @@ const THERAPISTS_BY_CENTER: Record<string, string[]> = {
   'cabestany': ['Audrey', 'Caroline', 'Sara']
 };
 
-const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, centerId }) => {
+const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, centerId, clientFirstName, clientLastName }) => {
   const [showCalculator, setShowCalculator] = useState(false);
   const [categories, setCategories] = useState<PaymentCategory[]>([
     {
@@ -305,12 +307,20 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
     savePaymentData(newCategories);
   };
 
-  const handleTherapistToggle = (therapistName: string) => {
+  const handleTherapistToggle = async (therapistName: string) => {
     const newTherapists = therapists.includes(therapistName)
       ? therapists.filter(t => t !== therapistName)
       : [...therapists, therapistName];
     setTherapists(newTherapists);
-    savePaymentData(undefined, newTherapists);
+    await savePaymentData(undefined, newTherapists);
+
+    if (clientFirstName && clientLastName && centerId) {
+      try {
+        await updateClientTherapistInAirtable(clientFirstName, clientLastName, centerId, newTherapists);
+      } catch (error) {
+        console.warn('Échec de la mise à jour du thérapeute dans Airtable:', error);
+      }
+    }
   };
 
   const removeCategory = (categoryId: string) => {

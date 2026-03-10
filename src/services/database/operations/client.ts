@@ -1,6 +1,6 @@
 import { collection, addDoc, getDocs, getDoc, doc, query, where, orderBy, limit, startAfter, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
-import { TREATMENT_COLLECTIONS } from '../../collections';
+import { TREATMENT_COLLECTIONS, PAYMENT_COLLECTION } from '../../collections';
 import { saveFormData } from '../../formUtils';
 import { addClientToAirtable } from '../../airtable';
 import type { Client, Treatment } from '../../../types/client';
@@ -91,7 +91,28 @@ export const saveClient = async (formData: FormData, centerId: string): Promise<
           break;
         }
       }
-      await addClientToAirtable({ ...clientData, centerId, totalAmount });
+
+      let therapistsFromPayment: string[] = [];
+      try {
+        const paymentDoc = await getDoc(doc(db, PAYMENT_COLLECTION, clientRef.id));
+        if (paymentDoc.exists()) {
+          const paymentData = paymentDoc.data();
+          therapistsFromPayment = paymentData.therapists || [];
+        }
+      } catch (paymentError) {
+        console.warn('Impossible de récupérer les thérapeutes depuis les paiements:', paymentError);
+      }
+
+      const therapistForAirtable = therapistsFromPayment.length > 0
+        ? therapistsFromPayment.join(', ')
+        : clientData.therapist;
+
+      await addClientToAirtable({
+        ...clientData,
+        centerId,
+        totalAmount,
+        therapist: therapistForAirtable
+      });
     } catch (airtableError) {
       console.warn('Échec de la synchronisation avec Airtable:', airtableError);
     }
