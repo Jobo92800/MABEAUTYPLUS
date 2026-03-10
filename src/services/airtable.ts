@@ -171,9 +171,6 @@ export const updateClientPaymentDataInAirtable = async (
       }
 
       if (firstCategory.careServices && firstCategory.careServices.length > 0) {
-        const serviceNames = firstCategory.careServices.map(service => service.name);
-        fields['Soins'] = serviceNames;
-
         const servicesText = firstCategory.careServices
           .map(service => `${service.name} (${service.sessions} séances)`)
           .join(', ');
