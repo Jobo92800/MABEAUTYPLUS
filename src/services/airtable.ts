@@ -28,6 +28,7 @@ interface AirtableClientData {
   referral: string;
   therapist: string;
   centerId: string;
+  totalAmount?: string;
 }
 
 export const addClientToAirtable = async (clientData: AirtableClientData): Promise<void> => {
@@ -44,6 +45,25 @@ export const addClientToAirtable = async (clientData: AirtableClientData): Promi
       format(parseISO(clientData.birthDate), 'yyyy-MM-dd') : 
       undefined;
 
+    const fields: Record<string, any> = {
+      'Nom': clientData.lastName,
+      'Prénom': clientData.firstName,
+      'Né(e) le': formattedBirthDate,
+      'Age': clientData.age,
+      'Adresse': clientData.address,
+      'Code postal': clientData.postalCode,
+      'Ville': clientData.city,
+      'Email': clientData.email,
+      'Téléphone': clientData.phone,
+      'Comment nous avez-vous connu ?': clientData.referral,
+      'Thérapeute': clientData.therapist,
+      'Centre': centerNames[clientData.centerId as keyof typeof centerNames] || clientData.centerId
+    };
+
+    if (clientData.totalAmount) {
+      fields['Montant Cure'] = parseFloat(clientData.totalAmount);
+    }
+
     const response = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_ID}`, {
       method: 'POST',
       headers: {
@@ -52,20 +72,7 @@ export const addClientToAirtable = async (clientData: AirtableClientData): Promi
       },
       body: JSON.stringify({
         records: [{
-          fields: {
-            'Nom': clientData.lastName,
-            'Prénom': clientData.firstName,
-            'Né(e) le': formattedBirthDate,
-            'Age': clientData.age,
-            'Adresse': clientData.address,
-            'Code postal': clientData.postalCode,
-            'Ville': clientData.city,
-            'Email': clientData.email,
-            'Téléphone': clientData.phone,
-            'Comment nous avez-vous connu ?': clientData.referral,
-            'Thérapeute': clientData.therapist,
-            'Centre': centerNames[clientData.centerId as keyof typeof centerNames] || clientData.centerId
-          }
+          fields
         }]
       })
     });

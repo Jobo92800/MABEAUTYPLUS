@@ -84,7 +84,14 @@ export const saveClient = async (formData: FormData, centerId: string): Promise<
     await saveFormData(clientRef.id, formData, collections);
 
     try {
-      await addClientToAirtable({ ...clientData, centerId });
+      let totalAmount = '';
+      for (const [key, value] of formData.entries()) {
+        if (key.startsWith('totalAmount-')) {
+          totalAmount = value as string;
+          break;
+        }
+      }
+      await addClientToAirtable({ ...clientData, centerId, totalAmount });
     } catch (airtableError) {
       console.warn('Échec de la synchronisation avec Airtable:', airtableError);
     }
