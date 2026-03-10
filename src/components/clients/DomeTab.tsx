@@ -5,6 +5,7 @@ import { db } from '../../services/firebase';
 import { format } from 'date-fns';
 import SectionTitlePink from '../SectionTitlePink';
 import type { FullClientData } from '../../types/client';
+import { getTotalTreatmentSessions, updateTotalTreatmentSessions } from '../../services/database/operations/totalSessions';
 
 interface DomeMeasurements {
   brasGauche: string;
@@ -32,6 +33,8 @@ const DomeTab: React.FC<DomeTabProps> = ({ initialData }) => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [displayLimit, setDisplayLimit] = useState(3);
+  const [totalSessions, setTotalSessions] = useState(0);
+  const [isEditingTotal, setIsEditingTotal] = useState(false);
 
   const [newSession, setNewSession] = useState<DomeSession>({
     date: format(new Date(), 'yyyy-MM-dd'),
@@ -82,6 +85,9 @@ const DomeTab: React.FC<DomeTabProps> = ({ initialData }) => {
             sessionNumber: loadedSessions[loadedSessions.length - 1].sessionNumber + 1
           }));
         }
+
+        const total = await getTotalTreatmentSessions(initialData.client.id, 'dome');
+        setTotalSessions(total);
       } catch (error) {
         console.error('Error loading sessions:', error);
       } finally {
@@ -106,6 +112,12 @@ const DomeTab: React.FC<DomeTabProps> = ({ initialData }) => {
       const newSessionWithId = { ...newSession, id: docRef.id };
       setSessions([...sessions, newSessionWithId]);
 
+      if (totalSessions > 0) {
+        const newTotal = totalSessions - 1;
+        await updateTotalTreatmentSessions(initialData.client.id, 'dome', newTotal);
+        setTotalSessions(newTotal);
+      }
+
       setNewSession({
         date: format(new Date(), 'yyyy-MM-dd'),
         sessionNumber: newSession.sessionNumber + 1,
@@ -126,13 +138,29 @@ const DomeTab: React.FC<DomeTabProps> = ({ initialData }) => {
   };
 
   const handleDeleteSession = async (sessionId: string) => {
-    if (!sessionId) return;
+    if (!sessionId || !initialData?.client.id) return;
 
     try {
       await deleteDoc(doc(db, 'domeSessions', sessionId));
       setSessions(sessions.filter(s => s.id !== sessionId));
+
+      const newTotal = totalSessions + 1;
+      await updateTotalTreatmentSessions(initialData.client.id, 'dome', newTotal);
+      setTotalSessions(newTotal);
     } catch (error) {
       console.error('Error deleting session:', error);
+    }
+  };
+
+  const handleUpdateTotalSessions = async (newTotal: number) => {
+    if (!initialData?.client.id) return;
+
+    try {
+      await updateTotalTreatmentSessions(initialData.client.id, 'dome', newTotal);
+      setTotalSessions(newTotal);
+      setIsEditingTotal(false);
+    } catch (error) {
+      console.error('Error updating total sessions:', error);
     }
   };
 
@@ -191,10 +219,53 @@ const DomeTab: React.FC<DomeTabProps> = ({ initialData }) => {
 
       <div className="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl p-6">
         <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">
-              Nombre de séances : {sessions.length}
-            </h3>
+          <div className="flex items-center gap-6">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">
+                Nombre de séances : {sessions.length}
+              </h3>
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-gray-700">
+                Nombre de séances total :
+              </label>
+              {isEditingTotal ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    value={totalSessions}
+                    onChange={(e) => setTotalSessions(parseInt(e.target.value) || 0)}
+                    className="w-20 rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring-brand-pink text-sm"
+                    min="0"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleUpdateTotalSessions(totalSessions)}
+                    className="text-xs px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                  >
+                    ✓
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsEditingTotal(false);
+                      getTotalTreatmentSessions(initialData?.client.id || '', 'dome').then(setTotalSessions);
+                    }}
+                    className="text-xs px-2 py-1 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setIsEditingTotal(true)}
+                  className="text-lg font-semibold text-brand-pink hover:text-pink-700"
+                >
+                  {totalSessions}
+                </button>
+              )}
+            </div>
           </div>
           <button
             type="button"
