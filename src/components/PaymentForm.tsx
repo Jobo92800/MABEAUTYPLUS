@@ -376,7 +376,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
     return 'bg-red-50 border-red-200';
   };
 
-  const handleCalculatorValidate = (data: { total: number; installments: number[] }) => {
+  const handleCalculatorValidate = async (data: { total: number; installments: number[] }) => {
     const categoryIdToUpdate = activeCategoryId || categories[0]?.id;
 
     const updatedCategories = categories.map(cat => {
@@ -398,7 +398,32 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
     });
 
     setCategories(updatedCategories);
-    savePaymentData(updatedCategories);
+    await savePaymentData(updatedCategories);
+
+    // Mettre à jour le Montant Cure dans Airtable
+    if (clientFirstName && clientLastName && centerId) {
+      const totalMontantCure = updatedCategories.reduce((sum, cat) => {
+        const amount = parseFloat(cat.totalAmount || '0');
+        return sum + (isNaN(amount) ? 0 : amount);
+      }, 0);
+
+      console.log('Mise à jour Montant Cure (via calculateur):', {
+        clientFirstName,
+        clientLastName,
+        centerId,
+        totalMontantCure,
+        categories: updatedCategories.map(c => ({ id: c.id, amount: c.totalAmount }))
+      });
+
+      if (totalMontantCure > 0) {
+        try {
+          await updateClientMontantCureInAirtable(clientFirstName, clientLastName, centerId, totalMontantCure);
+          console.log('✓ Montant Cure mis à jour avec succès dans Airtable (via calculateur)');
+        } catch (error) {
+          console.error('✗ Échec de la mise à jour du Montant Cure dans Airtable:', error);
+        }
+      }
+    }
   };
 
   if (loading) {
