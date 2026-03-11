@@ -149,7 +149,8 @@ const CATEGORIES = [
   {
     id:"psio", name:"Psio", icon:"◐", color:"#8b5cf6",
     items:[
-      { key:"B46", label:"Psio (nombre de séances)", type:"session", price:49, tier:"49" },
+      { key:"P01", label:"Cure Psio 6 séances", type:"package", price:351 },
+      { key:"P02", label:"Cure Psio 8 séances", type:"package", price:468 },
     ],
   },
   {
@@ -181,7 +182,6 @@ function computeInstallments(inputs: Record<string, number>, N: number): number[
 
   [
     { qty: v("B4")+v("B5")+v("B15"), price:49,  tier:"49"  },
-    { qty: v("B46"),                 price:49,  tier:"49"  },
     { qty: v("B10"),                 price:60,  tier:"60"  },
     { qty: v("B11"),                 price:99,  tier:"99"  },
     { qty: v("B12"),                 price:110, tier:"110" },
@@ -196,7 +196,8 @@ function computeInstallments(inputs: Record<string, number>, N: number): number[
 
   ["M01","M02","M03","M04","M05","M06","M07","M08","M09",
    "M10","M11","M12","M13","M14","M15","M16","M17","M18",
-   "M19","M20","M21","M22","M23","M24","M25","M26","M27"
+   "M19","M20","M21","M22","M23","M24","M25","M26","M27",
+   "P01","P02"
   ].forEach(key => {
     const it = CATEGORIES.flatMap(c=>c.items).find(x=>x.key===key);
     if (!it) return;
