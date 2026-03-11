@@ -38,6 +38,7 @@ const CATEGORIES = [
       { key:"B4",  label:"Luxothérapie",               type:"session", price:49,  tier:"49"  },
       { key:"B5",  label:"I-shape",                    type:"session", price:49,  tier:"49"  },
       { key:"B15", label:"Bottes Presso-Dynamie",      type:"session", price:49,  tier:"49"  },
+      { key:"B46", label:"Psio",                       type:"session", price:49,  tier:"49"  },
       { key:"B10", label:"Cavitation seule",           type:"session", price:60,  tier:"60"  },
       { key:"B11", label:"RF + Cavitation",            type:"session", price:99,  tier:"99"  },
       { key:"B12", label:"Plaques + RF + Cavitation",  type:"session", price:110, tier:"110" },
@@ -174,14 +175,14 @@ function computeInstallments(inputs: Record<string, number>, N: number): number[
   payments[0] += v("B6")*19 + v("B7")*60 + (v("B42")+v("B43")+v("B44")+v("B45"))*37;
 
   [
-    { qty: v("B4")+v("B5")+v("B15"), price:49,  tier:"49"  },
-    { qty: v("B10"),                  price:60,  tier:"60"  },
-    { qty: v("B11"),                  price:99,  tier:"99"  },
-    { qty: v("B12"),                  price:110, tier:"110" },
-    { qty: v("B18"),                  price:149, tier:"149" },
-    { qty: v("B21")+v("B22")+v("B26"), price:85, tier:"85" },
-    { qty: v("B23")+v("B24")+v("B25"), price:75, tier:"75" },
-    { qty: v("B27"),                  price:55,  tier:"55"  },
+    { qty: v("B4")+v("B5")+v("B15")+v("B46"), price:49,  tier:"49"  },
+    { qty: v("B10"),                          price:60,  tier:"60"  },
+    { qty: v("B11"),                          price:99,  tier:"99"  },
+    { qty: v("B12"),                          price:110, tier:"110" },
+    { qty: v("B18"),                          price:149, tier:"149" },
+    { qty: v("B21")+v("B22")+v("B26"),        price:85,  tier:"85"  },
+    { qty: v("B23")+v("B24")+v("B25"),        price:75,  tier:"75"  },
+    { qty: v("B27"),                          price:55,  tier:"55"  },
   ].forEach(({ qty, price, tier }) => {
     distribute(qty, N, tier).forEach((s, i) => { payments[i] += price*s; });
   });
