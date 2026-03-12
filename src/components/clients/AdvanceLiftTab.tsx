@@ -3,6 +3,8 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Plus, X, Pencil, Trash2 } from 'lucide-react';
 import { getSessions, addSession, updateSession, deleteSession } from '../../services/database';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../../services/firebase';
 import type { Session } from '../../types/session';
 import { toast } from 'react-hot-toast';
 
@@ -17,6 +19,7 @@ const AdvanceLiftTab: React.FC<AdvanceLiftTabProps> = ({ clientId, centerId }) =
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editingSession, setEditingSession] = useState<Session | null>(null);
+  const [totalSessions, setTotalSessions] = useState<number>(0);
   const [newSession, setNewSession] = useState({
     date: format(new Date(), 'yyyy-MM-dd'),
     comment: '',
@@ -37,8 +40,30 @@ const AdvanceLiftTab: React.FC<AdvanceLiftTabProps> = ({ clientId, centerId }) =
     }
   };
 
+  const fetchTotalSessions = async () => {
+    try {
+      const docRef = doc(db, 'cureadvancelift', clientId);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        const sessionCount = data.sessionCount;
+        if (sessionCount && !isNaN(Number(sessionCount))) {
+          setTotalSessions(Number(sessionCount));
+        } else {
+          setTotalSessions(0);
+        }
+      } else {
+        setTotalSessions(0);
+      }
+    } catch (err) {
+      console.error('Error fetching total sessions:', err);
+      setTotalSessions(0);
+    }
+  };
+
   useEffect(() => {
     fetchSessions();
+    fetchTotalSessions();
   }, [clientId, centerId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -67,7 +92,8 @@ const AdvanceLiftTab: React.FC<AdvanceLiftTabProps> = ({ clientId, centerId }) =
 
       // Rafraîchir la liste des séances
       await fetchSessions();
-      
+      await fetchTotalSessions();
+
       // Réinitialiser le formulaire
       setShowAddForm(false);
       setEditingSession(null);
@@ -129,6 +155,8 @@ const AdvanceLiftTab: React.FC<AdvanceLiftTabProps> = ({ clientId, centerId }) =
     );
   }
 
+  const remainingSessions = totalSessions - sessions.length;
+
   return (
     <div className="space-y-6">
       <div className="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl">
@@ -138,6 +166,19 @@ const AdvanceLiftTab: React.FC<AdvanceLiftTabProps> = ({ clientId, centerId }) =
               <h2 className="text-base font-semibold leading-6 text-gray-900">
                 Suivi des séances
               </h2>
+              <div className="mt-2 flex items-center gap-4 text-sm">
+                <span className="text-gray-600">
+                  Total de séances : <span className="font-semibold text-brand-blue">{totalSessions || 'Non défini'}</span>
+                </span>
+                <span className="text-gray-600">
+                  Séances effectuées : <span className="font-semibold text-brand-blue">{sessions.length}</span>
+                </span>
+                {totalSessions > 0 && (
+                  <span className="text-gray-600">
+                    Séances restantes : <span className="font-semibold text-brand-pink">{remainingSessions}</span>
+                  </span>
+                )}
+              </div>
             </div>
             <div className="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
               <button
