@@ -193,6 +193,23 @@ const AdipologyForm: React.FC<AdipologyFormProps> = ({ initialData }) => {
           </div>
         </div>
       </div>
+
+      {/* Cure */}
+      <div className="mt-8 space-y-6">
+        <SectionTitle>Cure</SectionTitle>
+        <div>
+          <label htmlFor="sessionCount" className="block text-sm font-medium text-gray-700">
+            Nombre de séances conseillées
+          </label>
+          <input
+            type="number"
+            name="cureAdipo.sessionCount"
+            id="sessionCount"
+            defaultValue={getFormValue(formData, 'cureAdipo.sessionCount')}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring-brand-pink"
+          />
+        </div>
+      </div>
     </>
   );
 };

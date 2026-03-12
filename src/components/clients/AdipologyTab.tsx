@@ -3,6 +3,8 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Plus, X } from 'lucide-react';
 import { getSessions, addSession } from '../../services/database';
+import { getFormValue } from '../../services/formData';
+import { useFormData } from '../../hooks/useFormData';
 import type { Session } from '../../types/session';
 
 interface AdipologyTabProps {
@@ -15,6 +17,7 @@ const AdipologyTab: React.FC<AdipologyTabProps> = ({ clientId, centerId }) => {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { formData } = useFormData(clientId, 'adipology');
   const [newSession, setNewSession] = useState({
     date: format(new Date(), 'yyyy-MM-dd'),
     comment: '',
@@ -30,6 +33,9 @@ const AdipologyTab: React.FC<AdipologyTabProps> = ({ clientId, centerId }) => {
       photoTaken: false
     }
   });
+
+  const totalSessions = Number(getFormValue(formData, 'cureAdipo.sessionCount')) || 0;
+  const remainingSessions = Math.max(0, totalSessions - sessions.length);
 
   useEffect(() => {
     const fetchSessions = async () => {
@@ -121,6 +127,19 @@ const AdipologyTab: React.FC<AdipologyTabProps> = ({ clientId, centerId }) => {
               <h2 className="text-base font-semibold leading-6 text-gray-900">
                 Suivi des séances & prises de mesures
               </h2>
+              {totalSessions > 0 && (
+                <div className="mt-2 flex items-center gap-4 text-sm">
+                  <span className="text-gray-600">
+                    Total de séances : <span className="font-semibold text-brand-blue">{totalSessions}</span>
+                  </span>
+                  <span className="text-gray-600">
+                    Séances effectuées : <span className="font-semibold text-brand-blue">{sessions.length}</span>
+                  </span>
+                  <span className="text-gray-600">
+                    Séances restantes : <span className="font-semibold text-brand-pink">{remainingSessions}</span>
+                  </span>
+                </div>
+              )}
             </div>
             <div className="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
               <button
