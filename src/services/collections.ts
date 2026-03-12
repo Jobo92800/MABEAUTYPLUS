@@ -4,7 +4,7 @@ export const TREATMENT_COLLECTIONS = {
   cavitalyse: ['cavitalyseSkin', 'cavitalyseLifestyle', 'cavitalyseTreatment'],
   'radiofrequency-mesojet': ['RFmesojetBilan', 'RFmesojetHygiene'],
   ishape: ['bilanishape', 'objishape'],
-  adipology: ['bilanAdipo', 'hygieneAdipo'],
+  adipology: ['bilanAdipo', 'hygieneAdipo', 'cureAdipo'],
   'advance-lift': ['bilanAdvancelift', 'cureadvancelift'],
   pressodynamie: ['prbpresso', 'curepresso'],
   mesojet: ['bilanmeso'], // Correction ici - utilisation d'une seule collection
