@@ -35,6 +35,10 @@ interface PaymentCategory {
     isGiven: boolean;
   };
   installments: PaymentLine[];
+  avoir?: {
+    amount: string;
+    comment: string;
+  };
 }
 
 interface PaymentFormProps {
@@ -100,7 +104,11 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
         isPaid: false,
         isGiven: false
       },
-      installments: [{ amount: '', date: '', purpose: '', method: '', isPaid: false, isGiven: false }]
+      installments: [{ amount: '', date: '', purpose: '', method: '', isPaid: false, isGiven: false }],
+      avoir: {
+        amount: '',
+        comment: ''
+      }
     }
   ]);
   const [loading, setLoading] = useState(true);
@@ -286,7 +294,11 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
           isPaid: false,
           isGiven: false
         },
-        installments: [{ amount: '', date: '', purpose: '', method: '', isPaid: false, isGiven: false }]
+        installments: [{ amount: '', date: '', purpose: '', method: '', isPaid: false, isGiven: false }],
+        avoir: {
+          amount: '',
+          comment: ''
+        }
       }
     ];
     setCategories(newCategories);
@@ -353,6 +365,23 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
   const removeCategory = (categoryId: string) => {
     if (categories.length === 1) return;
     const newCategories = categories.filter(cat => cat.id !== categoryId);
+    setCategories(newCategories);
+    savePaymentData(newCategories);
+  };
+
+  const handleAvoirChange = (categoryId: string, field: 'amount' | 'comment', value: string) => {
+    const newCategories = categories.map(cat => {
+      if (cat.id === categoryId) {
+        return {
+          ...cat,
+          avoir: {
+            ...cat.avoir,
+            [field]: value
+          }
+        };
+      }
+      return cat;
+    });
     setCategories(newCategories);
     savePaymentData(newCategories);
   };
@@ -679,14 +708,14 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
                   Ajouter un paiement
                 </button>
               </div>
-              
+
               <div className="space-y-3">
                 {category.installments.map((line, index) => (
-                  <div 
-                    key={index} 
+                  <div
+                    key={index}
                     className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-3 items-start p-3 rounded-lg border-2 ${getPaymentLineColor(
-                      line.isPaid, 
-                      line.isGiven, 
+                      line.isPaid,
+                      line.isGiven,
                       !!(line.amount && parseFloat(line.amount) > 0)
                     )}`}
                   >
@@ -781,6 +810,41 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+
+            {/* Avoir Section */}
+            <div className="bg-blue-50 p-4 rounded-lg border-2 border-blue-200">
+              <h4 className="text-sm font-medium text-gray-900 mb-4">Avoir</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Montant de l'avoir
+                  </label>
+                  <div className="relative">
+                    <Euro className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <input
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      value={category.avoir?.amount || ''}
+                      onChange={(e) => handleAvoirChange(category.id, 'amount', e.target.value)}
+                      className="block w-full pl-10 rounded-lg border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Commentaire avoir
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Commentaire..."
+                    value={category.avoir?.comment || ''}
+                    onChange={(e) => handleAvoirChange(category.id, 'comment', e.target.value)}
+                    className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue"
+                  />
+                </div>
               </div>
             </div>
           </div>
