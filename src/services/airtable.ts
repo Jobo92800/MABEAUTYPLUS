@@ -228,6 +228,84 @@ export const updateClientMontantCureInAirtable = async (
   }
 };
 
+export const updateClientAvoirInAirtable = async (
+  firstName: string,
+  lastName: string,
+  centerId: string,
+  avoirAmount: string,
+  avoirComment: string
+): Promise<void> => {
+  try {
+    console.log('[Airtable] Début mise à jour Avoir:', { firstName, lastName, centerId, avoirAmount, avoirComment });
+
+    const centerNames: Record<string, string> = {
+      'grau-du-roi': 'Le Grau-du-Roi',
+      'le-cres': 'Le Crès',
+      'serignant': 'Sérignan',
+      'cabestany': 'Cabestany'
+    };
+
+    const centerName = centerNames[centerId as keyof typeof centerNames] || centerId;
+    const filterFormula = `AND({Prénom}='${firstName}', {Nom}='${lastName}', {Centre}='${centerName}')`;
+    const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_ID}?filterByFormula=${encodeURIComponent(filterFormula)}`;
+
+    console.log('[Airtable] Recherche client avec formule:', filterFormula);
+
+    const getResponse = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${AIRTABLE_ACCESS_TOKEN}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!getResponse.ok) {
+      const errorData = await getResponse.json();
+      console.error('[Airtable] Erreur GET:', errorData);
+      return;
+    }
+
+    const data = await getResponse.json();
+    console.log('[Airtable] Résultat recherche:', { recordsFound: data.records?.length || 0 });
+
+    if (!data.records || data.records.length === 0) {
+      console.warn('[Airtable] Client non trouvé');
+      return;
+    }
+
+    const recordId = data.records[0].id;
+    console.log('[Airtable] Record trouvé, ID:', recordId);
+
+    const updatePayload = {
+      fields: {
+        'Avoir': avoirComment || avoirAmount
+      }
+    };
+    console.log('[Airtable] Payload de mise à jour:', updatePayload);
+
+    const updateResponse = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_ID}/${recordId}`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${AIRTABLE_ACCESS_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(updatePayload)
+    });
+
+    if (!updateResponse.ok) {
+      const errorData = await updateResponse.json();
+      console.error('[Airtable] Erreur PATCH:', errorData);
+      throw new Error(`Airtable API error: ${JSON.stringify(errorData)}`);
+    }
+
+    const updateResult = await updateResponse.json();
+    console.log('[Airtable] ✓ Mise à jour Avoir réussie:', updateResult);
+  } catch (error) {
+    console.error('[Airtable] Erreur lors de la mise à jour de l\'Avoir:', error);
+    throw error;
+  }
+};
+
 export const getClientPaymentDataFromAirtable = async (
   firstName: string,
   lastName: string,

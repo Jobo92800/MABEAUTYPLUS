@@ -3,7 +3,7 @@ import { Plus, X, CreditCard, Calendar, Euro, Trash2, Calculator } from 'lucide-
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { PAYMENT_COLLECTION } from '../services/collections';
-import { getClientPaymentDataFromAirtable, updateClientTherapistInAirtable, updateClientMontantCureInAirtable } from '../services/airtable';
+import { getClientPaymentDataFromAirtable, updateClientTherapistInAirtable, updateClientMontantCureInAirtable, updateClientAvoirInAirtable } from '../services/airtable';
 import { InstallmentsCalculator } from './InstallmentsCalculator';
 
 interface PaymentLine {
@@ -369,7 +369,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
     savePaymentData(newCategories);
   };
 
-  const handleAvoirChange = (categoryId: string, field: 'amount' | 'comment', value: string) => {
+  const handleAvoirChange = async (categoryId: string, field: 'amount' | 'comment', value: string) => {
     const newCategories = categories.map(cat => {
       if (cat.id === categoryId) {
         return {
@@ -383,7 +383,33 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
       return cat;
     });
     setCategories(newCategories);
-    savePaymentData(newCategories);
+    await savePaymentData(newCategories);
+
+    // Mettre à jour Airtable
+    if (clientFirstName && clientLastName && centerId) {
+      const category = newCategories.find(cat => cat.id === categoryId);
+      if (category && category.avoir) {
+        const avoirAmount = category.avoir.amount || '';
+        const avoirComment = category.avoir.comment || '';
+
+        console.log('Mise à jour Avoir dans Airtable:', {
+          clientFirstName,
+          clientLastName,
+          centerId,
+          avoirAmount,
+          avoirComment
+        });
+
+        try {
+          await updateClientAvoirInAirtable(clientFirstName, clientLastName, centerId, avoirAmount, avoirComment);
+          console.log('✓ Avoir mis à jour avec succès dans Airtable');
+        } catch (error) {
+          console.error('✗ Échec de la mise à jour de l\'Avoir dans Airtable:', error);
+        }
+      }
+    } else {
+      console.log('Informations client manquantes pour la mise à jour Airtable:', { clientFirstName, clientLastName, centerId });
+    }
   };
 
   // Nouvelle logique simplifiée pour les couleurs
