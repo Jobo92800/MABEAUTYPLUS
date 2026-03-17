@@ -232,11 +232,10 @@ export const updateClientAvoirInAirtable = async (
   firstName: string,
   lastName: string,
   centerId: string,
-  avoirAmount: string,
-  avoirComment: string
+  avoirAmount: string
 ): Promise<void> => {
   try {
-    console.log('[Airtable] Début mise à jour Avoir:', { firstName, lastName, centerId, avoirAmount, avoirComment });
+    console.log('[Airtable] Début mise à jour Avoir:', { firstName, lastName, centerId, avoirAmount });
 
     const centerNames: Record<string, string> = {
       'grau-du-roi': 'Le Grau-du-Roi',
@@ -276,9 +275,11 @@ export const updateClientAvoirInAirtable = async (
     const recordId = data.records[0].id;
     console.log('[Airtable] Record trouvé, ID:', recordId);
 
+    const avoirValue = avoirAmount ? parseFloat(avoirAmount) : 0;
+
     const updatePayload = {
       fields: {
-        'Avoir': avoirComment || avoirAmount
+        'Avoir': avoirValue
       }
     };
     console.log('[Airtable] Payload de mise à jour:', updatePayload);

@@ -385,30 +385,26 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
     setCategories(newCategories);
     await savePaymentData(newCategories);
 
-    // Mettre à jour Airtable
-    if (clientFirstName && clientLastName && centerId) {
+    // Mettre à jour Airtable seulement si c'est le montant qui change
+    if (field === 'amount' && clientFirstName && clientLastName && centerId) {
       const category = newCategories.find(cat => cat.id === categoryId);
       if (category && category.avoir) {
         const avoirAmount = category.avoir.amount || '';
-        const avoirComment = category.avoir.comment || '';
 
         console.log('Mise à jour Avoir dans Airtable:', {
           clientFirstName,
           clientLastName,
           centerId,
-          avoirAmount,
-          avoirComment
+          avoirAmount
         });
 
         try {
-          await updateClientAvoirInAirtable(clientFirstName, clientLastName, centerId, avoirAmount, avoirComment);
+          await updateClientAvoirInAirtable(clientFirstName, clientLastName, centerId, avoirAmount);
           console.log('✓ Avoir mis à jour avec succès dans Airtable');
         } catch (error) {
           console.error('✗ Échec de la mise à jour de l\'Avoir dans Airtable:', error);
         }
       }
-    } else {
-      console.log('Informations client manquantes pour la mise à jour Airtable:', { clientFirstName, clientLastName, centerId });
     }
   };
 
