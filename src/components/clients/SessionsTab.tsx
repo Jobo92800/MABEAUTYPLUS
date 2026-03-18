@@ -126,6 +126,7 @@ const SessionsTab: React.FC<SessionsTabProps> = ({ clientId, centerId }) => {
                 type="number"
                 value={totalSessions}
                 onChange={handleTotalSessionsChange}
+                onWheel={(e) => e.currentTarget.blur()}
                 className="w-20 rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue sm:text-sm"
                 min="0"
               />
@@ -197,6 +198,7 @@ const SessionsTab: React.FC<SessionsTabProps> = ({ clientId, centerId }) => {
                       id="weight"
                       value={newWeight}
                       onChange={(e) => setNewWeight(e.target.value)}
+                      onWheel={(e) => e.currentTarget.blur()}
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue sm:text-sm"
                     />
                   </div>

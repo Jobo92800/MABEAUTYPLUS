@@ -235,6 +235,7 @@ const DomeTab: React.FC<DomeTabProps> = ({ initialData }) => {
                     type="number"
                     value={totalSessions}
                     onChange={(e) => setTotalSessions(parseInt(e.target.value) || 0)}
+                    onWheel={(e) => e.currentTarget.blur()}
                     className="w-20 rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring-brand-pink text-sm"
                     min="0"
                   />
@@ -298,6 +299,7 @@ const DomeTab: React.FC<DomeTabProps> = ({ initialData }) => {
                 type="number"
                 value={newSession.sessionNumber}
                 onChange={(e) => setNewSession({ ...newSession, sessionNumber: parseInt(e.target.value) })}
+                onWheel={(e) => e.currentTarget.blur()}
                 className="w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring-brand-pink"
               />
             </div>

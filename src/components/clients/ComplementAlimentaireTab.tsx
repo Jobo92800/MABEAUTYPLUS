@@ -438,6 +438,7 @@ const ComplementAlimentaireTab: React.FC<ComplementAlimentaireTabProps> = ({
                       min="1"
                       value={newSale.quantity}
                       onChange={(e) => setNewSale({ ...newSale, quantity: parseInt(e.target.value) || 1 })}
+                      onWheel={(e) => e.currentTarget.blur()}
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring-brand-pink sm:text-sm"
                       required
                     />

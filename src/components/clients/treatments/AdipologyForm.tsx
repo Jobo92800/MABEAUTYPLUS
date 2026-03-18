@@ -206,6 +206,7 @@ const AdipologyForm: React.FC<AdipologyFormProps> = ({ initialData }) => {
             name="cureAdipo.sessionCount"
             id="sessionCount"
             defaultValue={getFormValue(formData, 'cureAdipo.sessionCount')}
+            onWheel={(e) => e.currentTarget.blur()}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring-brand-pink"
           />
         </div>

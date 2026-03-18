@@ -196,6 +196,7 @@ const AdipologyTab: React.FC<AdipologyTabProps> = ({ clientId, centerId }) => {
                           staticMode: { duration: parseInt(e.target.value) }
                         }
                       })}
+                      onWheel={(e) => e.currentTarget.blur()}
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring-brand-pink sm:text-sm"
                     />
                   </div>
@@ -215,6 +216,7 @@ const AdipologyTab: React.FC<AdipologyTabProps> = ({ clientId, centerId }) => {
                           dynamicMode: { duration: parseInt(e.target.value) }
                         }
                       })}
+                      onWheel={(e) => e.currentTarget.blur()}
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring-brand-pink sm:text-sm"
                     />
                   </div>

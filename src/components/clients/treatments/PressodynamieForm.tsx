@@ -117,6 +117,7 @@ const PressodynamieForm: React.FC<PressodynamieFormProps> = ({ initialData }) =>
               name="curepresso.sessionCount"
               id="sessionCount"
               defaultValue={getFormValue(formData, 'curepresso.sessionCount')}
+              onWheel={(e) => e.currentTarget.blur()}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring-brand-pink"
             />
           </div>

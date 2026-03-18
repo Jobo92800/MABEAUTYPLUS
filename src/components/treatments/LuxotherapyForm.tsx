@@ -212,6 +212,7 @@ const LuxotherapyForm: React.FC<LuxotherapyFormProps> = ({ initialData }) => {
               name="objectives.currentWeight"
               id="currentWeight"
               defaultValue={getFormValue(formData, 'objectives.currentWeight')}
+              onWheel={(e) => e.currentTarget.blur()}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
             />
           </div>
@@ -223,6 +224,7 @@ const LuxotherapyForm: React.FC<LuxotherapyFormProps> = ({ initialData }) => {
               name="objectives.targetWeight"
               id="targetWeight"
               defaultValue={getFormValue(formData, 'objectives.targetWeight')}
+              onWheel={(e) => e.currentTarget.blur()}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
             />
           </div>
@@ -233,6 +235,7 @@ const LuxotherapyForm: React.FC<LuxotherapyFormProps> = ({ initialData }) => {
               name="objectives.sessionCount"
               id="sessionCount"
               defaultValue={getFormValue(formData, 'objectives.sessionCount')}
+              onWheel={(e) => e.currentTarget.blur()}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
             />
           </div>

@@ -359,6 +359,7 @@ export const InstallmentsCalculator: React.FC<InstallmentsCalculatorProps> = ({ 
                                 <button type="button" className="cb" onClick={()=>set(it.key,qty-1)}
                                   style={{ background: qty>0?"#f3f4f6":"#fafafa", border: "none", width: 32, height: 32, fontSize: 17, color: qty>0?"#374151":"#d1d5db", display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
                                 <input type="number" min="0" value={qty||""} placeholder="0" onChange={e=>set(it.key,e.target.value)}
+                                  onWheel={(e) => e.currentTarget.blur()}
                                   style={{ width: 42, height: 32, textAlign: "center", border: "none", borderLeft: "1px solid #e5e7eb", borderRight: "1px solid #e5e7eb", fontSize: 14, fontWeight: 700, color: qty>0?cat.color:"#9ca3af", fontFamily: "inherit", background: "white", outline: "none" }} />
                                 <button type="button" className="cb" onClick={()=>set(it.key,qty+1)}
                                   style={{ background: "#f3f4f6", border: "none", width: 32, height: 32, fontSize: 17, color: "#374151", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>

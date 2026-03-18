@@ -154,6 +154,7 @@ const RelaxationTab: React.FC<{ clientId: string; centerId: string }> = ({ clien
               type="number"
               value={totalSessions}
               onChange={handleTotalSessionsChange}
+              onWheel={(e) => e.currentTarget.blur()}
               className="w-20 rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue sm:text-sm"
               min="0"
             />

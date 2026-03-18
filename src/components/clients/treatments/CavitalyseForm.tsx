@@ -165,6 +165,7 @@ const CavitalyseForm: React.FC<CavitalyseFormProps> = ({ initialData }) => {
               name="cavitalyseTreatment.sessionCount"
               id="sessionCount"
               defaultValue={getFormValue(formData, 'cavitalyseTreatment.sessionCount')}
+              onWheel={(e) => e.currentTarget.blur()}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring-brand-pink"
             />
           </div>

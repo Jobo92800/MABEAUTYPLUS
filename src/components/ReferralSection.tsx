@@ -170,6 +170,7 @@ const ReferralSection: React.FC<ReferralSectionProps> = ({ clientId }) => {
                       placeholder="Gains"
                       value={godchild.gains}
                       onChange={(e) => handleGodchildChange(index, 'gains', e.target.value)}
+                      onWheel={(e) => e.currentTarget.blur()}
                       className="block w-full rounded-lg border-gray-200 shadow-sm focus:border-brand-blue focus:ring-brand-blue"
                     />
 

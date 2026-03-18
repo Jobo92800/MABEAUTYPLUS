@@ -326,6 +326,7 @@ export default function App() {
                               value={qty || ""}
                               placeholder="0"
                               onChange={e => set(it.key, e.target.value)}
+                              onWheel={(e) => e.currentTarget.blur()}
                               style={{ width: 52, height: 36, textAlign: "center", border: "none", borderLeft: "1px solid #e5e7eb", borderRight: "1px solid #e5e7eb", fontSize: 15, fontWeight: 600, color: qty > 0 ? cat.color : "#9ca3af", fontFamily: "inherit", background: "white", outline: "none" }}
                             />
                             <button

@@ -658,6 +658,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
                     step="0.01"
                     value={category.deposit?.amount || ''}
                     onChange={(e) => handleDepositChange(category.id, 'amount', e.target.value)}
+                    onWheel={(e) => e.currentTarget.blur()}
                     className="block w-full pl-10 rounded-lg border-gray-200 shadow-sm focus:border-brand-blue focus:ring-brand-blue"
                     placeholder="Montant"
                   />
@@ -751,6 +752,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
                         placeholder="Montant"
                         value={line.amount}
                         onChange={(e) => handlePaymentLineChange(category.id, index, 'amount', e.target.value)}
+                        onWheel={(e) => e.currentTarget.blur()}
                         className="block w-full pl-10 rounded-lg border-gray-200 shadow-sm focus:border-brand-blue focus:ring-brand-blue"
                       />
                     </div>

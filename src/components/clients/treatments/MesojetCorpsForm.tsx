@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, TrendingDown, TrendingUp, Edit2, Save, X } from 'lucide-react';
+import { Plus, Trash2, TrendingDown, TrendingUp, CreditCard as Edit2, Save, X } from 'lucide-react';
 import { doc, getDoc, setDoc, collection, addDoc, query, orderBy, getDocs, deleteDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../../services/firebase';
 import { format } from 'date-fns';
@@ -274,6 +274,7 @@ const MesojetCorpsForm: React.FC<MesojetCorpsFormProps> = ({ initialData }) => {
             step="0.1"
             value={newSession.zones[zoneKey]}
             onChange={(e) => handleZoneChange(zoneKey, e.target.value)}
+            onWheel={(e) => e.currentTarget.blur()}
             className="w-20 px-2 py-1 text-sm rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring-brand-pink"
             placeholder="cm"
           />
@@ -465,6 +466,7 @@ const MesojetCorpsForm: React.FC<MesojetCorpsFormProps> = ({ initialData }) => {
                 type="number"
                 value={newSession.sessionNumber}
                 onChange={(e) => setNewSession({ ...newSession, sessionNumber: parseInt(e.target.value) || 1 })}
+                onWheel={(e) => e.currentTarget.blur()}
                 className="block w-full rounded-lg border-gray-200 shadow-sm focus:border-brand-pink focus:ring-brand-pink"
               />
             </div>
@@ -654,6 +656,7 @@ const MesojetCorpsForm: React.FC<MesojetCorpsFormProps> = ({ initialData }) => {
                                     type="number"
                                     value={editingSession?.sessionNumber}
                                     onChange={(e) => setEditingSession({ ...editingSession!, sessionNumber: parseInt(e.target.value) })}
+                                    onWheel={(e) => e.currentTarget.blur()}
                                     className="w-full text-xs rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring-brand-pink"
                                   />
                                 </div>

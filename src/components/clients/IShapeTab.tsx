@@ -235,6 +235,7 @@ const IShapeTab: React.FC<IShapeTabProps> = ({ clientId, centerId }) => {
               type="number"
               value={totalSessions}
               onChange={(e) => handleTotalSessionsChange(parseInt(e.target.value) || 0)}
+              onWheel={(e) => e.currentTarget.blur()}
               className="w-20 rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue sm:text-sm"
               min="0"
             />
@@ -364,6 +365,7 @@ const IShapeTab: React.FC<IShapeTabProps> = ({ clientId, centerId }) => {
                       id="weight"
                       value={newSession.weight}
                       onChange={(e) => setNewSession({ ...newSession, weight: e.target.value })}
+                      onWheel={(e) => e.currentTarget.blur()}
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring-brand-pink sm:text-sm"
                       placeholder="Ex: 65.5"
                     />

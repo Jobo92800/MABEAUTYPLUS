@@ -60,6 +60,7 @@ const SessionRow: React.FC<SessionRowProps> = ({ session, onUpdate }) => {
           step="0.1"
           value={editedData.weight}
           onChange={(e) => setEditedData({ ...editedData, weight: parseFloat(e.target.value) })}
+          onWheel={(e) => e.currentTarget.blur()}
           className="w-24 rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue sm:text-sm"
         />
         <input

@@ -107,6 +107,7 @@ const MeasurementsTab: React.FC<MeasurementsTabProps> = ({ clientId }) => {
                     id="weight"
                     value={newWeight}
                     onChange={(e) => setNewWeight(e.target.value)}
+                    onWheel={(e) => e.currentTarget.blur()}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
                   />
                 </div>
