@@ -634,6 +634,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
                   id={`totalAmount-${category.id}`}
                   value={category.totalAmount}
                   onChange={(e) => handleTotalAmountChange(category.id, e.target.value)}
+                  onWheel={(e) => e.currentTarget.blur()}
                   className="block w-full pl-10 rounded-lg border-gray-200 shadow-sm focus:border-brand-blue focus:ring-brand-blue"
                   placeholder="0.00"
                 />
@@ -851,6 +852,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
                       placeholder="0.00"
                       value={category.avoir?.amount || ''}
                       onChange={(e) => handleAvoirChange(category.id, 'amount', e.target.value)}
+                      onWheel={(e) => e.currentTarget.blur()}
                       className="block w-full pl-10 rounded-lg border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue"
                     />
                   </div>
