@@ -85,7 +85,8 @@ const THERAPISTS_BY_CENTER: Record<string, string[]> = {
   'grau-du-roi': ['Marie', 'Fanny', 'Nadia', 'Stéphanie'],
   'le-cres': ['Alexandra', 'Paola', 'Malvina'],
   'serignant': ['Caroll', 'Aude', 'Marie-san'],
-  'cabestany': ['Audrey', 'Caroline', 'Sara']
+  'cabestany': ['Audrey', 'Caroline', 'Sara'],
+  'avignon': ['Alexandra 2', 'Laura']
 };
 
 const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, centerId, clientFirstName, clientLastName }) => {

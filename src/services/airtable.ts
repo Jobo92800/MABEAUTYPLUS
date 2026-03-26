@@ -37,7 +37,8 @@ export const addClientToAirtable = async (clientData: AirtableClientData): Promi
       'grau-du-roi': 'Le Grau-du-Roi',
       'le-cres': 'Le Crès',
       'serignant': 'Sérignan',
-      'cabestany': 'Cabestany'
+      'cabestany': 'Cabestany',
+      'avignon': 'Avignon'
     };
 
     // Format date for Airtable (YYYY-MM-DD)
@@ -99,7 +100,8 @@ export const updateClientTherapistInAirtable = async (
       'grau-du-roi': 'Le Grau-du-Roi',
       'le-cres': 'Le Crès',
       'serignant': 'Sérignan',
-      'cabestany': 'Cabestany'
+      'cabestany': 'Cabestany',
+      'avignon': 'Avignon'
     };
 
     const centerName = centerNames[centerId as keyof typeof centerNames] || centerId;
@@ -164,7 +166,8 @@ export const updateClientMontantCureInAirtable = async (
       'grau-du-roi': 'Le Grau-du-Roi',
       'le-cres': 'Le Crès',
       'serignant': 'Sérignan',
-      'cabestany': 'Cabestany'
+      'cabestany': 'Cabestany',
+      'avignon': 'Avignon'
     };
 
     const centerName = centerNames[centerId as keyof typeof centerNames] || centerId;
@@ -241,7 +244,8 @@ export const updateClientAvoirInAirtable = async (
       'grau-du-roi': 'Le Grau-du-Roi',
       'le-cres': 'Le Crès',
       'serignant': 'Sérignan',
-      'cabestany': 'Cabestany'
+      'cabestany': 'Cabestany',
+      'avignon': 'Avignon'
     };
 
     const centerName = centerNames[centerId as keyof typeof centerNames] || centerId;
@@ -317,7 +321,8 @@ export const getClientPaymentDataFromAirtable = async (
       'grau-du-roi': 'Le Grau-du-Roi',
       'le-cres': 'Le Crès',
       'serignant': 'Sérignan',
-      'cabestany': 'Cabestany'
+      'cabestany': 'Cabestany',
+      'avignon': 'Avignon'
     };
 
     const centerName = centerNames[centerId as keyof typeof centerNames] || centerId;
