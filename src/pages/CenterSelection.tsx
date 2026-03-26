@@ -7,6 +7,7 @@ const centers = [
   { id: 'le-cres', name: 'Le Crès' },
   { id: 'serignant', name: 'Sérignan' },
   { id: 'cabestany', name: 'Cabestany' },
+  { id: 'avignon', name: 'Avignon' },
 ];
 
 const CenterSelection = () => {
