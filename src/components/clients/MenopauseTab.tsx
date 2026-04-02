@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Plus, X } from 'lucide-react';
-import { getSessions, addSession } from '../../services/database';
+import { Plus, X, Pencil, Trash2 } from 'lucide-react';
+import { getSessions, addSession, updateSession, deleteSession } from '../../services/database';
+import { getTotalTreatmentSessions, updateTotalTreatmentSessions } from '../../services/database/operations/totalSessions';
 import type { Session } from '../../types/session';
 
 const MenopauseTab: React.FC<{ clientId: string; centerId: string }> = ({ clientId, centerId }) => {
@@ -10,6 +11,8 @@ const MenopauseTab: React.FC<{ clientId: string; centerId: string }> = ({ client
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [totalSessions, setTotalSessions] = useState<number>(0);
+  const [editingSession, setEditingSession] = useState<Session | null>(null);
   const [newSession, setNewSession] = useState({
     number: sessions.length + 1,
     date: format(new Date(), 'yyyy-MM-dd'),
@@ -17,22 +20,26 @@ const MenopauseTab: React.FC<{ clientId: string; centerId: string }> = ({ client
     comment: ''
   });
 
-  useEffect(() => {
-    const fetchSessions = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await getSessions(clientId, centerId, 'menopause');
-        setSessions(data);
-      } catch (err: any) {
-        console.error('Error fetching menopause sessions:', err);
-        setError('Erreur lors du chargement des séances');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const [sessionsData, totalSessionsData] = await Promise.all([
+        getSessions(clientId, centerId, 'menopause'),
+        getTotalTreatmentSessions(clientId, 'menopause')
+      ]);
+      setSessions(sessionsData);
+      setTotalSessions(totalSessionsData || 0);
+    } catch (err: any) {
+      console.error('Error fetching menopause sessions:', err);
+      setError('Erreur lors du chargement des séances');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchSessions();
+  useEffect(() => {
+    fetchData();
   }, [clientId, centerId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -48,21 +55,62 @@ const MenopauseTab: React.FC<{ clientId: string; centerId: string }> = ({ client
         sessionType: newSession.type
       });
 
-      // Rafraîchir la liste des séances
-      const updatedSessions = await getSessions(clientId, centerId, 'menopause');
-      setSessions(updatedSessions);
-      
-      // Réinitialiser le formulaire
+      const newTotalSessions = Math.max(0, totalSessions - 1);
+      await updateTotalTreatmentSessions(clientId, 'menopause', newTotalSessions);
+      setTotalSessions(newTotalSessions);
+
       setShowAddForm(false);
       setNewSession({
-        number: updatedSessions.length + 2,
+        number: sessions.length + 2,
         date: format(new Date(), 'yyyy-MM-dd'),
         type: 'treatment',
         comment: ''
       });
+      await fetchData();
     } catch (error) {
       console.error('Error adding menopause session:', error);
       alert('Erreur lors de l\'ajout de la séance');
+    }
+  };
+
+  const handleEdit = (session: Session) => {
+    setEditingSession(session);
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingSession) return;
+
+    try {
+      await updateSession(editingSession);
+      setEditingSession(null);
+      await fetchData();
+    } catch (error) {
+      console.error('Error updating session:', error);
+      alert('Erreur lors de la modification de la séance');
+    }
+  };
+
+  const handleDelete = async (sessionId: string) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette séance ?')) return;
+
+    try {
+      await deleteSession(sessionId);
+      await fetchData();
+    } catch (error) {
+      console.error('Error deleting session:', error);
+      alert('Erreur lors de la suppression de la séance');
+    }
+  };
+
+  const handleTotalSessionsChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value) || 0;
+    try {
+      await updateTotalTreatmentSessions(clientId, 'menopause', value);
+      setTotalSessions(value);
+    } catch (error) {
+      console.error('Error updating total sessions:', error);
+      alert('Une erreur est survenue lors de la mise à jour du nombre total de séances.');
     }
   };
 
@@ -93,6 +141,25 @@ const MenopauseTab: React.FC<{ clientId: string; centerId: string }> = ({ client
 
   return (
     <div className="space-y-6">
+      <div className="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl p-6">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-gray-900">
+            Séances Ménopause
+          </h3>
+          <div className="flex items-center space-x-2">
+            <input
+              type="number"
+              value={totalSessions}
+              onChange={handleTotalSessionsChange}
+              onWheel={(e) => e.currentTarget.blur()}
+              className="w-20 rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue sm:text-sm"
+              min="0"
+            />
+            <span className="text-sm text-gray-500">séances</span>
+          </div>
+        </div>
+      </div>
+
       <div className="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl">
         <div className="px-4 py-5 sm:p-6">
           <div className="sm:flex sm:items-center">
@@ -199,16 +266,69 @@ const MenopauseTab: React.FC<{ clientId: string; centerId: string }> = ({ client
                         <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0">N°</th>
                         <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Date</th>
                         <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Commentaire</th>
+                        <th scope="col" className="px-3 py-3.5 text-right text-sm font-semibold text-gray-900">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                       {treatmentSessions.map((session, index) => (
                         <tr key={session.id}>
-                          <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">{index + 1}</td>
-                          <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                            {format(new Date(session.date), 'dd MMMM yyyy', { locale: fr })}
-                          </td>
-                          <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{session.comment}</td>
+                          {editingSession?.id === session.id ? (
+                            <>
+                              <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">{index + 1}</td>
+                              <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                                <input
+                                  type="date"
+                                  value={editingSession.date}
+                                  onChange={(e) => setEditingSession({ ...editingSession, date: e.target.value })}
+                                  className="rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue sm:text-sm"
+                                />
+                              </td>
+                              <td className="px-3 py-4 text-sm text-gray-500">
+                                <input
+                                  type="text"
+                                  value={editingSession.comment || ''}
+                                  onChange={(e) => setEditingSession({ ...editingSession, comment: e.target.value })}
+                                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue sm:text-sm"
+                                />
+                              </td>
+                              <td className="whitespace-nowrap px-3 py-4 text-sm text-right space-x-2">
+                                <button
+                                  onClick={handleUpdate}
+                                  className="text-green-600 hover:text-green-900"
+                                >
+                                  Sauver
+                                </button>
+                                <button
+                                  onClick={() => setEditingSession(null)}
+                                  className="text-gray-600 hover:text-gray-900"
+                                >
+                                  Annuler
+                                </button>
+                              </td>
+                            </>
+                          ) : (
+                            <>
+                              <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">{index + 1}</td>
+                              <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                                {format(new Date(session.date), 'dd MMMM yyyy', { locale: fr })}
+                              </td>
+                              <td className="px-3 py-4 text-sm text-gray-500">{session.comment || '-'}</td>
+                              <td className="whitespace-nowrap px-3 py-4 text-sm text-right space-x-2">
+                                <button
+                                  onClick={() => handleEdit(session)}
+                                  className="text-brand-blue hover:text-brand-pink"
+                                >
+                                  <Pencil className="h-4 w-4 inline" />
+                                </button>
+                                <button
+                                  onClick={() => handleDelete(session.id!)}
+                                  className="text-red-600 hover:text-red-900"
+                                >
+                                  <Trash2 className="h-4 w-4 inline" />
+                                </button>
+                              </td>
+                            </>
+                          )}
                         </tr>
                       ))}
                     </tbody>
@@ -232,16 +352,69 @@ const MenopauseTab: React.FC<{ clientId: string; centerId: string }> = ({ client
                         <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0">N°</th>
                         <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Date</th>
                         <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Commentaire</th>
+                        <th scope="col" className="px-3 py-3.5 text-right text-sm font-semibold text-gray-900">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                       {stabilizationSessions.map((session, index) => (
                         <tr key={session.id}>
-                          <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">{index + 1}</td>
-                          <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                            {format(new Date(session.date), 'dd MMMM yyyy', { locale: fr })}
-                          </td>
-                          <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{session.comment}</td>
+                          {editingSession?.id === session.id ? (
+                            <>
+                              <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">{index + 1}</td>
+                              <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                                <input
+                                  type="date"
+                                  value={editingSession.date}
+                                  onChange={(e) => setEditingSession({ ...editingSession, date: e.target.value })}
+                                  className="rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue sm:text-sm"
+                                />
+                              </td>
+                              <td className="px-3 py-4 text-sm text-gray-500">
+                                <input
+                                  type="text"
+                                  value={editingSession.comment || ''}
+                                  onChange={(e) => setEditingSession({ ...editingSession, comment: e.target.value })}
+                                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue sm:text-sm"
+                                />
+                              </td>
+                              <td className="whitespace-nowrap px-3 py-4 text-sm text-right space-x-2">
+                                <button
+                                  onClick={handleUpdate}
+                                  className="text-green-600 hover:text-green-900"
+                                >
+                                  Sauver
+                                </button>
+                                <button
+                                  onClick={() => setEditingSession(null)}
+                                  className="text-gray-600 hover:text-gray-900"
+                                >
+                                  Annuler
+                                </button>
+                              </td>
+                            </>
+                          ) : (
+                            <>
+                              <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">{index + 1}</td>
+                              <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                                {format(new Date(session.date), 'dd MMMM yyyy', { locale: fr })}
+                              </td>
+                              <td className="px-3 py-4 text-sm text-gray-500">{session.comment || '-'}</td>
+                              <td className="whitespace-nowrap px-3 py-4 text-sm text-right space-x-2">
+                                <button
+                                  onClick={() => handleEdit(session)}
+                                  className="text-brand-blue hover:text-brand-pink"
+                                >
+                                  <Pencil className="h-4 w-4 inline" />
+                                </button>
+                                <button
+                                  onClick={() => handleDelete(session.id!)}
+                                  className="text-red-600 hover:text-red-900"
+                                >
+                                  <Trash2 className="h-4 w-4 inline" />
+                                </button>
+                              </td>
+                            </>
+                          )}
                         </tr>
                       ))}
                     </tbody>
