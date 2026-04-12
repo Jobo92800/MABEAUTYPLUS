@@ -1,5 +1,5 @@
 import React from 'react';
-import { useLocation, Link, useParams } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { Users, ArrowLeft, Package } from 'lucide-react';
 
 interface LayoutProps {
@@ -8,9 +8,11 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
-  const { centerId } = useParams();
   const isHome = location.pathname === '/';
   const isStockPage = location.pathname.includes('/stock');
+
+  const centerMatch = location.pathname.match(/\/centers\/([^/]+)/);
+  const centerId = centerMatch ? centerMatch[1] : null;
 
   return (
     <div className="min-h-screen bg-gray-50">
