@@ -46,14 +46,10 @@ const StockCard: React.FC<StockCardProps> = ({ level, onIncrement, onOpenDetail 
   };
 
   return (
-    <div className={`rounded-xl border-2 p-4 transition-all duration-200 hover:shadow-md ${styles.card}`}>
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-gray-800 truncate">{level.product.name}</h3>
-          <span className="text-xs text-gray-500">{level.product.unit}</span>
-        </div>
-        <div className="flex items-center gap-1 ml-2">
-          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${styles.badge}`}>
+    <div className={`rounded-xl border-2 p-4 transition-all duration-200 hover:shadow-md flex flex-col ${styles.card}`}>
+      <div className="flex items-start justify-between gap-2 mb-1">
+        <div className="flex items-center gap-1 shrink-0 ml-auto">
+          <span className={`text-xs px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${styles.badge}`}>
             {styles.badgeText}
           </span>
           <button
@@ -63,6 +59,11 @@ const StockCard: React.FC<StockCardProps> = ({ level, onIncrement, onOpenDetail 
             <Settings className="h-4 w-4" />
           </button>
         </div>
+      </div>
+
+      <div className="mb-3">
+        <h3 className="font-semibold text-gray-800 leading-snug text-sm">{level.product.name}</h3>
+        <span className="text-xs text-gray-500">{level.product.unit}</span>
       </div>
 
       <div className={`text-4xl font-bold text-center my-3 ${styles.qty}`}>
