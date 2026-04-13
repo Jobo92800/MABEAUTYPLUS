@@ -16,7 +16,7 @@ import StockHistory from '../components/stock/StockHistory';
 
 type TabKey = 'stock' | 'history';
 
-const AVAILABLE_CATEGORIES: StockCategory[] = ['complement', 'vetement', 'mesojet', 'kos', 'advance_beauty'];
+const AVAILABLE_CATEGORIES: StockCategory[] = ['livre', 'complement', 'vetement', 'mesojet', 'kos', 'advance_beauty'];
 
 const StockPage: React.FC = () => {
   const { centerId } = useParams<{ centerId: string }>();
@@ -25,7 +25,7 @@ const StockPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [tab, setTab] = useState<TabKey>('stock');
-  const [selectedCategory, setSelectedCategory] = useState<StockCategory>('complement');
+  const [selectedCategory, setSelectedCategory] = useState<StockCategory>('livre');
   const [detailLevel, setDetailLevel] = useState<StockLevelWithProduct | null>(null);
   const [search, setSearch] = useState('');
 
@@ -33,7 +33,7 @@ const StockPage: React.FC = () => {
 
   const availableCategories = AVAILABLE_CATEGORIES.filter((cat) => {
     const specific = CENTER_SPECIFIC_CATEGORIES[centerId ?? ''];
-    if (cat === 'complement' || cat === 'vetement') return true;
+    if (cat === 'livre' || cat === 'complement' || cat === 'vetement') return true;
     if (!specific) return false;
     return specific.includes(cat);
   });

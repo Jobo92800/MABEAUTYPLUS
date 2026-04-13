@@ -1,4 +1,4 @@
-export type StockCategory = 'complement' | 'vetement' | 'mesojet' | 'kos' | 'advance_beauty';
+export type StockCategory = 'livre' | 'complement' | 'vetement' | 'mesojet' | 'kos' | 'advance_beauty';
 export type MovementType = 'entry' | 'exit';
 
 export interface StockProduct {
@@ -43,6 +43,7 @@ export interface StockLevelWithProduct extends StockLevel {
 export type StockStatus = 'danger' | 'warning' | 'normal';
 
 export const CATEGORY_LABELS: Record<StockCategory, string> = {
+  livre: 'Livres',
   complement: 'Compléments alimentaires',
   vetement: 'Vêtements',
   mesojet: 'Mésojet',
@@ -51,6 +52,7 @@ export const CATEGORY_LABELS: Record<StockCategory, string> = {
 };
 
 export const CATEGORY_COLORS: Record<StockCategory, { bg: string; text: string; border: string }> = {
+  livre: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
   complement: { bg: 'bg-pink-50', text: 'text-pink-700', border: 'border-pink-200' },
   vetement: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
   mesojet: { bg: 'bg-teal-50', text: 'text-teal-700', border: 'border-teal-200' },
