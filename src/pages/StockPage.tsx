@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Package, AlertTriangle, Clock, RefreshCw, Search, ArrowLeft } from 'lucide-react';
+import { Package, AlertTriangle, Clock, RefreshCw, Search, ArrowLeft, Plus } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import {
   getStockLevels,
@@ -13,6 +13,7 @@ import { CATEGORY_LABELS, CATEGORY_COLORS, CENTER_SPECIFIC_CATEGORIES, ALL_CENTE
 import StockCard from '../components/stock/StockCard';
 import StockDetailModal from '../components/stock/StockDetailModal';
 import StockHistory from '../components/stock/StockHistory';
+import AddProductModal from '../components/stock/AddProductModal';
 
 type TabKey = 'stock' | 'history';
 
@@ -28,6 +29,7 @@ const StockPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<StockCategory>('livre');
   const [detailLevel, setDetailLevel] = useState<StockLevelWithProduct | null>(null);
   const [search, setSearch] = useState('');
+  const [showAddModal, setShowAddModal] = useState(false);
 
   const center = ALL_CENTERS.find((c) => c.id === centerId);
 
@@ -189,15 +191,24 @@ const StockPage: React.FC = () => {
               })}
             </div>
 
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Rechercher un produit..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-brand-pink bg-white shadow-sm"
-              />
+            <div className="flex gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Rechercher un produit..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-brand-pink bg-white shadow-sm"
+                />
+              </div>
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="flex items-center gap-2 px-4 py-2.5 bg-brand-pink text-white rounded-xl text-sm font-medium hover:bg-brand-pink/90 transition-colors shadow-sm whitespace-nowrap"
+              >
+                <Plus className="h-4 w-4" />
+                Nouveau produit
+              </button>
             </div>
 
             {loading ? (
@@ -260,6 +271,16 @@ const StockPage: React.FC = () => {
           level={detailLevel}
           onClose={() => setDetailLevel(null)}
           onUpdated={fetchLevels}
+        />
+      )}
+
+      {showAddModal && centerId && (
+        <AddProductModal
+          centerId={centerId}
+          selectedCategory={selectedCategory}
+          availableCategories={availableCategories}
+          onClose={() => setShowAddModal(false)}
+          onAdded={fetchLevels}
         />
       )}
     </div>
