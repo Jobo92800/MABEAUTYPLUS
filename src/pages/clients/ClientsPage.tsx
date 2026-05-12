@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { PlusIcon, Download } from 'lucide-react';
+import { Plus as PlusIcon, Download } from 'lucide-react';
 import { getClients } from '../../services/database';
 import { utils, writeFile } from 'xlsx';
 import type { Client } from '../../services/database';
@@ -99,7 +99,7 @@ const ClientsPage = () => {
   return (
     <div className="relative min-h-screen">
       {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-brand-blue/5 to-white -z-10" />
+      <div className="absolute inset-0 -z-10" style={{ background: 'linear-gradient(to bottom, rgba(50,172,222,0.05), var(--bg))' }} />
       
       {/* Content */}
       <div className="space-y-6">

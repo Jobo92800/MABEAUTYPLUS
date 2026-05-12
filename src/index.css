@@ -2,6 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Nouvelle DA MaBeautyPlus */
+:root {
+  --bg: #F3F3FF;
+  --bg-soft: #E8E8FA;
+  --bg-card: #FFFFFF;
+  --ink: #00002E;
+  --ink-soft: #4A4A6E;
+  --line: #D8D8EC;
+  --line-strong: #B8B8D4;
+  --primary: #32ACDE;
+  --primary-soft: #C8E8F5;
+  --secondary: #DA33BF;
+  --secondary-soft: #F5C8EE;
+}
+
 /* Mobile-first responsive styles */
 @layer base {
   html {
@@ -10,6 +25,11 @@
 
   body {
     @apply antialiased;
+    background-color: var(--bg);
+    background-image:
+      radial-gradient(circle at 10% 0%, rgba(50, 172, 222, 0.07) 0%, transparent 45%),
+      radial-gradient(circle at 90% 100%, rgba(218, 51, 191, 0.06) 0%, transparent 45%);
+    min-height: 100vh;
   }
 }
 
@@ -42,20 +62,41 @@
 
 /* Custom styles for brand colors */
 .text-brand-blue {
-  color: #35aedc;
+  color: #32ACDE;
 }
 
 .text-brand-pink {
-  color: #f42abe;
+  color: #DA33BF;
 }
 
 .bg-brand-blue {
-  background-color: #35aedc;
+  background-color: #32ACDE;
 }
 
 .bg-brand-pink {
-  background-color: #f42abe;
+  background-color: #DA33BF;
 }
+
+/* Utilitaires DA */
+.bg-da-bg       { background-color: var(--bg); }
+.bg-da-soft     { background-color: var(--bg-soft); }
+.bg-da-card     { background-color: var(--bg-card); }
+.border-da-line { border-color: var(--line); }
+.text-da-ink    { color: var(--ink); }
+.text-da-soft   { color: var(--ink-soft); }
+
+/* Override Tailwind gray backgrounds avec la palette lavande */
+.bg-gray-50    { background-color: var(--bg-soft) !important; }
+.hover\:bg-gray-50:hover { background-color: var(--bg-soft) !important; }
+.bg-gray-100   { background-color: #DDDDF0 !important; }
+.hover\:bg-gray-100:hover { background-color: #DDDDF0 !important; }
+
+/* Override borders grises */
+.border-gray-200 { border-color: var(--line) !important; }
+.divide-gray-200 > :not([hidden]) ~ :not([hidden]) { border-color: var(--line) !important; }
+.divide-gray-100 > :not([hidden]) ~ :not([hidden]) { border-color: var(--line) !important; }
+.border-gray-100 { border-color: var(--line) !important; }
+.ring-gray-900\/5 { --tw-ring-color: rgba(0,0,46,0.06) !important; }
 
 /* Responsive navigation */
 @media (max-width: 640px) {

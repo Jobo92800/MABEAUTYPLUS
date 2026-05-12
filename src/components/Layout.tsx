@@ -15,9 +15,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const centerId = centerMatch ? centerMatch[1] : null;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--bg)' }}>
       {!isStockPage && (
-        <nav className="bg-white border-b border-gray-200">
+        <nav className="bg-white/90 backdrop-blur-sm border-b" style={{ borderColor: 'var(--line)' }}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between h-16">
               <div className="flex items-center">
@@ -50,7 +50,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 {!isHome && centerId && (
                   <Link
                     to={`/centers/${centerId}/stock`}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-pink-50 text-pink-600 hover:bg-pink-100 font-medium text-sm transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-colors"
+                    style={{ backgroundColor: 'var(--secondary-soft)', color: 'var(--secondary)' }}
+                    onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#EDACDE')}
+                    onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'var(--secondary-soft)')}
                   >
                     <Package className="h-4 w-4" />
                     Stock

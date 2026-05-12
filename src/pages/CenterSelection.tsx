@@ -14,7 +14,7 @@ const CenterSelection = () => {
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* Background with custom gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-brand-blue/10 to-white" />
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(50,172,222,0.10), var(--bg))' }} />
       
       {/* Decorative circles */}
       <div className="absolute inset-0 overflow-hidden">
@@ -50,10 +50,11 @@ const CenterSelection = () => {
                   to={`/centers/${center.id}/clients`}
                   className="group block"
                 >
-                  <div className="bg-white/90 backdrop-blur-sm px-8 py-6 rounded-2xl transition-all duration-300 
-                    border border-brand-blue/20 hover:border-brand-pink
+                  <div className="bg-white/90 backdrop-blur-sm px-8 py-6 rounded-2xl transition-all duration-300
+                    border hover:border-brand-pink
                     shadow-sm hover:shadow-lg hover:shadow-brand-pink/10
-                    transform hover:scale-[1.02]">
+                    transform hover:scale-[1.02]"
+                    style={{ borderColor: 'var(--line)' }}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
                         <div className="flex items-center justify-center w-12 h-12 rounded-full 
@@ -69,7 +70,7 @@ const CenterSelection = () => {
                       <div className="w-6 h-6 flex items-center justify-center rounded-full
                         bg-brand-pink/10 group-hover:bg-brand-pink/20 transition-colors duration-300">
                         <span className="block w-2 h-2 border-t-2 border-r-2 transform rotate-45"
-                          style={{ borderColor: '#f42abe' }} />
+                          style={{ borderColor: 'var(--secondary)' }} />
                       </div>
                     </div>
                   </div>
