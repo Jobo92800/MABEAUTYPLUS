@@ -2,148 +2,120 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Nouvelle DA MaBeautyPlus */
+/* ============================================================
+   Palette MaBeautyPlus — DA harmonisée
+   Fond lavande doux, cards translucides, contrastes fluides
+   ============================================================ */
 :root {
-  --bg: #F3F3FF;
-  --bg-soft: #E8E8FA;
-  --bg-card: #FFFFFF;
-  --ink: #00002E;
-  --ink-soft: #4A4A6E;
-  --line: #D8D8EC;
-  --line-strong: #B8B8D4;
-  --primary: #32ACDE;
-  --primary-soft: #C8E8F5;
-  --secondary: #DA33BF;
-  --secondary-soft: #F5C8EE;
+  --bg:           #F0F0FF;
+  --bg-soft:      #E6E6FA;
+  --bg-card:      rgba(255, 255, 255, 0.75);
+  --bg-card-solid: #FFFFFF;
+  --ink:          #1A1A3E;
+  --ink-soft:     #5A5A7E;
+  --ink-muted:    #8A8AB0;
+  --line:         #D4D4EE;
+  --line-strong:  #B4B4D4;
+  --primary:      #32ACDE;
+  --primary-soft: #D8F0FA;
+  --secondary:    #DA33BF;
+  --secondary-soft: #FAD8F5;
 }
 
-/* Mobile-first responsive styles */
 @layer base {
-  html {
-    @apply text-base;
-  }
+  html { @apply text-base; }
 
   body {
     @apply antialiased;
     background-color: var(--bg);
     background-image:
-      radial-gradient(circle at 10% 0%, rgba(50, 172, 222, 0.07) 0%, transparent 45%),
-      radial-gradient(circle at 90% 100%, rgba(218, 51, 191, 0.06) 0%, transparent 45%);
+      radial-gradient(ellipse at 0% 0%,   rgba(50, 172, 222, 0.12) 0%, transparent 50%),
+      radial-gradient(ellipse at 100% 100%, rgba(218, 51, 191, 0.10) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 40%,  rgba(50, 172, 222, 0.04) 0%, transparent 60%);
+    background-attachment: fixed;
     min-height: 100vh;
   }
 }
 
 @layer components {
-  /* Mobile-optimized containers */
-  .container-mobile {
-    @apply w-full px-4 mx-auto sm:px-6 lg:px-8;
-  }
-
-  /* Responsive tables */
-  .table-responsive {
-    @apply block w-full overflow-x-auto -mx-4 sm:-mx-6 lg:-mx-8;
-  }
-
-  /* Responsive forms */
-  .form-grid {
-    @apply grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3;
-  }
-
-  /* Responsive buttons */
-  .btn-mobile {
-    @apply w-full sm:w-auto;
-  }
-
-  /* Responsive cards */
-  .card-mobile {
-    @apply p-4 sm:p-6;
-  }
+  .container-mobile { @apply w-full px-4 mx-auto sm:px-6 lg:px-8; }
+  .table-responsive  { @apply block w-full overflow-x-auto -mx-4 sm:-mx-6 lg:-mx-8; }
+  .form-grid         { @apply grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3; }
+  .btn-mobile        { @apply w-full sm:w-auto; }
+  .card-mobile       { @apply p-4 sm:p-6; }
 }
 
-/* Custom styles for brand colors */
-.text-brand-blue {
-  color: #32ACDE;
+/* ── Brand colors ── */
+.text-brand-blue  { color: var(--primary); }
+.text-brand-pink  { color: var(--secondary); }
+.bg-brand-blue    { background-color: var(--primary); }
+.bg-brand-pink    { background-color: var(--secondary); }
+
+/* ── Cards translucides harmonisées ──
+   Remplace les bg-white rigides par des surfaces légèrement translucides
+   qui s'intègrent naturellement dans le fond lavande              */
+.bg-white {
+  background-color: rgba(255, 255, 255, 0.80) !important;
+  backdrop-filter: blur(8px);
 }
 
-.text-brand-pink {
-  color: #DA33BF;
+/* Cas où on veut du blanc solide (modales, inputs) */
+.bg-white-solid,
+input, select, textarea,
+.modal-solid {
+  background-color: #FFFFFF !important;
+  backdrop-filter: none !important;
 }
 
-.bg-brand-blue {
-  background-color: #32ACDE;
-}
+/* ── Neutrals harmonisés ── */
+.bg-gray-50       { background-color: var(--bg-soft) !important; }
+.bg-gray-100      { background-color: rgba(210, 210, 240, 0.6) !important; }
+.hover\:bg-gray-50:hover  { background-color: rgba(210, 210, 240, 0.45) !important; }
+.hover\:bg-gray-100:hover { background-color: rgba(210, 210, 240, 0.70) !important; }
 
-.bg-brand-pink {
-  background-color: #DA33BF;
-}
-
-/* Utilitaires DA */
-.bg-da-bg       { background-color: var(--bg); }
-.bg-da-soft     { background-color: var(--bg-soft); }
-.bg-da-card     { background-color: var(--bg-card); }
-.border-da-line { border-color: var(--line); }
-.text-da-ink    { color: var(--ink); }
-.text-da-soft   { color: var(--ink-soft); }
-
-/* Override Tailwind gray backgrounds avec la palette lavande */
-.bg-gray-50    { background-color: var(--bg-soft) !important; }
-.hover\:bg-gray-50:hover { background-color: var(--bg-soft) !important; }
-.bg-gray-100   { background-color: #DDDDF0 !important; }
-.hover\:bg-gray-100:hover { background-color: #DDDDF0 !important; }
-
-/* Override borders grises */
+/* ── Borders harmonisées ── */
 .border-gray-200 { border-color: var(--line) !important; }
+.border-gray-100 { border-color: var(--line) !important; }
+.border-gray-300 { border-color: var(--line-strong) !important; }
 .divide-gray-200 > :not([hidden]) ~ :not([hidden]) { border-color: var(--line) !important; }
 .divide-gray-100 > :not([hidden]) ~ :not([hidden]) { border-color: var(--line) !important; }
-.border-gray-100 { border-color: var(--line) !important; }
-.ring-gray-900\/5 { --tw-ring-color: rgba(0,0,46,0.06) !important; }
 
-/* Responsive navigation */
+/* ── Ring harmonisé ── */
+.ring-gray-900\/5 { --tw-ring-color: rgba(26, 26, 62, 0.07) !important; }
+
+/* ── Text neutrals ── */
+.text-gray-900 { color: var(--ink) !important; }
+.text-gray-700 { color: var(--ink) !important; }
+.text-gray-600 { color: var(--ink-soft) !important; }
+.text-gray-500 { color: var(--ink-soft) !important; }
+.text-gray-400 { color: var(--ink-muted) !important; }
+.text-gray-300 { color: var(--ink-muted) !important; }
+
+/* ── Bouton Retour ── */
+.btn-back {
+  background-color: rgba(90, 90, 126, 0.18);
+  color: var(--ink-soft);
+}
+.btn-back:hover { background-color: rgba(90, 90, 126, 0.28); }
+
+/* ── Responsive navigation ── */
 @media (max-width: 640px) {
-  .nav-mobile {
-    @apply flex-col items-start space-y-2;
-  }
-
-  .nav-item-mobile {
-    @apply w-full;
-  }
-
-  .tab-scroll {
-    @apply overflow-x-auto whitespace-nowrap pb-2;
-    -webkit-overflow-scrolling: touch;
-  }
+  .nav-mobile      { @apply flex-col items-start space-y-2; }
+  .nav-item-mobile { @apply w-full; }
+  .tab-scroll      { @apply overflow-x-auto whitespace-nowrap pb-2; -webkit-overflow-scrolling: touch; }
 }
 
-/* Responsive charts */
-@media (max-width: 768px) {
-  .chart-container {
-    @apply h-[300px] w-full;
-  }
-}
+@media (max-width: 768px) { .chart-container { @apply h-[300px] w-full; } }
+@media (max-width: 640px) { .grid-mobile { @apply grid-cols-1 gap-4; } }
 
-/* Responsive grid layouts */
-@media (max-width: 640px) {
-  .grid-mobile {
-    @apply grid-cols-1 gap-4;
-  }
-}
-
-/* Animations */
+/* ── Animations ── */
 @keyframes fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
+.animate-fade-in { animation: fade-in 0.6s ease-out forwards; }
 
-.animate-fade-in {
-  animation: fade-in 0.6s ease-out forwards;
-}
-
+/* ── Font ── */
 @font-face {
   font-family: 'Inter var';
   src: url('https://rsms.me/inter/font-files/Inter-roman.var.woff2') format('woff2');

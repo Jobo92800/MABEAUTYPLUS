@@ -22,8 +22,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <div className="flex justify-between h-16">
               <div className="flex items-center">
                 {!isHome && (
-                  <Link to="/" className="flex items-center text-gray-500 hover:text-gray-700">
-                    <ArrowLeft className="h-5 w-5 mr-2" />
+                  <Link to="/" className="flex items-center text-sm font-medium transition-colors duration-200" style={{ color: 'var(--ink-soft)' }}
+                    onMouseEnter={e => (e.currentTarget.style.color = 'var(--primary)')}
+                    onMouseLeave={e => (e.currentTarget.style.color = 'var(--ink-soft)')}
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-1.5" />
                     Changer de centre
                   </Link>
                 )}
@@ -41,9 +44,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 {!isHome && centerId && (
                   <Link
                     to={`/centers/${centerId}/clients`}
-                    className="flex items-center text-gray-500 hover:text-gray-700"
+                    className="flex items-center text-sm font-medium transition-colors duration-200"
+                    style={{ color: 'var(--ink-soft)' }}
+                    onMouseEnter={e => (e.currentTarget.style.color = 'var(--primary)')}
+                    onMouseLeave={e => (e.currentTarget.style.color = 'var(--ink-soft)')}
                   >
-                    <Users className="h-5 w-5 mr-2" />
+                    <Users className="h-4 w-4 mr-1.5" />
                     Clients
                   </Link>
                 )}
