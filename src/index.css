@@ -7,10 +7,10 @@
    Fond lavande doux, cards translucides, contrastes fluides
    ============================================================ */
 :root {
-  --bg:           #F0F0FF;
-  --bg-soft:      #E6E6FA;
-  --bg-card:      rgba(255, 255, 255, 0.75);
-  --bg-card-solid: #FFFFFF;
+  --bg:           #EBEBFF;
+  --bg-soft:      #EAEAF8;
+  --bg-card:      #F5F5FF;
+  --bg-card-solid: #F5F5FF;
   --ink:          #1A1A3E;
   --ink-soft:     #5A5A7E;
   --ink-muted:    #8A8AB0;
@@ -29,9 +29,8 @@
     @apply antialiased;
     background-color: var(--bg);
     background-image:
-      radial-gradient(ellipse at 0% 0%,   rgba(50, 172, 222, 0.12) 0%, transparent 50%),
-      radial-gradient(ellipse at 100% 100%, rgba(218, 51, 191, 0.10) 0%, transparent 50%),
-      radial-gradient(ellipse at 50% 40%,  rgba(50, 172, 222, 0.04) 0%, transparent 60%);
+      radial-gradient(ellipse at 0% 0%,    rgba(50, 172, 222, 0.15) 0%, transparent 50%),
+      radial-gradient(ellipse at 100% 100%, rgba(218, 51, 191, 0.12) 0%, transparent 50%);
     background-attachment: fixed;
     min-height: 100vh;
   }
@@ -51,27 +50,24 @@
 .bg-brand-blue    { background-color: var(--primary); }
 .bg-brand-pink    { background-color: var(--secondary); }
 
-/* ── Cards translucides harmonisées ──
-   Remplace les bg-white rigides par des surfaces légèrement translucides
-   qui s'intègrent naturellement dans le fond lavande              */
+/* ── Cards — même famille lavande que le fond ──
+   Plus claires que le fond mais dans la même teinte, pas de blanc pur  */
 .bg-white {
-  background-color: rgba(255, 255, 255, 0.80) !important;
-  backdrop-filter: blur(8px);
+  background-color: rgba(248, 248, 255, 0.90) !important;
+  backdrop-filter: blur(4px);
 }
 
-/* Cas où on veut du blanc solide (modales, inputs) */
-.bg-white-solid,
-input, select, textarea,
-.modal-solid {
-  background-color: #FFFFFF !important;
+/* Inputs : blanc pur pour la lisibilité */
+input, select, textarea {
+  background-color: rgba(255, 255, 255, 0.95) !important;
   backdrop-filter: none !important;
 }
 
 /* ── Neutrals harmonisés ── */
-.bg-gray-50       { background-color: var(--bg-soft) !important; }
-.bg-gray-100      { background-color: rgba(210, 210, 240, 0.6) !important; }
-.hover\:bg-gray-50:hover  { background-color: rgba(210, 210, 240, 0.45) !important; }
-.hover\:bg-gray-100:hover { background-color: rgba(210, 210, 240, 0.70) !important; }
+.bg-gray-50       { background-color: #EAEAF8 !important; }
+.bg-gray-100      { background-color: #E0E0F4 !important; }
+.hover\:bg-gray-50:hover  { background-color: #E4E4F6 !important; }
+.hover\:bg-gray-100:hover { background-color: #DCDCF2 !important; }
 
 /* ── Borders harmonisées ── */
 .border-gray-200 { border-color: var(--line) !important; }

@@ -14,7 +14,7 @@ const CenterSelection = () => {
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* Background with custom gradient */}
-      <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(50,172,222,0.10), var(--bg))' }} />
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(50,172,222,0.08), var(--bg))' }} />
       
       {/* Decorative circles */}
       <div className="absolute inset-0 overflow-hidden">

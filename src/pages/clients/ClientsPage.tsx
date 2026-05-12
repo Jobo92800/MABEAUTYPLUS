@@ -99,7 +99,7 @@ const ClientsPage = () => {
   return (
     <div className="relative min-h-screen">
       {/* Background gradient */}
-      <div className="absolute inset-0 -z-10" style={{ background: 'linear-gradient(to bottom, rgba(50,172,222,0.05), var(--bg))' }} />
+      <div className="absolute inset-0 -z-10" style={{ background: 'var(--bg)' }} />
       
       {/* Content */}
       <div className="space-y-6">
