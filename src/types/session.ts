@@ -13,4 +13,5 @@ export interface Session {
   complementType?: string; // Pour les compléments alimentaires
   quantity?: number; // Pour les compléments alimentaires
   createdAt?: string;
+  cureNumber?: number;
 }
