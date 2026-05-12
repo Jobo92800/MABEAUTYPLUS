@@ -304,8 +304,7 @@ const EditClientPage = () => {
         <div className="flex items-center space-x-3">
           <button
             onClick={() => navigate(`/centers/${centerId}/clients`)}
-            className="flex items-center rounded-full px-6 py-2 text-sm font-semibold shadow-sm hover:shadow-md transition-all duration-200"
-            style={{ backgroundColor: 'rgba(90,90,126,0.15)', color: 'var(--ink-soft)' }}
+            className="flex items-center rounded-full px-6 py-2 text-sm font-semibold text-white shadow-sm hover:shadow-md transition-all duration-200 bg-gray-500"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Retour
@@ -360,21 +359,16 @@ const EditClientPage = () => {
                               : 'bg-brand-blue text-white shadow-sm'
                             : shouldBeOrange
                               ? 'text-orange-600 hover:text-orange-700 hover:bg-orange-50'
-                              : 'hover:bg-white/60'
+                              : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                           }
                         `}
-                        style={
-                          currentTab !== tab.id && !shouldBeOrange
-                            ? { color: 'var(--ink-soft)' }
-                            : undefined
-                        }
                       >
                         <Icon className={`
-                          ${currentTab === tab.id
-                            ? 'text-white'
+                          ${currentTab === tab.id 
+                            ? 'text-white' 
                             : shouldBeOrange
                               ? 'text-orange-500 group-hover:text-orange-600'
-                              : 'opacity-60'
+                              : 'text-gray-400 group-hover:text-gray-500'
                           }
                           -ml-0.5 mr-2 h-5 w-5
                         `} />

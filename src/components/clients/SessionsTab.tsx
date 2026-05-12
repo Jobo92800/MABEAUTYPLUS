@@ -209,10 +209,7 @@ const SessionsTab: React.FC<SessionsTabProps> = ({ clientId, centerId }) => {
           </div>
           <button
             onClick={() => setShowNewCureConfirm(true)}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors border"
-            style={{ backgroundColor: 'var(--bg-soft)', borderColor: 'var(--line)', color: 'var(--ink-soft)' }}
-            onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--primary-soft)')}
-            onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'var(--bg-soft)')}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 text-gray-600 text-xs font-medium hover:bg-gray-100 transition-colors"
           >
             <RefreshCw className="h-3.5 w-3.5" />
             Nouvelle cure

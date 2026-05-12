@@ -2,116 +2,107 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ============================================================
-   Palette MaBeautyPlus — DA harmonisée
-   Fond lavande doux, cards translucides, contrastes fluides
-   ============================================================ */
-:root {
-  --bg:           #EBEBFF;
-  --bg-soft:      #EAEAF8;
-  --bg-card:      #F5F5FF;
-  --bg-card-solid: #F5F5FF;
-  --ink:          #1A1A3E;
-  --ink-soft:     #5A5A7E;
-  --ink-muted:    #8A8AB0;
-  --line:         #D4D4EE;
-  --line-strong:  #B4B4D4;
-  --primary:      #32ACDE;
-  --primary-soft: #D8F0FA;
-  --secondary:    #DA33BF;
-  --secondary-soft: #FAD8F5;
-}
-
+/* Mobile-first responsive styles */
 @layer base {
-  html { @apply text-base; }
+  html {
+    @apply text-base;
+  }
 
   body {
     @apply antialiased;
-    background-color: var(--bg);
-    background-image:
-      radial-gradient(ellipse at 0% 0%,    rgba(50, 172, 222, 0.15) 0%, transparent 50%),
-      radial-gradient(ellipse at 100% 100%, rgba(218, 51, 191, 0.12) 0%, transparent 50%);
-    background-attachment: fixed;
-    min-height: 100vh;
   }
 }
 
 @layer components {
-  .container-mobile { @apply w-full px-4 mx-auto sm:px-6 lg:px-8; }
-  .table-responsive  { @apply block w-full overflow-x-auto -mx-4 sm:-mx-6 lg:-mx-8; }
-  .form-grid         { @apply grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3; }
-  .btn-mobile        { @apply w-full sm:w-auto; }
-  .card-mobile       { @apply p-4 sm:p-6; }
+  /* Mobile-optimized containers */
+  .container-mobile {
+    @apply w-full px-4 mx-auto sm:px-6 lg:px-8;
+  }
+
+  /* Responsive tables */
+  .table-responsive {
+    @apply block w-full overflow-x-auto -mx-4 sm:-mx-6 lg:-mx-8;
+  }
+
+  /* Responsive forms */
+  .form-grid {
+    @apply grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3;
+  }
+
+  /* Responsive buttons */
+  .btn-mobile {
+    @apply w-full sm:w-auto;
+  }
+
+  /* Responsive cards */
+  .card-mobile {
+    @apply p-4 sm:p-6;
+  }
 }
 
-/* ── Brand colors ── */
-.text-brand-blue  { color: var(--primary); }
-.text-brand-pink  { color: var(--secondary); }
-.bg-brand-blue    { background-color: var(--primary); }
-.bg-brand-pink    { background-color: var(--secondary); }
-
-/* ── Cards — même famille lavande que le fond ──
-   Plus claires que le fond mais dans la même teinte, pas de blanc pur  */
-.bg-white {
-  background-color: rgba(248, 248, 255, 0.90) !important;
-  backdrop-filter: blur(4px);
+/* Custom styles for brand colors */
+.text-brand-blue {
+  color: #35aedc;
 }
 
-/* Inputs : blanc pur pour la lisibilité */
-input, select, textarea {
-  background-color: rgba(255, 255, 255, 0.95) !important;
-  backdrop-filter: none !important;
+.text-brand-pink {
+  color: #f42abe;
 }
 
-/* ── Neutrals harmonisés ── */
-.bg-gray-50       { background-color: #EAEAF8 !important; }
-.bg-gray-100      { background-color: #E0E0F4 !important; }
-.hover\:bg-gray-50:hover  { background-color: #E4E4F6 !important; }
-.hover\:bg-gray-100:hover { background-color: #DCDCF2 !important; }
-
-/* ── Borders harmonisées ── */
-.border-gray-200 { border-color: var(--line) !important; }
-.border-gray-100 { border-color: var(--line) !important; }
-.border-gray-300 { border-color: var(--line-strong) !important; }
-.divide-gray-200 > :not([hidden]) ~ :not([hidden]) { border-color: var(--line) !important; }
-.divide-gray-100 > :not([hidden]) ~ :not([hidden]) { border-color: var(--line) !important; }
-
-/* ── Ring harmonisé ── */
-.ring-gray-900\/5 { --tw-ring-color: rgba(26, 26, 62, 0.07) !important; }
-
-/* ── Text neutrals ── */
-.text-gray-900 { color: var(--ink) !important; }
-.text-gray-700 { color: var(--ink) !important; }
-.text-gray-600 { color: var(--ink-soft) !important; }
-.text-gray-500 { color: var(--ink-soft) !important; }
-.text-gray-400 { color: var(--ink-muted) !important; }
-.text-gray-300 { color: var(--ink-muted) !important; }
-
-/* ── Bouton Retour ── */
-.btn-back {
-  background-color: rgba(90, 90, 126, 0.18);
-  color: var(--ink-soft);
+.bg-brand-blue {
+  background-color: #35aedc;
 }
-.btn-back:hover { background-color: rgba(90, 90, 126, 0.28); }
 
-/* ── Responsive navigation ── */
+.bg-brand-pink {
+  background-color: #f42abe;
+}
+
+/* Responsive navigation */
 @media (max-width: 640px) {
-  .nav-mobile      { @apply flex-col items-start space-y-2; }
-  .nav-item-mobile { @apply w-full; }
-  .tab-scroll      { @apply overflow-x-auto whitespace-nowrap pb-2; -webkit-overflow-scrolling: touch; }
+  .nav-mobile {
+    @apply flex-col items-start space-y-2;
+  }
+
+  .nav-item-mobile {
+    @apply w-full;
+  }
+
+  .tab-scroll {
+    @apply overflow-x-auto whitespace-nowrap pb-2;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
-@media (max-width: 768px) { .chart-container { @apply h-[300px] w-full; } }
-@media (max-width: 640px) { .grid-mobile { @apply grid-cols-1 gap-4; } }
+/* Responsive charts */
+@media (max-width: 768px) {
+  .chart-container {
+    @apply h-[300px] w-full;
+  }
+}
 
-/* ── Animations ── */
+/* Responsive grid layouts */
+@media (max-width: 640px) {
+  .grid-mobile {
+    @apply grid-cols-1 gap-4;
+  }
+}
+
+/* Animations */
 @keyframes fade-in {
-  from { opacity: 0; transform: translateY(-10px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
-.animate-fade-in { animation: fade-in 0.6s ease-out forwards; }
 
-/* ── Font ── */
+.animate-fade-in {
+  animation: fade-in 0.6s ease-out forwards;
+}
+
 @font-face {
   font-family: 'Inter var';
   src: url('https://rsms.me/inter/font-files/Inter-roman.var.woff2') format('woff2');

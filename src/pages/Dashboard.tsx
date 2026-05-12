@@ -22,8 +22,7 @@ const Dashboard = () => {
           return (
             <div
               key={item.name}
-              className="bg-white overflow-hidden shadow-sm rounded-xl border"
-              style={{ borderColor: 'var(--line)' }}
+              className="bg-white overflow-hidden shadow rounded-lg"
             >
               <div className="p-5">
                 <div className="flex items-center">
@@ -47,14 +46,14 @@ const Dashboard = () => {
         })}
       </div>
 
-      <div className="bg-white shadow-sm rounded-xl border" style={{ borderColor: 'var(--line)' }}>
+      <div className="bg-white shadow rounded-lg">
         <div className="px-4 py-5 sm:px-6">
           <h3 className="text-lg leading-6 font-medium text-gray-900">
             Rendez-vous du Jour
           </h3>
         </div>
-        <div className="border-t" style={{ borderColor: 'var(--line)' }}>
-          <ul className="divide-y" style={{ borderColor: 'var(--line)' }}>
+        <div className="border-t border-gray-200">
+          <ul className="divide-y divide-gray-200">
             {recentClients.map((client) => (
               <li key={client.id} className="px-4 py-4 sm:px-6">
                 <div className="flex items-center justify-between">

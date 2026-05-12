@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Pencil as PencilIcon, CircleUser as UserCircle, MessageSquare, Trash2 } from 'lucide-react';
+import { PencilIcon, UserCircle, MessageSquare, Trash2 } from 'lucide-react';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../services/firebase';
 import { deleteClient } from '../../services/database';
@@ -167,30 +167,21 @@ const ClientList: React.FC<ClientListProps> = ({ clients, centerId, onClientDele
               <div className="flex items-center gap-2">
                 <button
                   onClick={(e) => handleOpenNoteModal(client, e)}
-                  className="rounded-full p-2 text-brand-pink transition-colors duration-200"
-                  style={{ backgroundColor: 'var(--secondary-soft)' }}
-                  onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(218,51,191,0.18)')}
-                  onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'var(--secondary-soft)')}
+                  className="rounded-full bg-white p-2 text-brand-pink hover:bg-brand-pink/5 transition-colors duration-200"
                   title="Notes"
                 >
                   <MessageSquare className="h-4 w-4" />
                 </button>
                 <Link
                   to={`/centers/${centerId}/clients/${client.id}/edit`}
-                  className="rounded-full p-2 text-brand-blue transition-colors duration-200"
-                  style={{ backgroundColor: 'var(--primary-soft)' }}
-                  onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(50,172,222,0.18)')}
-                  onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'var(--primary-soft)')}
+                  className="rounded-full bg-white p-2 text-brand-blue hover:bg-brand-blue/5 transition-colors duration-200"
                   title="Modifier"
                 >
                   <PencilIcon className="h-4 w-4" />
                 </Link>
                 <button
                   onClick={() => handleDeleteClient(client)}
-                  className="rounded-full p-2 text-red-500 transition-colors duration-200"
-                  style={{ backgroundColor: 'rgba(254,226,226,0.6)' }}
-                  onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(254,202,202,0.8)')}
-                  onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'rgba(254,226,226,0.6)')}
+                  className="rounded-full bg-white p-2 text-red-500 hover:bg-red-50 transition-colors duration-200"
                   title="Supprimer"
                 >
                   <Trash2 className="h-4 w-4" />

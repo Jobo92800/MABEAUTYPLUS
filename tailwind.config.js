@@ -5,14 +5,9 @@ export default {
     extend: {
       colors: {
         brand: {
-          blue: '#32ACDE',
-          pink: '#DA33BF',
-          white: '#ffffff',
-          bg: '#F3F3FF',
-          'bg-soft': '#E8E8FA',
-          ink: '#00002E',
-          'ink-soft': '#4A4A6E',
-          line: '#D8D8EC',
+          blue: '#35aedc',
+          pink: '#f42abe',
+          white: '#ffffff'
         }
       },
       fontFamily: {
