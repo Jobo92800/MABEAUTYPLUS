@@ -22,6 +22,7 @@ import PsioTab from '../../components/clients/PsioTab';
 import DomeTab from '../../components/clients/DomeTab';
 import { getFullClientData, getMeasurements, getSessions, updateClient } from '../../services/database';
 import { generateClientPDF } from '../../utils/pdfGenerator';
+import CureFormModal from '../../components/clients/CureFormModal';
 import type { FullClientData } from '../../types/client';
 import type { Measurement } from '../../types/measurements';
 import type { Session } from '../../types/session';
@@ -95,6 +96,7 @@ const EditClientPage = () => {
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasExpiredComplements, setHasExpiredComplements] = useState(false);
+  const [showCureForm, setShowCureForm] = useState(false);
 
   // Fonction pour vérifier les compléments expirés (SOS exclu du calcul automatique)
   const checkExpiredComplements = async () => {
@@ -286,13 +288,20 @@ const EditClientPage = () => {
   }
 
   return (
+    <>
+    {showCureForm && (
+      <CureFormModal
+        clientName={clientData ? `${clientData.client.firstName} ${clientData.client.lastName}` : undefined}
+        onClose={() => setShowCureForm(false)}
+      />
+    )}
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-brand-blue">
           {clientData.client.firstName} {clientData.client.lastName}
         </h1>
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-3">
           <button
             onClick={() => navigate(`/centers/${centerId}/clients`)}
             className="flex items-center rounded-full px-6 py-2 text-sm font-semibold text-white shadow-sm hover:shadow-md transition-all duration-200 bg-gray-500"
@@ -301,11 +310,18 @@ const EditClientPage = () => {
             Retour
           </button>
           <button
+            onClick={() => setShowCureForm(true)}
+            className="flex items-center rounded-full px-5 py-2 text-sm font-semibold text-white shadow-sm hover:shadow-md transition-all duration-200 bg-brand-pink"
+          >
+            <Sparkles className="h-4 w-4 mr-2" />
+            Formulaire Cure
+          </button>
+          <button
             onClick={handleDownloadPDF}
             disabled={generatingPDF}
             className={`
               flex items-center rounded-full px-6 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-200
-              ${generatingPDF 
+              ${generatingPDF
                 ? 'bg-gray-400 cursor-not-allowed'
                 : 'bg-brand-blue hover:shadow-md'
               }
@@ -420,6 +436,7 @@ const EditClientPage = () => {
         )}
       </div>
     </div>
+    </>
   );
 };
 
