@@ -19,7 +19,7 @@ export const getMeasurements = async (clientId: string, centerId: string): Promi
   }
 };
 
-export const addMeasurement = async (clientId: string, centerId: string, data: { date: string; weight: number; comment?: string }): Promise<void> => {
+export const addMeasurement = async (clientId: string, centerId: string, data: { date: string; weight: number; comment?: string; photoTaken?: boolean; cureNumber?: number }): Promise<void> => {
   try {
     await addDoc(collection(db, 'measurements'), {
       clientId,

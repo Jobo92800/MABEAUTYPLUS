@@ -6,6 +6,7 @@ export interface Measurement {
   weight: number;
   comment?: string;
   photoTaken?: boolean;
+  cureNumber?: number;
 }
 
 export interface Mensuration {
