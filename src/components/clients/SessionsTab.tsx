@@ -132,20 +132,22 @@ const SessionsTab: React.FC<SessionsTabProps> = ({ clientId, centerId }) => {
   }, {});
   const cureNumbers = Object.keys(cureGroups).map(Number).sort((a, b) => b - a);
 
-  // Chart data: one line per cure
-  const chartDataByCure: Record<number, { date: string; weight: number }[]> = {};
+  // Chart data: one line per cure, keyed by ISO date for correct sorting
+  const chartDataByCure: Record<number, { isoDate: string; date: string; weight: number }[]> = {};
   Object.entries(cureGroups).forEach(([cn, ms]) => {
     chartDataByCure[Number(cn)] = [...ms]
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-      .map(m => ({ date: format(new Date(m.date), 'dd/MM'), weight: m.weight }));
+      .map(m => ({ isoDate: m.date, date: format(new Date(m.date), 'dd/MM'), weight: m.weight }));
   });
 
-  // Merge all dates for the chart X axis
-  const allDates = [...new Set(Object.values(chartDataByCure).flatMap(d => d.map(p => p.date)))].sort();
-  const chartData = allDates.map(date => {
-    const point: Record<string, string | number> = { date };
+  // Merge all dates sorted chronologically
+  const allIsoDates = [...new Set(Object.values(chartDataByCure).flatMap(d => d.map(p => p.isoDate)))]
+    .sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+  const chartData = allIsoDates.map(isoDate => {
+    const label = format(new Date(isoDate), 'dd/MM');
+    const point: Record<string, string | number> = { date: label };
     Object.entries(chartDataByCure).forEach(([cn, data]) => {
-      const found = data.find(p => p.date === date);
+      const found = data.find(p => p.isoDate === isoDate);
       if (found) point[`cure${cn}`] = found.weight;
     });
     return point;
