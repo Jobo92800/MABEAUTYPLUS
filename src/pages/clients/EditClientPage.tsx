@@ -38,7 +38,7 @@ const menuCategories = [
   {
     name: 'Luxothérapie',
     tabs: [
-      { id: 'sessions', name: 'Suivi des séances', icon: Scale },
+      { id: 'sessions', name: 'PDP', icon: Scale },
       { id: 'mensurations', name: 'Mensurations', icon: Ruler },
       { id: 'relaxation', name: 'Relaxation', icon: Coffee },
       { id: 'menopause', name: 'Ménopause', icon: Activity }
