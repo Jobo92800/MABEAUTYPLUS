@@ -3,13 +3,13 @@ import { getFirestore, enableIndexedDbPersistence, connectFirestoreEmulator } fr
 import { getStorage, connectStorageEmulator } from 'firebase/storage';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyB6AYTOIduPpwD689cENgg17EijJiPjvyY",
-  authDomain: "mabeauty-plus-crm.firebaseapp.com",
-  projectId: "mabeauty-plus-crm",
-  storageBucket: "mabeauty-plus-crm.firebasestorage.app",
-  messagingSenderId: "284040627618",
-  appId: "1:284040627618:web:c629f3392fdd0899549efb",
-  measurementId: "G-QK1X8BL81L"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
 // Initialize Firebase
