@@ -4,14 +4,21 @@ import { toast } from 'react-hot-toast';
 import { saveCureData } from '../../services/database';
 import type { ClientCureData } from '../../types/client';
 
+interface CurePayload extends ClientCureData {
+  firstName?: string;
+  lastName?: string;
+}
+
 interface CureFormModalProps {
   clientId?: string;
   clientName?: string;
   onClose: () => void;
   onSaved?: () => void;
+  /** Appelé quand pas de clientId : transmet les données cure + prénom/nom pour préremplissage */
+  onCureData?: (payload: CurePayload) => void;
 }
 
-const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onClose, onSaved }) => {
+const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onClose, onSaved, onCureData }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
@@ -25,13 +32,18 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
   useEffect(() => {
     const handleMessage = async (e: MessageEvent) => {
       if (e.data?.type !== 'SAVE_CURE_DATA') return;
+      const payload: CurePayload = e.data.payload;
+
       if (!clientId) {
-        toast.error('Aucun client sélectionné');
+        // Nouveau client : on remonte les données au parent pour préremplissage
+        onCureData?.(payload);
+        toast.success('Informations de cure importées dans le formulaire');
+        onClose();
         return;
       }
+
       try {
-        const cureData: ClientCureData = e.data.payload;
-        await saveCureData(clientId, cureData);
+        await saveCureData(clientId, payload);
         toast.success('Cure enregistrée sur la fiche client');
         onSaved?.();
         onClose();
@@ -41,7 +53,7 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
     };
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [clientId, onClose, onSaved]);
+  }, [clientId, onClose, onSaved, onCureData]);
 
   const htmlContent = `<!DOCTYPE html>
 <html lang="fr">
@@ -105,7 +117,7 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
   .header h1 em { font-style: italic; color: var(--gold); }
   .header .subtitle { margin-top: 16px; font-size: 14px; color: var(--ink-soft); letter-spacing: 0.02em; max-width: 540px; margin-left: auto; margin-right: auto; }
   .divider { width: 60px; height: 1px; background: var(--gold); margin: 24px auto 0; }
-  .client-bar { background: var(--bg-card); border: 1px solid var(--line); border-radius: 14px; padding: 20px 24px; margin-bottom: 28px; display: grid; grid-template-columns: 1fr 1fr auto; gap: 20px; align-items: end; }
+  .client-bar { background: var(--bg-card); border: 1px solid var(--line); border-radius: 14px; padding: 20px 24px; margin-bottom: 28px; display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 20px; align-items: end; }
   .client-field label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--ink-soft); margin-bottom: 8px; font-weight: 500; }
   .client-field input { width: 100%; border: none; border-bottom: 1px solid var(--line); padding: 6px 0; font-family: 'Manrope', sans-serif; font-size: 16px; background: transparent; color: var(--ink); transition: border-color 0.2s; }
   .client-field input:focus { outline: none; border-bottom-color: var(--gold); }
@@ -282,8 +294,12 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
   </header>
   <div class="client-bar">
     <div class="client-field">
-      <label>Cliente</label>
-      <input type="text" id="clientName" placeholder="Prénom & Nom">
+      <label>Prénom</label>
+      <input type="text" id="clientFirstName" placeholder="Prénom">
+    </div>
+    <div class="client-field">
+      <label>Nom</label>
+      <input type="text" id="clientLastName" placeholder="Nom">
     </div>
     <div class="client-field">
       <label>Date du bilan</label>
@@ -704,6 +720,8 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
     if (total <= 0) return;
     const payments = computeInstallments(total, currentNbEch);
     const treatments = getActiveTreatments();
+    const firstName = (document.getElementById('clientFirstName')?.value || '').trim();
+    const lastName = (document.getElementById('clientLastName')?.value || '').trim();
     const payload = {
       totalPrice: total,
       installmentCount: currentNbEch,
@@ -711,6 +729,8 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
       savedAt: new Date().toISOString(),
       treatments: treatments,
       careServiceIds: treatments.map(t => t.careServiceId).filter(Boolean),
+      firstName,
+      lastName,
     };
     window.parent.postMessage({ type: 'SAVE_CURE_DATA', payload }, '*');
   }
@@ -724,7 +744,8 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
   function resetForm() {
     document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
     document.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
-    document.getElementById('clientName').value = '';
+    document.getElementById('clientFirstName').value = '';
+    document.getElementById('clientLastName').value = '';
     document.getElementById('clientDate').value = new Date().toISOString().split('T')[0];
     document.getElementById('pricingLocked').classList.remove('hide');
     document.getElementById('pricingRevealed').classList.remove('show');
@@ -737,7 +758,11 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
     renderForm();
     updateScores();
     document.getElementById('clientDate').value = new Date().toISOString().split('T')[0];
-    ${clientName ? `document.getElementById('clientName').value = ${JSON.stringify(clientName)};` : ''}
+    ${clientName ? `
+      const parts = ${JSON.stringify(clientName)}.trim().split(' ');
+      document.getElementById('clientFirstName').value = parts[0] || '';
+      document.getElementById('clientLastName').value = parts.slice(1).join(' ') || '';
+    ` : ''}
   });
 </script>
 </body>
