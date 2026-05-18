@@ -35,10 +35,15 @@ export const saveCureData = async (clientId: string, cureData: ClientCureData): 
   ];
 
   const careServiceIds = cureData.careServiceIds || [];
+  const treatments = cureData.treatments || [];
   const careServices = careServiceIds
     .map(id => CARE_SERVICES_LIST.find(s => s.id === id))
     .filter(Boolean)
-    .map(s => ({ id: s!.id, name: s!.name, sessions: '' }));
+    .map(s => {
+      const treatment = treatments.find(t => t.careServiceId === s!.id);
+      const sessionCount = treatment?.sessions ?? '';
+      return { id: s!.id, name: s!.name, sessions: sessionCount !== '' ? String(sessionCount) : '' };
+    });
 
   const newInstallments = cureData.installments.map((inst) => ({
     amount: inst.amount.toString(),
