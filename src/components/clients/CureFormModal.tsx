@@ -574,27 +574,54 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
   let currentNbEch = 3;
   const ordinal = ['1ère', '2ème', '3ème', '4ème', '5ème', '6ème'];
 
-  function distribute(qty, n) {
+  // Même logique que InstallmentsCalculator
+  const UP = Math.ceil, DOWN = Math.floor;
+  function distribute(qty, n, type) {
     if (qty <= 0) return Array(n).fill(0);
-    const result = [];
-    let remaining = qty;
-    for (let i = 0; i < n; i++) {
-      const share = i === 0 ? Math.ceil(remaining / (n - i)) : Math.round(remaining / (n - i));
-      result.push(share);
-      remaining -= share;
+    switch (n) {
+      case 1: return [qty];
+      case 2: return [UP(qty/2), DOWN(qty/2)];
+      case 3:
+        if (["129","259","dome"].includes(type)) { const t=UP(qty/3),u=DOWN(qty/3); return [t,u,qty-t-u]; }
+        { const u=UP(qty/3),v=DOWN(qty/3); return [qty-u-v,u,v]; }
+      case 4: { const t=UP(qty/4),u=DOWN(qty/4),v=DOWN(qty/4),w=qty-t-u-v; return type==="dome"?[t,u,v,w]:[t,w,v,u]; }
+      case 5: { const u=UP(qty/5),v=DOWN(qty/5),w=DOWN(qty/5),x=UP(qty/5),t=qty-u-v-w-x; return type==="dome"?[t,u,v,w,x]:[x,u,v,w,t]; }
+      case 6: {
+        if (type==="49") { const u=UP(qty/6),v=UP(qty/6),w=DOWN(qty/6),x=DOWN(qty/6),y=DOWN(qty/6); return [qty-u-v-w-x-y,u,v,w,x,y]; }
+        if (["149","195","129","259","dome"].includes(type)) { const u=UP(qty/6),v=UP(qty/6),w=UP(qty/6),x=DOWN(qty/6),y=DOWN(qty/6); return [qty-u-v-w-x-y,u,v,w,x,y]; }
+        if (type==="65") { const u=UP(qty/6),v=DOWN(qty/6),w=DOWN(qty/6),x=DOWN(qty/6),y=UP(qty/6); return [qty-u-v-w-x-y,u,v,w,x,y]; }
+        const u=UP(qty/6),v=DOWN(qty/6),w=DOWN(qty/6),x=DOWN(qty/6),y=DOWN(qty/6); return [qty-u-v-w-x-y,u,v,w,x,y];
+      }
+      default: return [qty];
     }
-    return result;
+  }
+
+  function distributeAmount(amount, n) {
+    if (amount <= 0) return Array(n).fill(0);
+    const base = DOWN(amount/n);
+    const higher = amount - base*n;
+    return Array(n).fill(0).map((_,i) => i < higher ? base+1 : base);
   }
 
   function computeInstallments(total, n) {
     if (total === 0) return Array(n).fill(0);
     if (n === 1) return [total];
     const payments = Array(n).fill(0);
-    // Distribuer les centimes
-    const base = Math.floor(total / n);
-    const remainder = total - base * n;
-    for (let i = 0; i < n; i++) payments[i] = base + (i < remainder ? 1 : 0);
-    // Première échéance légèrement plus haute si arrondi
+
+    // Addons (guide 19€, tenue 60€) → 1ère échéance comme dans InstallmentsCalculator
+    let addonTotal = 0;
+    document.querySelectorAll('[data-fixed-price]').forEach(el => {
+      addonTotal += parseFloat(el.dataset.fixedPrice) || 0;
+    });
+    payments[0] += addonTotal;
+
+    // Soins à 49€/séance → distribution par séances avec tier "49"
+    let totalSessions = 0;
+    document.querySelectorAll('.sessions-input').forEach(inp => {
+      totalSessions += parseFloat(inp.value) || 0;
+    });
+    distribute(totalSessions, n, "49").forEach((s, i) => { payments[i] += DEFAULT_PRICE * s; });
+
     return payments;
   }
 
