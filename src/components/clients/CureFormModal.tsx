@@ -640,6 +640,36 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
   }
   // ────────────────────────────────────────────────────────────────────────────
 
+  // Mapping clé formulaire cure → ID CARE_SERVICES du PaymentForm
+  const CURE_KEY_TO_CARE_SERVICE = {
+    'luxo':   'luxo-pdp',
+    'ishape': 'ishape',
+    'presso': 'presso',
+    'relax':  'luxo-relax',
+    'meno':   'luxo-meno',
+    'adipo':  'adipologie',
+    'cavitalyse': 'cavitalyse',
+    'meso':   'meso-visage',
+    'meso-corps': 'meso-corps',
+    'advance-lift': 'advance-lift',
+    'psio':   'psio',
+  };
+  const CARE_SERVICES_MAP = {
+    'luxo-pdp':      'Luxo - PDP',
+    'luxo-relax':    'Luxo - Relax',
+    'luxo-meno':     'Luxo - Méno',
+    'ishape':        'I-Shape',
+    'cavitalyse':    'Cavitalyse',
+    'adipologie':    'Adipologie',
+    'presso':        'Presso',
+    'meso-corps':    'Méso Corps',
+    'meso-visage':   'Méso Visage',
+    'advance-lift':  'Advance Lift',
+    'psio':          'Psio',
+    'guide':         'Guide',
+    'tenue':         'Tenue',
+  };
+
   function getActiveTreatments() {
     const results = [];
     document.querySelectorAll('.sessions-input').forEach(inp => {
@@ -647,7 +677,23 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
       const sessions = parseFloat(inp.value) || 0;
       if (sessions > 0) {
         const nameEl = inp.closest('.price-row')?.querySelector('.price-row-name');
-        results.push({ name: nameEl ? nameEl.textContent : key, sessions: sessions, pricePerSession: DEFAULT_PRICE });
+        const careServiceId = CURE_KEY_TO_CARE_SERVICE[key] || key;
+        results.push({
+          name: nameEl ? nameEl.textContent : key,
+          sessions: sessions,
+          pricePerSession: DEFAULT_PRICE,
+          careServiceId: careServiceId,
+        });
+      }
+    });
+    // Addons (guide, tenue)
+    document.querySelectorAll('[data-fixed-price]').forEach(el => {
+      const addonName = el.querySelector('.addon-name')?.textContent || '';
+      let careServiceId = null;
+      if (addonName.toLowerCase().includes('guide')) careServiceId = 'guide';
+      else if (addonName.toLowerCase().includes('tenue')) careServiceId = 'tenue';
+      if (careServiceId) {
+        results.push({ name: addonName, sessions: 1, pricePerSession: parseFloat(el.dataset.fixedPrice) || 0, careServiceId });
       }
     });
     return results;
@@ -657,12 +703,14 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
     const total = getTotalNumeric();
     if (total <= 0) return;
     const payments = computeInstallments(total, currentNbEch);
+    const treatments = getActiveTreatments();
     const payload = {
       totalPrice: total,
       installmentCount: currentNbEch,
       installments: payments.map((amt, i) => ({ index: i + 1, amount: amt })),
       savedAt: new Date().toISOString(),
-      treatments: getActiveTreatments(),
+      treatments: treatments,
+      careServiceIds: treatments.map(t => t.careServiceId).filter(Boolean),
     };
     window.parent.postMessage({ type: 'SAVE_CURE_DATA', payload }, '*');
   }

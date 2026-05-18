@@ -8,7 +8,8 @@ export interface ClientCureData {
   installmentCount: number;
   installments: CureInstallment[];
   savedAt: string;
-  treatments: Array<{ name: string; sessions: number; pricePerSession: number }>;
+  treatments: Array<{ name: string; sessions: number; pricePerSession: number; careServiceId?: string }>;
+  careServiceIds?: string[];
 }
 
 export interface Client {

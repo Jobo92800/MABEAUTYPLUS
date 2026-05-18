@@ -1,4 +1,4 @@
-import { collection, addDoc, getDocs, getDoc, doc, query, where, orderBy, limit, startAfter, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, getDoc, setDoc, doc, query, where, orderBy, limit, startAfter, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { TREATMENT_COLLECTIONS, PAYMENT_COLLECTION } from '../../collections';
 import { saveFormData } from '../../formUtils';
@@ -7,11 +7,79 @@ import type { Client, ClientCureData, Treatment } from '../../../types/client';
 import { deleteClientRelatedData } from './clientRelated';
 
 export const saveCureData = async (clientId: string, cureData: ClientCureData): Promise<void> => {
+  // 1. Sauvegarder sur le document client
   const clientRef = doc(db, 'clients', clientId);
   await updateDoc(clientRef, {
     cureData,
     updatedAt: new Date().toISOString(),
   });
+
+  // 2. Mettre à jour le premier règlement dans la collection payments
+  const paymentRef = doc(db, PAYMENT_COLLECTION, clientId);
+  const snap = await getDoc(paymentRef);
+
+  const CARE_SERVICES_LIST = [
+    { id: 'luxo-pdp', name: 'Luxo - PDP' },
+    { id: 'luxo-relax', name: 'Luxo - Relax' },
+    { id: 'luxo-meno', name: 'Luxo - Méno' },
+    { id: 'ishape', name: 'I-Shape' },
+    { id: 'cavitalyse', name: 'Cavitalyse' },
+    { id: 'adipologie', name: 'Adipologie' },
+    { id: 'presso', name: 'Presso' },
+    { id: 'meso-corps', name: 'Méso Corps' },
+    { id: 'meso-visage', name: 'Méso Visage' },
+    { id: 'advance-lift', name: 'Advance Lift' },
+    { id: 'psio', name: 'Psio' },
+    { id: 'guide', name: 'Guide' },
+    { id: 'tenue', name: 'Tenue' },
+  ];
+
+  const careServiceIds = cureData.careServiceIds || [];
+  const careServices = careServiceIds
+    .map(id => CARE_SERVICES_LIST.find(s => s.id === id))
+    .filter(Boolean)
+    .map(s => ({ id: s!.id, name: s!.name, sessions: '' }));
+
+  const newInstallments = cureData.installments.map((inst) => ({
+    amount: inst.amount.toString(),
+    date: '',
+    purpose: '',
+    method: '',
+    isPaid: false,
+    isGiven: false,
+  }));
+
+  let categories: any[] = [];
+  if (snap.exists()) {
+    const data = snap.data();
+    categories = Array.isArray(data.categories) ? [...data.categories] : [];
+  }
+
+  if (categories.length === 0) {
+    categories = [{
+      id: '1',
+      name: '',
+      ruleName: '',
+      careServices: [],
+      totalAmount: '',
+      deposit: { amount: '', date: '', method: '', isPaid: false, isGiven: false },
+      installments: [{ amount: '', date: '', purpose: '', method: '', isPaid: false, isGiven: false }],
+      avoir: { amount: '', comment: '' },
+    }];
+  }
+
+  // Mettre à jour le premier règlement
+  categories[0] = {
+    ...categories[0],
+    careServices,
+    totalAmount: cureData.totalPrice.toString(),
+    installments: newInstallments,
+  };
+
+  await setDoc(paymentRef, {
+    categories,
+    updatedAt: new Date().toISOString(),
+  }, { merge: true });
 };
 
 export const getClients = async (centerId: string, pageSize = 50, lastDoc?: any): Promise<Client[]> => {
