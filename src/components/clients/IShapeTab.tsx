@@ -341,7 +341,7 @@ const IShapeTab: React.FC<IShapeTabProps> = ({ clientId, centerId }) => {
                   <X className="h-5 w-5" />
                 </button>
               </div>
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4" noValidate>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
