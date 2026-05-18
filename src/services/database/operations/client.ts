@@ -2,7 +2,7 @@ import { collection, addDoc, getDocs, getDoc, setDoc, doc, query, where, orderBy
 import { db } from '../../firebase';
 import { TREATMENT_COLLECTIONS, PAYMENT_COLLECTION } from '../../collections';
 import { saveFormData } from '../../formUtils';
-import { addClientToAirtable } from '../../airtable';
+import { addClientToAirtable, updateClientMontantCureInAirtable } from '../../airtable';
 import type { Client, ClientCureData, Treatment } from '../../../types/client';
 import { deleteClientRelatedData } from './clientRelated';
 
@@ -80,6 +80,20 @@ export const saveCureData = async (clientId: string, cureData: ClientCureData): 
     categories,
     updatedAt: new Date().toISOString(),
   }, { merge: true });
+
+  // 3. Synchroniser le montant avec Airtable
+  const clientSnap = await getDoc(clientRef);
+  if (clientSnap.exists()) {
+    const clientData = clientSnap.data() as Client;
+    const { firstName, lastName, centerId } = clientData;
+    if (firstName && lastName && centerId && cureData.totalPrice > 0) {
+      try {
+        await updateClientMontantCureInAirtable(firstName, lastName, centerId, cureData.totalPrice);
+      } catch {
+        // Non bloquant : la sauvegarde Firestore a réussi
+      }
+    }
+  }
 };
 
 export const getClients = async (centerId: string, pageSize = 50, lastDoc?: any): Promise<Client[]> => {
