@@ -91,22 +91,27 @@ const IShapeTab: React.FC<IShapeTabProps> = ({ clientId, centerId }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const parsedWeight = newSession.weight && !isNaN(parseFloat(newSession.weight)) ? parseFloat(newSession.weight) : null;
       if (editingSession) {
-        await updateSession({ ...editingSession, ...newSession });
+        const updated = { ...editingSession, ...newSession };
+        if (parsedWeight !== null) updated.weight = parsedWeight;
+        else delete updated.weight;
+        await updateSession(updated);
         toast.success('Séance mise à jour');
       } else {
-        await addSession({
+        const sessionData: Omit<import('../../types/session').Session, 'id'> = {
           clientId,
           centerId,
           type: 'ishape',
           date: newSession.date,
           comment: newSession.comment,
           photoTaken: newSession.photoTaken,
-          weight: newSession.weight && !isNaN(parseFloat(newSession.weight)) ? parseFloat(newSession.weight) : undefined,
           measurements: newSession.measurements,
           number: 0,
           cureNumber: currentCure,
-        });
+        };
+        if (parsedWeight !== null) sessionData.weight = parsedWeight;
+        await addSession(sessionData);
 
         const newTotal = Math.max(0, totalSessions - 1);
         await updateTotalTreatmentSessions(clientId, 'ishape', newTotal);
