@@ -190,6 +190,39 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientName, onClose }) =>
   .empty-state { text-align: center; padding: 60px 20px; color: var(--ink-soft); }
   .empty-state-icon { font-family: 'Cormorant Garamond', serif; font-size: 48px; color: var(--gold-soft); margin-bottom: 12px; font-style: italic; }
   .empty-state-text { font-size: 14px; max-width: 380px; margin: 0 auto; }
+  /* ── ÉCHEANCIER ── */
+  .echeancier { margin-top: 24px; background: var(--bg-card); border: 1px solid var(--line); border-radius: 18px; padding: 32px; display: none; }
+  .echeancier.show { display: block; }
+  .ech-title { font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 500; text-align: center; margin-bottom: 8px; color: var(--ink); }
+  .ech-subtitle { font-size: 13px; color: var(--ink-soft); text-align: center; margin-bottom: 28px; }
+  .ech-selector { display: flex; gap: 8px; justify-content: center; margin-bottom: 28px; flex-wrap: wrap; }
+  .ech-btn { width: 52px; height: 52px; border-radius: 12px; border: 2px solid var(--line); background: var(--bg); font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 600; color: var(--ink-soft); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+  .ech-btn:hover { border-color: var(--primary); color: var(--primary); }
+  .ech-btn.active { border-color: var(--primary); background: var(--primary); color: white; box-shadow: 0 4px 14px -4px rgba(50,172,222,0.5); }
+  .ech-total-banner { background: linear-gradient(135deg, var(--primary) 0%, #1a7fa8 100%); border-radius: 14px; padding: 20px 24px; text-align: center; margin-bottom: 24px; }
+  .ech-total-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.2em; color: rgba(255,255,255,0.75); margin-bottom: 6px; }
+  .ech-total-amount { font-family: 'Cormorant Garamond', serif; font-size: 42px; font-weight: 500; color: white; line-height: 1; }
+  .ech-total-sub { font-size: 12px; color: rgba(255,255,255,0.65); margin-top: 6px; }
+  .ech-cards { display: grid; gap: 10px; }
+  .ech-card { background: var(--bg-card); border: 2px solid var(--line); border-radius: 14px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; transition: all 0.2s; }
+  .ech-card.first { background: linear-gradient(135deg, #fff0fb, #fce7f3); border-color: #f9a8d4; }
+  .ech-card:hover { transform: translateY(-1px); box-shadow: 0 6px 20px -6px rgba(0,0,0,0.1); }
+  .ech-card-left { display: flex; flex-direction: column; gap: 4px; }
+  .ech-card-ordinal { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+  .ech-card.first .ech-card-ordinal { color: var(--secondary); }
+  .ech-card:not(.first) .ech-card-ordinal { color: var(--ink-soft); }
+  .ech-card-note { font-size: 11px; color: var(--ink-soft); }
+  .ech-bar-wrap { width: 80px; height: 4px; background: var(--bg-soft); border-radius: 2px; margin-top: 4px; }
+  .ech-bar { height: 100%; border-radius: 2px; transition: width 0.4s; }
+  .ech-card.first .ech-bar { background: var(--secondary); }
+  .ech-card:not(.first) .ech-bar { background: var(--primary); }
+  .ech-card-amount { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 600; text-align: right; }
+  .ech-card.first .ech-card-amount { color: var(--secondary); }
+  .ech-card:not(.first) .ech-card-amount { color: var(--primary); }
+  .ech-card-pct { font-size: 11px; color: var(--ink-soft); text-align: right; }
+  .ech-verify { margin-top: 12px; background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 10px; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; }
+  .ech-verify-label { font-size: 13px; color: #15803d; font-weight: 500; }
+  .ech-verify-amount { font-size: 14px; font-weight: 700; color: #15803d; }
   @media print {
     .client-bar, .form-grid, .legend, .results-header, .reset-btn { display: none !important; }
     body { background: white; }
@@ -197,6 +230,7 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientName, onClose }) =>
     .results { opacity: 1; transform: none; }
     .pricing-locked { display: none !important; }
     .pricing-revealed { display: block !important; }
+    .echeancier { display: block !important; }
   }
   .print-btn { position: fixed; bottom: 24px; right: 24px; background: var(--primary); color: white; border: none; width: 52px; height: 52px; border-radius: 50%; cursor: pointer; box-shadow: 0 10px 30px -10px rgba(50, 172, 222, 0.6); transition: all 0.2s; display: none; align-items: center; justify-content: center; }
   .print-btn.visible { display: flex; }
@@ -250,6 +284,29 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientName, onClose }) =>
           <span class="price-total-amount" id="priceTotal">— €</span>
         </div>
         <p style="font-size: 12px; color: var(--ink-soft); margin-top: 16px; text-align: center;">Tarif fixe 49 €/séance. Vous pouvez ajuster le nombre de séances par prestation.</p>
+      </div>
+    </div>
+    <!-- ÉCHÉANCIER -->
+    <div class="echeancier" id="echeancier">
+      <div class="ech-title">Échéancier de paiement</div>
+      <p class="ech-subtitle">Sélectionnez le nombre de fois pour répartir le règlement.</p>
+      <div class="ech-selector">
+        <button class="ech-btn" data-n="1" onclick="setNbEch(1)">1×</button>
+        <button class="ech-btn" data-n="2" onclick="setNbEch(2)">2×</button>
+        <button class="ech-btn active" data-n="3" onclick="setNbEch(3)">3×</button>
+        <button class="ech-btn" data-n="4" onclick="setNbEch(4)">4×</button>
+        <button class="ech-btn" data-n="5" onclick="setNbEch(5)">5×</button>
+        <button class="ech-btn" data-n="6" onclick="setNbEch(6)">6×</button>
+      </div>
+      <div class="ech-total-banner">
+        <div class="ech-total-label">Total cure</div>
+        <div class="ech-total-amount" id="echTotal">— €</div>
+        <div class="ech-total-sub" id="echTotalSub"></div>
+      </div>
+      <div class="ech-cards" id="echCards"></div>
+      <div class="ech-verify" id="echVerify" style="display:none;">
+        <span class="ech-verify-label">✓ Total vérifié</span>
+        <span class="ech-verify-amount" id="echVerifyAmount"></span>
       </div>
     </div>
   </div>
@@ -450,11 +507,96 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientName, onClose }) =>
     });
     document.querySelectorAll('[data-fixed-price]').forEach(el => { total += parseFloat(el.dataset.fixedPrice) || 0; });
     document.getElementById('priceTotal').textContent = total > 0 ? total.toLocaleString('fr-FR') + ' \u20ac' : '\u2014 \u20ac';
+    renderEcheancier();
   }
+
+  // ── ÉCHÉANCIER ──────────────────────────────────────────────────────────────
+  let currentNbEch = 3;
+  const ordinal = ['1ère', '2ème', '3ème', '4ème', '5ème', '6ème'];
+
+  function distribute(qty, n) {
+    if (qty <= 0) return Array(n).fill(0);
+    const result = [];
+    let remaining = qty;
+    for (let i = 0; i < n; i++) {
+      const share = i === 0 ? Math.ceil(remaining / (n - i)) : Math.round(remaining / (n - i));
+      result.push(share);
+      remaining -= share;
+    }
+    return result;
+  }
+
+  function computeInstallments(total, n) {
+    if (total === 0) return Array(n).fill(0);
+    if (n === 1) return [total];
+    const payments = Array(n).fill(0);
+    // Distribuer les centimes
+    const base = Math.floor(total / n);
+    const remainder = total - base * n;
+    for (let i = 0; i < n; i++) payments[i] = base + (i < remainder ? 1 : 0);
+    // Première échéance légèrement plus haute si arrondi
+    return payments;
+  }
+
+  function getTotalNumeric() {
+    let total = 0;
+    document.querySelectorAll('.sessions-input').forEach(inp => {
+      total += (parseFloat(inp.value) || 0) * DEFAULT_PRICE;
+    });
+    document.querySelectorAll('[data-fixed-price]').forEach(el => {
+      total += parseFloat(el.dataset.fixedPrice) || 0;
+    });
+    return total;
+  }
+
+  function setNbEch(n) {
+    currentNbEch = n;
+    document.querySelectorAll('.ech-btn').forEach(btn => {
+      btn.classList.toggle('active', parseInt(btn.dataset.n) === n);
+    });
+    renderEcheancier();
+  }
+
+  function renderEcheancier() {
+    const total = getTotalNumeric();
+    const echEl = document.getElementById('echeancier');
+    if (total <= 0) { echEl.classList.remove('show'); return; }
+    echEl.classList.add('show');
+
+    const fmtEur = (v) => v.toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' \u20ac';
+    document.getElementById('echTotal').textContent = fmtEur(total);
+    const sub = document.getElementById('echTotalSub');
+    sub.textContent = currentNbEch > 1 ? 'R\u00e9parti sur ' + currentNbEch + ' \u00e9ch\u00e9ances' : 'R\u00e8glement en une fois';
+
+    const payments = computeInstallments(total, currentNbEch);
+    const cards = document.getElementById('echCards');
+    cards.innerHTML = payments.map((amt, i) => {
+      const isFirst = i === 0;
+      const pct = Math.round(amt / total * 100);
+      return '<div class="ech-card ' + (isFirst ? 'first' : '') + '">' +
+        '<div class="ech-card-left">' +
+          '<div class="ech-card-ordinal">' + ordinal[i] + ' \u00e9ch\u00e9ance</div>' +
+          (isFirst && currentNbEch > 1 ? '<div class="ech-card-note">Versement initial</div>' : '') +
+          '<div class="ech-bar-wrap"><div class="ech-bar" style="width:' + pct + '%"></div></div>' +
+        '</div>' +
+        '<div>' +
+          '<div class="ech-card-amount">' + fmtEur(amt) + '</div>' +
+          '<div class="ech-card-pct">' + pct + ' %</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    const verifyEl = document.getElementById('echVerify');
+    const verifyAmt = document.getElementById('echVerifyAmount');
+    verifyEl.style.display = currentNbEch > 1 ? 'flex' : 'none';
+    if (currentNbEch > 1) verifyAmt.textContent = fmtEur(payments.reduce((a, b) => a + b, 0));
+  }
+  // ────────────────────────────────────────────────────────────────────────────
 
   function revealPricing() {
     document.getElementById('pricingLocked').classList.add('hide');
     document.getElementById('pricingRevealed').classList.add('show');
+    renderEcheancier();
   }
 
   function resetForm() {
