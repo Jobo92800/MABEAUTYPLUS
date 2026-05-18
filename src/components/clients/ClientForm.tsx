@@ -7,6 +7,7 @@ import PaymentForm from '../PaymentForm';
 import ReferralSection from '../ReferralSection';
 import SectionTitle from '../SectionTitle';
 import SectionTitleRed from '../SectionTitleRed';
+import CollapsibleSection from '../CollapsibleSection';
 import LuxotherapyForm from './treatments/LuxotherapyForm';
 import IShapeForm from './treatments/IShapeForm';
 import AdipologyForm from './treatments/AdipologyForm';
@@ -127,8 +128,12 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, initialData, centerId
       <div className="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl">
         <div className="px-4 py-6 sm:p-8">
           {/* Règlement */}
-          <div className="space-y-6">
-            <SectionTitleRed>Règlement</SectionTitleRed>
+          <CollapsibleSection
+            title="Règlement"
+            headerClassName="bg-red-500"
+            defaultOpen={true}
+            className="mb-8"
+          >
             <PaymentForm
               formData={initialData}
               prefix="payment"
@@ -137,17 +142,24 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, initialData, centerId
               clientFirstName={initialData?.client.firstName}
               clientLastName={initialData?.client.lastName}
             />
-          </div>
+          </CollapsibleSection>
 
           {/* Parrain / Filleuil */}
-          <div className="mt-8">
-            <ReferralSection clientId={initialData?.client.id} />
-          </div>
+          <CollapsibleSection
+            title="Parrain / Filleuil"
+            headerStyle={{ background: 'linear-gradient(to right, #1d6ae5, #e91e8c)' }}
+            className="mb-8"
+          >
+            <ReferralSection clientId={initialData?.client.id} hideHeader />
+          </CollapsibleSection>
 
           {/* Treatment Selection */}
-          <div className="mb-8">
-            <label className="text-base font-semibold text-gray-900">Sélectionnez le soin</label>
-            <div className="mt-6 space-y-8">
+          <CollapsibleSection
+            title="Sélection du soin"
+            headerClassName="bg-brand-blue"
+            className="mb-8"
+          >
+            <div className="space-y-8 pb-2">
               {treatmentCategories.map((category) => (
                 <div key={category.name} className="space-y-4">
                   <h3 className="text-lg font-bold text-brand-blue">
@@ -156,7 +168,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, initialData, centerId
                   <div className="flex flex-wrap gap-3">
                     {category.treatments.map((treatment) => {
                       const { hasData } = useHasFormData(initialData?.client.id, treatment.id as any);
-                      
+
                       return (
                         <button
                           key={treatment.id}
@@ -182,11 +194,16 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, initialData, centerId
                 </div>
               ))}
             </div>
-          </div>
+          </CollapsibleSection>
 
           {/* Coordonnées */}
+          <CollapsibleSection
+            title="Coordonnées"
+            headerClassName="bg-brand-blue"
+            defaultOpen={true}
+            className="mb-8"
+          >
           <div className="space-y-6">
-            <SectionTitle>Coordonnées</SectionTitle>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
               <div>
                 <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">Nom</label>
@@ -305,9 +322,17 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, initialData, centerId
               </div>
             </div>
           </div>
+          </CollapsibleSection>
 
           {/* Treatment Specific Form */}
-          {renderTreatmentForm()}
+          <CollapsibleSection
+            title="Fiche soin"
+            headerClassName="bg-brand-blue"
+            defaultOpen={true}
+            className="mb-8"
+          >
+            {renderTreatmentForm()}
+          </CollapsibleSection>
         </div>
 
         {/* Form Actions */}

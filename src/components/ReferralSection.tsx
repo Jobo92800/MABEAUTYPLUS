@@ -15,9 +15,10 @@ interface ReferralData {
 
 interface ReferralSectionProps {
   clientId?: string;
+  hideHeader?: boolean;
 }
 
-const ReferralSection: React.FC<ReferralSectionProps> = ({ clientId }) => {
+const ReferralSection: React.FC<ReferralSectionProps> = ({ clientId, hideHeader = false }) => {
   const [godfather, setGodfather] = useState('');
   const [godchildren, setGodchildren] = useState<Godchild[]>([]);
   const [loading, setLoading] = useState(true);
@@ -98,15 +99,16 @@ const ReferralSection: React.FC<ReferralSectionProps> = ({ clientId }) => {
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-brand-blue to-brand-pink p-6">
-        <div className="flex items-center gap-3">
-          <Users className="h-6 w-6 text-white" />
-          <h3 className="text-lg font-semibold text-white">
-            Parrain / Filleuil
-          </h3>
+      {!hideHeader && (
+        <div className="bg-gradient-to-r from-brand-blue to-brand-pink p-6">
+          <div className="flex items-center gap-3">
+            <Users className="h-6 w-6 text-white" />
+            <h3 className="text-lg font-semibold text-white">
+              Parrain / Filleuil
+            </h3>
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="p-6 space-y-6">
         {/* Parrain Section */}
