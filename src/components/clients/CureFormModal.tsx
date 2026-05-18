@@ -180,6 +180,8 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientName, onClose }) =>
   .price-row-amount { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; color: var(--ink); }
   .price-input { width: 90px; border: 1px solid var(--line-strong); border-radius: 6px; padding: 6px 10px; text-align: right; font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 600; color: var(--ink); background: var(--bg); }
   .price-input:focus { outline: none; border-color: var(--luxo); }
+  .sessions-input { width: 72px; border: 1px solid var(--line-strong); border-radius: 6px; padding: 6px 10px; text-align: right; font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 600; color: var(--ink); background: var(--bg); }
+  .sessions-input:focus { outline: none; border-color: var(--luxo); }
   .addon-section-label { margin: 18px 0 4px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.25em; color: var(--ink-soft); font-weight: 600; text-align: left; padding-top: 14px; border-top: 1px dashed var(--line); }
   .addon-row .addon-name { font-size: 18px; font-style: italic; }
   .price-total { margin-top: 20px; padding-top: 20px; border-top: 2px solid var(--ink); display: flex; justify-content: space-between; align-items: baseline; }
@@ -247,7 +249,7 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientName, onClose }) =>
           <span class="price-total-label">Total cure</span>
           <span class="price-total-amount" id="priceTotal">— €</span>
         </div>
-        <p style="font-size: 12px; color: var(--ink-soft); margin-top: 16px; text-align: center;">Tarif standard 49€/séance. Vous pouvez ajuster chaque ligne au besoin.</p>
+        <p style="font-size: 12px; color: var(--ink-soft); margin-top: 16px; text-align: center;">Tarif fixe 49 €/séance. Vous pouvez ajuster le nombre de séances par prestation.</p>
       </div>
     </div>
   </div>
@@ -417,8 +419,8 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientName, onClose }) =>
     const keys = recommended.map(([k]) => k);
     let html = recommended.map(([key]) => {
       const p = prestations[key];
-      return '<div class="price-row"><div class="price-row-label"><span class="price-row-name">' + p.name + '</span><span class="price-row-detail">' + sessionsCount + ' s\u00e9ances</span></div>' +
-        '<div style="display:flex;align-items:center;gap:8px;"><input type="number" class="price-input" id="price-' + key + '" placeholder="49" min="0" step="1" oninput="updateTotal()" value="' + DEFAULT_PRICE + '"><span style="font-size:14px;color:var(--ink-soft);">\u20ac / s\u00e9ance</span></div></div>';
+      return '<div class="price-row"><div class="price-row-label"><span class="price-row-name">' + p.name + '</span><span class="price-row-detail" style="color:var(--ink-soft);">' + DEFAULT_PRICE + ' \u20ac / s\u00e9ance</span></div>' +
+        '<div style="display:flex;align-items:center;gap:8px;"><input type="number" class="sessions-input" id="sessions-' + key + '" min="1" step="1" oninput="updateTotal()" value="' + sessionsCount + '"><span style="font-size:14px;color:var(--ink-soft);">s\u00e9ances</span></div></div>';
     }).join('');
     const addons = [];
     if (keys.includes('luxo'))   addons.push(ADDONS.luxo);
@@ -434,10 +436,18 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientName, onClose }) =>
   }
 
   function updateTotal() {
-    const { poidsSessions } = calculateScores();
-    const sessionsCount = poidsSessions || 12;
     let total = 0;
-    document.querySelectorAll('.price-input').forEach(inp => { total += (parseFloat(inp.value) || 0) * sessionsCount; });
+    document.querySelectorAll('.sessions-input').forEach(inp => {
+      const key = inp.id.replace('sessions-', '');
+      const count = parseFloat(inp.value) || 0;
+      total += count * DEFAULT_PRICE;
+      // sync session count shown in the cure card
+      const cureCard = document.querySelector('.cure-card[data-key="' + key + '"] .cure-sessions-num');
+      if (cureCard) cureCard.textContent = count;
+      // sync the detail line in the pricing row
+      const detail = inp.closest('.price-row')?.querySelector('.price-row-detail');
+      if (detail) detail.textContent = DEFAULT_PRICE + ' \u20ac / s\u00e9ance';
+    });
     document.querySelectorAll('[data-fixed-price]').forEach(el => { total += parseFloat(el.dataset.fixedPrice) || 0; });
     document.getElementById('priceTotal').textContent = total > 0 ? total.toLocaleString('fr-FR') + ' \u20ac' : '\u2014 \u20ac';
   }
