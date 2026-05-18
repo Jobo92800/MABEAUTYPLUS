@@ -3,8 +3,16 @@ import { db } from '../../firebase';
 import { TREATMENT_COLLECTIONS, PAYMENT_COLLECTION } from '../../collections';
 import { saveFormData } from '../../formUtils';
 import { addClientToAirtable } from '../../airtable';
-import type { Client, Treatment } from '../../../types/client';
+import type { Client, ClientCureData, Treatment } from '../../../types/client';
 import { deleteClientRelatedData } from './clientRelated';
+
+export const saveCureData = async (clientId: string, cureData: ClientCureData): Promise<void> => {
+  const clientRef = doc(db, 'clients', clientId);
+  await updateDoc(clientRef, {
+    cureData,
+    updatedAt: new Date().toISOString(),
+  });
+};
 
 export const getClients = async (centerId: string, pageSize = 50, lastDoc?: any): Promise<Client[]> => {
   try {

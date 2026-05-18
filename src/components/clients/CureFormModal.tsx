@@ -1,12 +1,17 @@
 import React, { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import { saveCureData } from '../../services/database';
+import type { ClientCureData } from '../../types/client';
 
 interface CureFormModalProps {
+  clientId?: string;
   clientName?: string;
   onClose: () => void;
+  onSaved?: () => void;
 }
 
-const CureFormModal: React.FC<CureFormModalProps> = ({ clientName, onClose }) => {
+const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onClose, onSaved }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
@@ -16,6 +21,27 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientName, onClose }) =>
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [onClose]);
+
+  useEffect(() => {
+    const handleMessage = async (e: MessageEvent) => {
+      if (e.data?.type !== 'SAVE_CURE_DATA') return;
+      if (!clientId) {
+        toast.error('Aucun client sélectionné');
+        return;
+      }
+      try {
+        const cureData: ClientCureData = e.data.payload;
+        await saveCureData(clientId, cureData);
+        toast.success('Cure enregistrée sur la fiche client');
+        onSaved?.();
+        onClose();
+      } catch {
+        toast.error("Erreur lors de l'enregistrement");
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [clientId, onClose, onSaved]);
 
   const htmlContent = `<!DOCTYPE html>
 <html lang="fr">
@@ -223,6 +249,14 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientName, onClose }) =>
   .ech-verify { margin-top: 12px; background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 10px; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; }
   .ech-verify-label { font-size: 13px; color: #15803d; font-weight: 500; }
   .ech-verify-amount { font-size: 14px; font-weight: 700; color: #15803d; }
+  /* ── BOUTON ENREGISTRER ── */
+  .save-section { margin-top: 24px; display: none; }
+  .save-section.show { display: block; }
+  .save-btn { width: 100%; padding: 18px 24px; border-radius: 14px; border: none; background: linear-gradient(135deg, #0d9488 0%, #0891b2 100%); color: white; font-family: 'Manrope', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: 0.06em; cursor: pointer; transition: all 0.2s; box-shadow: 0 6px 20px -6px rgba(13,148,136,0.5); display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .save-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 28px -6px rgba(13,148,136,0.55); }
+  .save-btn:active { transform: translateY(0); }
+  .save-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
+  .save-note { font-size: 12px; color: var(--ink-soft); text-align: center; margin-top: 10px; }
   @media print {
     .client-bar, .form-grid, .legend, .results-header, .reset-btn { display: none !important; }
     body { background: white; }
@@ -308,6 +342,16 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientName, onClose }) =>
         <span class="ech-verify-label">✓ Total vérifié</span>
         <span class="ech-verify-amount" id="echVerifyAmount"></span>
       </div>
+    </div>
+    <!-- BOUTON ENREGISTRER -->
+    <div class="save-section" id="saveSection">
+      <button class="save-btn" onclick="saveCure()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+        </svg>
+        Enregistrer sur la fiche client
+      </button>
+      <p class="save-note">Les informations de cure et l'échéancier seront sauvegardés sur la fiche du client.</p>
     </div>
   </div>
   <div class="empty-state" id="emptyState">
@@ -590,8 +634,38 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientName, onClose }) =>
     const verifyAmt = document.getElementById('echVerifyAmount');
     verifyEl.style.display = currentNbEch > 1 ? 'flex' : 'none';
     if (currentNbEch > 1) verifyAmt.textContent = fmtEur(payments.reduce((a, b) => a + b, 0));
+
+    // Afficher le bouton enregistrer
+    document.getElementById('saveSection').classList.add('show');
   }
   // ────────────────────────────────────────────────────────────────────────────
+
+  function getActiveTreatments() {
+    const results = [];
+    document.querySelectorAll('.sessions-input').forEach(inp => {
+      const key = inp.id.replace('sessions-', '');
+      const sessions = parseFloat(inp.value) || 0;
+      if (sessions > 0) {
+        const nameEl = inp.closest('.price-row')?.querySelector('.price-row-name');
+        results.push({ name: nameEl ? nameEl.textContent : key, sessions: sessions, pricePerSession: DEFAULT_PRICE });
+      }
+    });
+    return results;
+  }
+
+  function saveCure() {
+    const total = getTotalNumeric();
+    if (total <= 0) return;
+    const payments = computeInstallments(total, currentNbEch);
+    const payload = {
+      totalPrice: total,
+      installmentCount: currentNbEch,
+      installments: payments.map((amt, i) => ({ index: i + 1, amount: amt })),
+      savedAt: new Date().toISOString(),
+      treatments: getActiveTreatments(),
+    };
+    window.parent.postMessage({ type: 'SAVE_CURE_DATA', payload }, '*');
+  }
 
   function revealPricing() {
     document.getElementById('pricingLocked').classList.add('hide');
@@ -606,6 +680,8 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientName, onClose }) =>
     document.getElementById('clientDate').value = new Date().toISOString().split('T')[0];
     document.getElementById('pricingLocked').classList.remove('hide');
     document.getElementById('pricingRevealed').classList.remove('show');
+    document.getElementById('echeancier').classList.remove('show');
+    document.getElementById('saveSection').classList.remove('show');
     updateScores();
   }
 

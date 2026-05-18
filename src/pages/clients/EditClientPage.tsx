@@ -26,7 +26,68 @@ import CureFormModal from '../../components/clients/CureFormModal';
 import type { FullClientData } from '../../types/client';
 import type { Measurement } from '../../types/measurements';
 import type { Session } from '../../types/session';
-import { addDays, isAfter } from 'date-fns';
+import type { ClientCureData } from '../../types/client';
+import { addDays, isAfter, format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+
+const ordinalFr = ['1ère', '2ème', '3ème', '4ème', '5ème', '6ème'];
+
+const CureSummaryCard: React.FC<{ cureData: ClientCureData }> = ({ cureData }) => {
+  const fmt = (n: number) => n.toLocaleString('fr-FR') + ' €';
+  return (
+    <div className="mt-6 bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl overflow-hidden">
+      <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+        <div>
+          <h3 className="text-base font-semibold text-gray-900">Cure enregistrée</h3>
+          {cureData.savedAt && (
+            <p className="text-xs text-gray-400 mt-0.5">
+              Enregistrée le {format(new Date(cureData.savedAt), 'd MMMM yyyy', { locale: fr })}
+            </p>
+          )}
+        </div>
+        <div className="text-right">
+          <div className="text-2xl font-bold text-brand-blue">{fmt(cureData.totalPrice)}</div>
+          <div className="text-xs text-gray-500 mt-0.5">Total cure</div>
+        </div>
+      </div>
+
+      <div className="px-6 py-4">
+        {cureData.treatments && cureData.treatments.length > 0 && (
+          <div className="mb-4">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Prestations</p>
+            <div className="space-y-1">
+              {cureData.treatments.map((t, i) => (
+                <div key={i} className="flex justify-between items-center text-sm py-1.5 border-b border-gray-50">
+                  <span className="text-gray-700">{t.name}</span>
+                  <span className="text-gray-500 font-medium">{t.sessions} séances × {t.pricePerSession} €</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+          Échéancier — {cureData.installmentCount}× paiement{cureData.installmentCount > 1 ? 's' : ''}
+        </p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {cureData.installments.map((inst) => (
+            <div
+              key={inst.index}
+              className={`rounded-xl p-3 flex flex-col gap-1 ${inst.index === 1 ? 'bg-pink-50 ring-1 ring-pink-200' : 'bg-gray-50 ring-1 ring-gray-100'}`}
+            >
+              <span className={`text-xs font-bold uppercase tracking-wide ${inst.index === 1 ? 'text-pink-600' : 'text-gray-400'}`}>
+                {ordinalFr[inst.index - 1]} échéance
+              </span>
+              <span className={`text-lg font-bold ${inst.index === 1 ? 'text-pink-600' : 'text-brand-blue'}`}>
+                {fmt(inst.amount)}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const menuCategories = [
   {
@@ -291,8 +352,10 @@ const EditClientPage = () => {
     <>
     {showCureForm && (
       <CureFormModal
+        clientId={id}
         clientName={clientData ? `${clientData.client.firstName} ${clientData.client.lastName}` : undefined}
         onClose={() => setShowCureForm(false)}
+        onSaved={() => fetchData()}
       />
     )}
     <div className="space-y-6">
@@ -386,7 +449,12 @@ const EditClientPage = () => {
       {/* Content */}
       <div>
         {currentTab === 'info' && (
-          <ClientForm onSubmit={handleSubmit} initialData={clientData} isSubmitting={isSubmitting} />
+          <>
+            <ClientForm onSubmit={handleSubmit} initialData={clientData} isSubmitting={isSubmitting} />
+            {clientData.client.cureData && (
+              <CureSummaryCard cureData={clientData.client.cureData} />
+            )}
+          </>
         )}
         {currentTab === 'sessions' && (
           <SessionsTab clientId={id!} centerId={centerId!} />
