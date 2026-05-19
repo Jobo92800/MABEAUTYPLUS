@@ -555,11 +555,13 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
   function updateTotal() {
     let total = 0;
     let ishapeSessions = 0;
+    let luxoSessions = 0;
     document.querySelectorAll('.sessions-input').forEach(inp => {
       const key = inp.id.replace('sessions-', '');
       const count = parseFloat(inp.value) || 0;
       total += count * DEFAULT_PRICE;
       if (key === 'ishape') ishapeSessions = count;
+      if (key === 'luxo') luxoSessions = count;
       // sync session count shown in the cure card
       const cureCard = document.querySelector('.cure-card[data-key="' + key + '"] .cure-sessions-num');
       if (cureCard) cureCard.textContent = count;
@@ -569,8 +571,11 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
     });
     document.querySelectorAll('[data-fixed-price]').forEach(el => {
       const addonName = el.querySelector('.addon-name')?.textContent || '';
-      const isTenueIshape = addonName.toLowerCase().includes('tenue');
-      if (isTenueIshape && ishapeSessions === 0) {
+      const isTenue = addonName.toLowerCase().includes('tenue');
+      const isGuide = addonName.toLowerCase().includes('guide');
+      if (isTenue && ishapeSessions === 0) {
+        el.style.display = 'none';
+      } else if (isGuide && luxoSessions === 0) {
         el.style.display = 'none';
       } else {
         el.style.display = '';
@@ -639,16 +644,20 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
   function getTotalNumeric() {
     let total = 0;
     let ishapeSessions = 0;
+    let luxoSessions = 0;
     document.querySelectorAll('.sessions-input').forEach(inp => {
       const key = inp.id.replace('sessions-', '');
       const count = parseFloat(inp.value) || 0;
       total += count * DEFAULT_PRICE;
       if (key === 'ishape') ishapeSessions = count;
+      if (key === 'luxo') luxoSessions = count;
     });
     document.querySelectorAll('[data-fixed-price]').forEach(el => {
       const addonName = el.querySelector('.addon-name')?.textContent || '';
-      const isTenueIshape = addonName.toLowerCase().includes('tenue');
-      if (isTenueIshape && ishapeSessions === 0) return;
+      const isTenue = addonName.toLowerCase().includes('tenue');
+      const isGuide = addonName.toLowerCase().includes('guide');
+      if (isTenue && ishapeSessions === 0) return;
+      if (isGuide && luxoSessions === 0) return;
       total += parseFloat(el.dataset.fixedPrice) || 0;
     });
     return total;
