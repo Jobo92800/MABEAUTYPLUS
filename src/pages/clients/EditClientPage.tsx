@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   User, Scale, Ruler, FileDown, Activity,
-  Sparkles, Zap, Heart, Coffee, ArrowLeft, Pill, Brain, Droplet
+  Sparkles, Zap, Heart, Coffee, ArrowLeft, Pill, Brain, Droplet, MessageSquare
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import ClientForm from '../../components/clients/ClientForm';
@@ -23,6 +23,7 @@ import DomeTab from '../../components/clients/DomeTab';
 import { getFullClientData, getMeasurements, getSessions, updateClient } from '../../services/database';
 import { generateClientPDF } from '../../utils/pdfGenerator';
 import CureFormModal from '../../components/clients/CureFormModal';
+import ClientNoteModal from '../../components/clients/ClientNoteModal';
 import type { FullClientData } from '../../types/client';
 import type { Measurement } from '../../types/measurements';
 import type { Session } from '../../types/session';
@@ -158,6 +159,7 @@ const EditClientPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasExpiredComplements, setHasExpiredComplements] = useState(false);
   const [showCureForm, setShowCureForm] = useState(false);
+  const [showNoteModal, setShowNoteModal] = useState(false);
 
   // Fonction pour vérifier les compléments expirés (SOS exclu du calcul automatique)
   const checkExpiredComplements = async () => {
@@ -358,6 +360,12 @@ const EditClientPage = () => {
         onSaved={() => fetchData()}
       />
     )}
+    <ClientNoteModal
+      isOpen={showNoteModal}
+      onClose={() => setShowNoteModal(false)}
+      client={clientData.client}
+      centerId={centerId!}
+    />
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -371,6 +379,13 @@ const EditClientPage = () => {
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Retour
+          </button>
+          <button
+            onClick={() => setShowNoteModal(true)}
+            className="flex items-center rounded-full px-5 py-2 text-sm font-semibold text-white shadow-sm hover:shadow-md transition-all duration-200 bg-amber-500"
+          >
+            <MessageSquare className="h-4 w-4 mr-2" />
+            Commentaire
           </button>
           <button
             onClick={() => setShowCureForm(true)}
