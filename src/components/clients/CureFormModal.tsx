@@ -554,10 +554,12 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
 
   function updateTotal() {
     let total = 0;
+    let ishapeSessions = 0;
     document.querySelectorAll('.sessions-input').forEach(inp => {
       const key = inp.id.replace('sessions-', '');
       const count = parseFloat(inp.value) || 0;
       total += count * DEFAULT_PRICE;
+      if (key === 'ishape') ishapeSessions = count;
       // sync session count shown in the cure card
       const cureCard = document.querySelector('.cure-card[data-key="' + key + '"] .cure-sessions-num');
       if (cureCard) cureCard.textContent = count;
@@ -565,7 +567,16 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
       const detail = inp.closest('.price-row')?.querySelector('.price-row-detail');
       if (detail) detail.textContent = DEFAULT_PRICE + ' \u20ac / s\u00e9ance';
     });
-    document.querySelectorAll('[data-fixed-price]').forEach(el => { total += parseFloat(el.dataset.fixedPrice) || 0; });
+    document.querySelectorAll('[data-fixed-price]').forEach(el => {
+      const addonName = el.querySelector('.addon-name')?.textContent || '';
+      const isTenueIshape = addonName.toLowerCase().includes('tenue');
+      if (isTenueIshape && ishapeSessions === 0) {
+        el.style.display = 'none';
+      } else {
+        el.style.display = '';
+        total += parseFloat(el.dataset.fixedPrice) || 0;
+      }
+    });
     document.getElementById('priceTotal').textContent = total > 0 ? total.toLocaleString('fr-FR') + ' \u20ac' : '\u2014 \u20ac';
     renderEcheancier();
   }
@@ -627,10 +638,17 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
 
   function getTotalNumeric() {
     let total = 0;
+    let ishapeSessions = 0;
     document.querySelectorAll('.sessions-input').forEach(inp => {
-      total += (parseFloat(inp.value) || 0) * DEFAULT_PRICE;
+      const key = inp.id.replace('sessions-', '');
+      const count = parseFloat(inp.value) || 0;
+      total += count * DEFAULT_PRICE;
+      if (key === 'ishape') ishapeSessions = count;
     });
     document.querySelectorAll('[data-fixed-price]').forEach(el => {
+      const addonName = el.querySelector('.addon-name')?.textContent || '';
+      const isTenueIshape = addonName.toLowerCase().includes('tenue');
+      if (isTenueIshape && ishapeSessions === 0) return;
       total += parseFloat(el.dataset.fixedPrice) || 0;
     });
     return total;
