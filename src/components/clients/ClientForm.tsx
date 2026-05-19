@@ -153,49 +153,6 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, initialData, centerId
             <ReferralSection clientId={initialData?.client.id} hideHeader />
           </CollapsibleSection>
 
-          {/* Treatment Selection */}
-          <CollapsibleSection
-            title="Sélection du soin"
-            headerClassName="bg-brand-blue"
-            className="mb-8"
-          >
-            <div className="space-y-8 pb-2">
-              {treatmentCategories.map((category) => (
-                <div key={category.name} className="space-y-4">
-                  <h3 className="text-lg font-bold text-brand-blue">
-                    {category.name}
-                  </h3>
-                  <div className="flex flex-wrap gap-3">
-                    {category.treatments.map((treatment) => {
-                      const { hasData } = useHasFormData(initialData?.client.id, treatment.id as any);
-
-                      return (
-                        <button
-                          key={treatment.id}
-                          type="button"
-                          onClick={() => setSelectedTreatment(treatment.id)}
-                          className={`
-                            relative px-6 py-3 rounded-full text-sm font-medium transition-all duration-300
-                            ${selectedTreatment === treatment.id
-                              ? 'bg-brand-blue text-white shadow-lg transform scale-105'
-                              : 'bg-white text-gray-700 hover:bg-brand-blue/5 border border-brand-blue/20'
-                            }
-                            ${hasData ? 'ring-2 ring-green-500' : ''}
-                          `}
-                        >
-                          {treatment.label}
-                          {hasData && (
-                            <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-green-500" />
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CollapsibleSection>
-
           {/* Coordonnées */}
           <CollapsibleSection
             title="Coordonnées"
@@ -322,6 +279,49 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, initialData, centerId
               </div>
             </div>
           </div>
+          </CollapsibleSection>
+
+          {/* Treatment Selection */}
+          <CollapsibleSection
+            title="Sélection du soin"
+            headerClassName="bg-brand-blue"
+            className="mb-8"
+          >
+            <div className="space-y-8 pb-2">
+              {treatmentCategories.map((category) => (
+                <div key={category.name} className="space-y-4">
+                  <h3 className="text-lg font-bold text-brand-blue">
+                    {category.name}
+                  </h3>
+                  <div className="flex flex-wrap gap-3">
+                    {category.treatments.map((treatment) => {
+                      const { hasData } = useHasFormData(initialData?.client.id, treatment.id as any);
+
+                      return (
+                        <button
+                          key={treatment.id}
+                          type="button"
+                          onClick={() => setSelectedTreatment(treatment.id)}
+                          className={`
+                            relative px-6 py-3 rounded-full text-sm font-medium transition-all duration-300
+                            ${selectedTreatment === treatment.id
+                              ? 'bg-brand-blue text-white shadow-lg transform scale-105'
+                              : 'bg-white text-gray-700 hover:bg-brand-blue/5 border border-brand-blue/20'
+                            }
+                            ${hasData ? 'ring-2 ring-green-500' : ''}
+                          `}
+                        >
+                          {treatment.label}
+                          {hasData && (
+                            <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-green-500" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
           </CollapsibleSection>
 
           {/* Treatment Specific Form */}
