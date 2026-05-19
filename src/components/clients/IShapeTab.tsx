@@ -5,6 +5,7 @@ import { Plus, X, Pencil, Trash2, RefreshCw, ChevronDown, ChevronUp } from 'luci
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { getSessions, addSession, deleteSession, updateSession, getTotalTreatmentSessions, updateTotalTreatmentSessions } from '../../services/database';
 import { getCurrentCureNumber, setCurrentCureNumber } from '../../services/database/operations/totalSessions';
+import { saveIShapeTenuSize, getIShapeTenuSize } from '../../services/database/operations/client';
 import type { Session } from '../../types/session';
 import { toast } from 'react-hot-toast';
 
@@ -43,6 +44,7 @@ const IShapeTab: React.FC<IShapeTabProps> = ({ clientId, centerId }) => {
   const [currentCure, setCurrentCure] = useState<number>(1);
   const [showNewCureConfirm, setShowNewCureConfirm] = useState(false);
   const [collapsedCures, setCollapsedCures] = useState<Set<number>>(new Set());
+  const [tenuSize, setTenuSize] = useState<string>('');
   const [newSession, setNewSession] = useState({
     date: format(new Date(), 'yyyy-MM-dd'),
     comment: '',
@@ -55,10 +57,11 @@ const IShapeTab: React.FC<IShapeTabProps> = ({ clientId, centerId }) => {
     try {
       setLoading(true);
       setError(null);
-      const [sessionsData, totalSessionsData, cureNumber] = await Promise.all([
+      const [sessionsData, totalSessionsData, cureNumber, savedSize] = await Promise.all([
         getSessions(clientId, centerId, 'ishape'),
         getTotalTreatmentSessions(clientId, 'ishape'),
         getCurrentCureNumber(clientId, 'ishape'),
+        getIShapeTenuSize(clientId),
       ]);
 
       const sorted = [...sessionsData].sort((a, b) =>
@@ -68,6 +71,7 @@ const IShapeTab: React.FC<IShapeTabProps> = ({ clientId, centerId }) => {
       setSessions(withNumbers);
       setTotalSessions(totalSessionsData);
       setCurrentCure(cureNumber);
+      setTenuSize(savedSize);
     } catch {
       setError('Erreur lors du chargement des données');
     } finally {
@@ -85,6 +89,16 @@ const IShapeTab: React.FC<IShapeTabProps> = ({ clientId, centerId }) => {
       setTotalSessions(value);
     } catch {
       toast.error('Erreur lors de la mise à jour');
+    }
+  };
+
+  const handleTenuSizeChange = async (size: string) => {
+    const newSize = tenuSize === size ? '' : size;
+    setTenuSize(newSize);
+    try {
+      await saveIShapeTenuSize(clientId, newSize);
+    } catch {
+      toast.error('Erreur lors de la sauvegarde de la taille');
     }
   };
 
@@ -219,7 +233,7 @@ const IShapeTab: React.FC<IShapeTabProps> = ({ clientId, centerId }) => {
   return (
     <div className="space-y-6">
       {/* Header cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl p-5">
           <p className="text-sm text-gray-500 mb-1">Séances I-Shape restantes</p>
           <div className="flex items-center gap-2">
@@ -249,6 +263,29 @@ const IShapeTab: React.FC<IShapeTabProps> = ({ clientId, centerId }) => {
             <RefreshCw className="h-3.5 w-3.5" />
             Nouvelle cure
           </button>
+        </div>
+
+        {/* Taille Tenue */}
+        <div className="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl p-5">
+          <p className="text-sm text-gray-500 mb-3">Taille Tenue</p>
+          <div className="flex gap-2">
+            {['S', 'M', 'L', 'XL'].map((size) => (
+              <button
+                key={size}
+                type="button"
+                onClick={() => handleTenuSizeChange(size)}
+                className={`
+                  flex-1 py-2 rounded-lg text-sm font-semibold border-2 transition-all duration-150
+                  ${tenuSize === size
+                    ? 'bg-brand-blue border-brand-blue text-white shadow-sm'
+                    : 'bg-white border-gray-200 text-gray-600 hover:border-brand-blue hover:text-brand-blue'
+                  }
+                `}
+              >
+                {size}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

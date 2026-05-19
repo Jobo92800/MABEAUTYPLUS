@@ -101,6 +101,17 @@ export const saveCureData = async (clientId: string, cureData: ClientCureData): 
   }
 };
 
+export const saveIShapeTenuSize = async (clientId: string, size: string): Promise<void> => {
+  const clientRef = doc(db, 'clients', clientId);
+  await updateDoc(clientRef, { ishapeTenuSize: size, updatedAt: new Date().toISOString() });
+};
+
+export const getIShapeTenuSize = async (clientId: string): Promise<string> => {
+  const clientRef = doc(db, 'clients', clientId);
+  const snap = await getDoc(clientRef);
+  return snap.exists() ? (snap.data().ishapeTenuSize ?? '') : '';
+};
+
 export const getClients = async (centerId: string, pageSize = 50, lastDoc?: any): Promise<Client[]> => {
   try {
     const q = query(
