@@ -484,21 +484,22 @@ const EditClientPage = () => {
           {exceptionText.trim() ? (
             <button
               onClick={() => { setExceptionDraft(exceptionText); setShowExceptionModal(true); }}
-              className="flex flex-col items-start rounded-2xl px-5 py-3 text-sm font-bold text-white shadow-sm hover:shadow-md transition-all duration-200 w-full bg-red-600 hover:bg-red-700 text-left"
+              className="flex flex-col items-center gap-2 rounded-2xl px-6 py-4 font-bold text-white shadow-md hover:shadow-lg transition-all duration-200 w-full bg-red-600 hover:bg-red-700 text-center group"
             >
-              <div className="flex items-center gap-2 w-full justify-center mb-2">
-                <span className="text-base">⚠️</span>
-                <span>Exception cure</span>
-                <span className="text-base">⚠️</span>
+              <div className="flex items-center gap-2.5 justify-center">
+                <span className="text-lg leading-none">⚠️</span>
+                <span className="text-base tracking-wide">Exception cure</span>
+                <span className="text-lg leading-none">⚠️</span>
               </div>
-              <p className="text-xs font-normal text-red-100 leading-relaxed whitespace-pre-wrap line-clamp-3 w-full">
+              <div className="w-full h-px bg-red-400/60 rounded-full" />
+              <p className="text-sm font-normal text-red-100 leading-relaxed whitespace-pre-wrap line-clamp-3 w-full text-center">
                 {exceptionText}
               </p>
             </button>
           ) : (
             <button
               onClick={() => { setExceptionDraft(''); setShowExceptionModal(true); }}
-              className="flex items-center rounded-full px-8 py-2.5 text-sm font-bold text-white shadow-sm hover:shadow-md transition-all duration-200 w-full justify-center bg-gray-400 hover:bg-gray-500"
+              className="flex items-center justify-center rounded-full px-8 py-2.5 text-sm font-bold text-white shadow-sm hover:shadow-md transition-all duration-200 w-full bg-gray-400 hover:bg-gray-500"
             >
               Exception cure
             </button>
