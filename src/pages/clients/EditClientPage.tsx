@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   User, Scale, Ruler, FileDown, Activity,
-  Sparkles, Zap, Heart, Coffee, ArrowLeft, Pill, Brain, Droplet, MessageSquare
+  Sparkles, Zap, Heart, Coffee, ArrowLeft, Pill, Brain, Droplet, MessageSquare, AlertTriangle, X
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import ClientForm from '../../components/clients/ClientForm';
@@ -21,6 +21,8 @@ import ComplementAlimentaireTab from '../../components/clients/ComplementAliment
 import PsioTab from '../../components/clients/PsioTab';
 import DomeTab from '../../components/clients/DomeTab';
 import { getFullClientData, getMeasurements, getSessions, updateClient } from '../../services/database';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { db } from '../../services/firebase';
 import { generateClientPDF } from '../../utils/pdfGenerator';
 import CureFormModal from '../../components/clients/CureFormModal';
 import ClientNoteModal from '../../components/clients/ClientNoteModal';
@@ -160,6 +162,10 @@ const EditClientPage = () => {
   const [hasExpiredComplements, setHasExpiredComplements] = useState(false);
   const [showCureForm, setShowCureForm] = useState(false);
   const [showNoteModal, setShowNoteModal] = useState(false);
+  const [showExceptionModal, setShowExceptionModal] = useState(false);
+  const [exceptionText, setExceptionText] = useState('');
+  const [exceptionDraft, setExceptionDraft] = useState('');
+  const [savingException, setSavingException] = useState(false);
 
   // Fonction pour vérifier les compléments expirés (SOS exclu du calcul automatique)
   const checkExpiredComplements = async () => {
@@ -266,6 +272,11 @@ const EditClientPage = () => {
       setMeasurements(measurementsData);
       setSessions(sessionsData);
 
+      // Charger l'exception cure
+      const exceptionDoc = await getDoc(doc(db, 'client-exceptions', id));
+      const savedText = exceptionDoc.exists() ? (exceptionDoc.data().text ?? '') : '';
+      setExceptionText(savedText);
+
       // Vérifier les compléments expirés dès le chargement
       await checkExpiredComplements();
     } catch (err) {
@@ -342,6 +353,21 @@ const EditClientPage = () => {
     );
   }
 
+  const handleSaveException = async () => {
+    if (!id) return;
+    setSavingException(true);
+    try {
+      await setDoc(doc(db, 'client-exceptions', id), { text: exceptionDraft });
+      setExceptionText(exceptionDraft);
+      setShowExceptionModal(false);
+      toast.success('Exception cure sauvegardée');
+    } catch {
+      toast.error('Erreur lors de la sauvegarde');
+    } finally {
+      setSavingException(false);
+    }
+  };
+
   if (!clientData) {
     return (
       <div className="text-center py-12">
@@ -366,47 +392,105 @@ const EditClientPage = () => {
       client={clientData.client}
       centerId={centerId!}
     />
+
+    {/* Modal Exception cure */}
+    {showExceptionModal && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setShowExceptionModal(false)} />
+        <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-red-50">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-red-600" />
+              <h2 className="text-base font-semibold text-red-700">Exception cure — Contre-indication</h2>
+            </div>
+            <button onClick={() => setShowExceptionModal(false)} className="rounded-full p-1 text-gray-400 hover:bg-gray-100">
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          <div className="px-6 py-5 space-y-4">
+            <p className="text-sm text-gray-500">Indiquez toute contre-indication ou exception à prendre en compte pour ce client.</p>
+            <textarea
+              rows={5}
+              value={exceptionDraft}
+              onChange={(e) => setExceptionDraft(e.target.value)}
+              placeholder="Ex : allergie au latex, antécédents cardiaques, traitement anticoagulant..."
+              className="block w-full rounded-xl border border-gray-200 shadow-sm focus:border-red-400 focus:ring-red-400 text-sm resize-none p-3"
+            />
+          </div>
+          <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50">
+            <button
+              onClick={() => setShowExceptionModal(false)}
+              className="px-4 py-2 rounded-full text-sm font-medium text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 transition-colors"
+            >
+              Annuler
+            </button>
+            <button
+              onClick={handleSaveException}
+              disabled={savingException}
+              className="px-5 py-2 rounded-full text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors shadow-sm disabled:opacity-50"
+            >
+              {savingException ? 'Sauvegarde...' : 'Sauvegarder'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-brand-blue">
+      <div className="flex items-start justify-between">
+        <h1 className="text-2xl font-semibold text-brand-blue pt-1">
           {clientData.client.firstName} {clientData.client.lastName}
         </h1>
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-col items-end gap-2">
+          {/* Ligne 1 : 4 boutons */}
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => navigate(`/centers/${centerId}/clients`)}
+              className="flex items-center rounded-full px-6 py-2 text-sm font-semibold text-white shadow-sm hover:shadow-md transition-all duration-200 bg-gray-500"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Retour
+            </button>
+            <button
+              onClick={() => setShowNoteModal(true)}
+              className="flex items-center rounded-full px-5 py-2 text-sm font-semibold text-white shadow-sm hover:shadow-md transition-all duration-200 bg-amber-500"
+            >
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Commentaire
+            </button>
+            <button
+              onClick={() => setShowCureForm(true)}
+              className="flex items-center rounded-full px-5 py-2 text-sm font-semibold text-white shadow-sm hover:shadow-md transition-all duration-200 bg-brand-pink"
+            >
+              <Sparkles className="h-4 w-4 mr-2" />
+              Formulaire Cure
+            </button>
+            <button
+              onClick={handleDownloadPDF}
+              disabled={generatingPDF}
+              className={`
+                flex items-center rounded-full px-6 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-200
+                ${generatingPDF
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-brand-blue hover:shadow-md'
+                }
+              `}
+            >
+              <FileDown className="h-4 w-4 mr-2" />
+              {generatingPDF ? 'Génération...' : 'Télécharger PDF'}
+            </button>
+          </div>
+          {/* Ligne 2 : bouton Exception cure */}
           <button
-            onClick={() => navigate(`/centers/${centerId}/clients`)}
-            className="flex items-center rounded-full px-6 py-2 text-sm font-semibold text-white shadow-sm hover:shadow-md transition-all duration-200 bg-gray-500"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Retour
-          </button>
-          <button
-            onClick={() => setShowNoteModal(true)}
-            className="flex items-center rounded-full px-5 py-2 text-sm font-semibold text-white shadow-sm hover:shadow-md transition-all duration-200 bg-amber-500"
-          >
-            <MessageSquare className="h-4 w-4 mr-2" />
-            Commentaire
-          </button>
-          <button
-            onClick={() => setShowCureForm(true)}
-            className="flex items-center rounded-full px-5 py-2 text-sm font-semibold text-white shadow-sm hover:shadow-md transition-all duration-200 bg-brand-pink"
-          >
-            <Sparkles className="h-4 w-4 mr-2" />
-            Formulaire Cure
-          </button>
-          <button
-            onClick={handleDownloadPDF}
-            disabled={generatingPDF}
+            onClick={() => { setExceptionDraft(exceptionText); setShowExceptionModal(true); }}
             className={`
-              flex items-center rounded-full px-6 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-200
-              ${generatingPDF
-                ? 'bg-gray-400 cursor-not-allowed'
-                : 'bg-brand-blue hover:shadow-md'
-              }
+              flex items-center rounded-full px-8 py-2.5 text-sm font-bold text-white shadow-sm hover:shadow-md transition-all duration-200 w-full justify-center
+              ${exceptionText.trim() ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-400 hover:bg-gray-500'}
             `}
           >
-            <FileDown className="h-4 w-4 mr-2" />
-            {generatingPDF ? 'Génération...' : 'Télécharger PDF'}
+            {exceptionText.trim() && <span className="mr-2 text-base">⚠️</span>}
+            Exception cure
+            {exceptionText.trim() && <span className="ml-2 text-base">⚠️</span>}
           </button>
         </div>
       </div>
