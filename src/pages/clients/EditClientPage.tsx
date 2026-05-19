@@ -481,17 +481,28 @@ const EditClientPage = () => {
             </button>
           </div>
           {/* Ligne 2 : bouton Exception cure */}
-          <button
-            onClick={() => { setExceptionDraft(exceptionText); setShowExceptionModal(true); }}
-            className={`
-              flex items-center rounded-full px-8 py-2.5 text-sm font-bold text-white shadow-sm hover:shadow-md transition-all duration-200 w-full justify-center
-              ${exceptionText.trim() ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-400 hover:bg-gray-500'}
-            `}
-          >
-            {exceptionText.trim() && <span className="mr-2 text-base">⚠️</span>}
-            Exception cure
-            {exceptionText.trim() && <span className="ml-2 text-base">⚠️</span>}
-          </button>
+          {exceptionText.trim() ? (
+            <button
+              onClick={() => { setExceptionDraft(exceptionText); setShowExceptionModal(true); }}
+              className="flex flex-col items-start rounded-2xl px-5 py-3 text-sm font-bold text-white shadow-sm hover:shadow-md transition-all duration-200 w-full bg-red-600 hover:bg-red-700 text-left"
+            >
+              <div className="flex items-center gap-2 w-full justify-center mb-2">
+                <span className="text-base">⚠️</span>
+                <span>Exception cure</span>
+                <span className="text-base">⚠️</span>
+              </div>
+              <p className="text-xs font-normal text-red-100 leading-relaxed whitespace-pre-wrap line-clamp-3 w-full">
+                {exceptionText}
+              </p>
+            </button>
+          ) : (
+            <button
+              onClick={() => { setExceptionDraft(''); setShowExceptionModal(true); }}
+              className="flex items-center rounded-full px-8 py-2.5 text-sm font-bold text-white shadow-sm hover:shadow-md transition-all duration-200 w-full justify-center bg-gray-400 hover:bg-gray-500"
+            >
+              Exception cure
+            </button>
+          )}
         </div>
       </div>
 
