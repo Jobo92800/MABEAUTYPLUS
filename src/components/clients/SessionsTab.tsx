@@ -403,7 +403,7 @@ const SessionsTab: React.FC<SessionsTabProps> = ({ clientId, centerId }) => {
                                   }`}>
                                     {variation === null ? '—' : (variation > 0 ? '+' : '') + variation.toFixed(1)}
                                   </td>
-                                  <td className="px-3 py-3 text-sm text-gray-500 max-w-[200px] truncate">
+                                  <td className="px-3 py-3 text-sm text-gray-500 min-w-[180px] break-words whitespace-normal">
                                     {measurement.comment || '—'}
                                   </td>
                                   <td className="whitespace-nowrap px-3 py-3 text-sm text-center">

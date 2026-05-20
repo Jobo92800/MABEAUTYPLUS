@@ -529,7 +529,7 @@ const IShapeTab: React.FC<IShapeTabProps> = ({ clientId, centerId }) => {
                                 <td className="whitespace-nowrap px-3 py-3 text-sm text-gray-600">
                                   {session.weight ? `${session.weight} kg` : '—'}
                                 </td>
-                                <td className="px-3 py-3 text-sm text-gray-500 max-w-[200px] truncate">
+                                <td className="px-3 py-3 text-sm text-gray-500 min-w-[180px] break-words whitespace-normal">
                                   {session.comment || '—'}
                                 </td>
                                 <td className="whitespace-nowrap px-3 py-3 text-sm text-center">
