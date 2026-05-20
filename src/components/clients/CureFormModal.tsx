@@ -518,7 +518,7 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
         '<div class="cure-status ' + statusClass + '">' + statusText + '</div>' +
         '<div class="cure-tag">' + p.tag + '</div>' +
         '<div class="cure-name">' + p.name + '</div>' +
-        '<div class="cure-sessions"><span class="cure-sessions-num">' + sessionsCount + '</span><span class="cure-sessions-label">s\u00e9ances</span></div>' +
+        '<div class="cure-sessions"><span class="cure-sessions-num">' + (key === 'relax' ? Math.min(sessionsCount, 10) : sessionsCount) + '</span><span class="cure-sessions-label">s\u00e9ances</span></div>' +
         '<ul class="cure-benefits">' + p.benefits.map(b => '<li>' + b + '</li>').join('') + '</ul>';
       cureGrid.appendChild(card);
     });
@@ -537,7 +537,7 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
     let html = recommended.map(([key]) => {
       const p = prestations[key];
       return '<div class="price-row"><div class="price-row-label"><span class="price-row-name">' + p.name + '</span><span class="price-row-detail" style="color:var(--ink-soft);">' + DEFAULT_PRICE + ' \u20ac / s\u00e9ance</span></div>' +
-        '<div style="display:flex;align-items:center;gap:8px;"><input type="number" class="sessions-input" id="sessions-' + key + '" min="1" step="1" oninput="updateTotal()" value="' + sessionsCount + '"><span style="font-size:14px;color:var(--ink-soft);">s\u00e9ances</span></div></div>';
+        '<div style="display:flex;align-items:center;gap:8px;"><input type="number" class="sessions-input" id="sessions-' + key + '" min="1" step="1" oninput="updateTotal()" value="' + (key === 'relax' ? Math.min(sessionsCount, 10) : sessionsCount) + '"><span style="font-size:14px;color:var(--ink-soft);">s\u00e9ances</span></div></div>';
     }).join('');
     const addons = [];
     if (keys.includes('luxo'))   addons.push(ADDONS.luxo);
