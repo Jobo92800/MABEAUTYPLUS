@@ -446,82 +446,6 @@ const MesojetCorpsForm: React.FC<MesojetCorpsFormProps> = ({ initialData }) => {
         </div>
       </div>
 
-      {/* Summary cards — evolution depuis le début */}
-      {sessions.length >= 2 && (() => {
-        const first = sessions[0];
-        const last = sessions[sessions.length - 1];
-
-        const sumCategory = (keys: (keyof BodyZone)[]) => {
-          let total = 0; let count = 0;
-          keys.forEach(k => {
-            const f = parseFloat(first.zones[k]);
-            const l = parseFloat(last.zones[k]);
-            if (!isNaN(f) && !isNaN(l) && f > 0 && l > 0) { total += l - f; count++; }
-          });
-          return count > 0 ? total : null;
-        };
-
-        const brasKeys: (keyof BodyZone)[] = ['brasHautDroit','brasHautGauche','brasMilieuDroit','brasMilieuGauche','brasBasDroit','brasBasGauche'];
-        const tronkKeys: (keyof BodyZone)[] = ['ventre','hanche','taille','fesses','sousFessier'];
-        const jambesKeys: (keyof BodyZone)[] = ['cuisseHautDroit','cuisseHautGauche','cuisseMilieuDroit','cuisseMilieuGauche','cuisseBasDroit','cuisseBasGauche','molletDroit','molletGauche'];
-
-        const categories = [
-          { title: 'Bras', keys: brasKeys },
-          { title: 'Tronc', keys: tronkKeys },
-          { title: 'Jambes', keys: jambesKeys },
-        ].map(cat => {
-          const zoneItems = cat.keys.map(k => {
-            const f = parseFloat(first.zones[k]);
-            const l = parseFloat(last.zones[k]);
-            if (!isNaN(f) && !isNaN(l) && f > 0 && l > 0) return { label: zoneLabels[k], value: l - f };
-            return null;
-          }).filter(Boolean) as { label: string; value: number }[];
-          return { title: cat.title, items: zoneItems };
-        }).filter(c => c.items.length > 0);
-
-        if (categories.length === 0) return null;
-
-        const totalDiff = categories.flatMap(c => c.items).reduce((s, i) => s + i.value, 0);
-        const totalCount = categories.flatMap(c => c.items).length;
-        const isTotalPositive = totalDiff > 0;
-
-        return (
-          <div className="space-y-4">
-            {/* Global banner */}
-            <div className={`flex items-center justify-between px-5 py-4 rounded-xl border ${isTotalPositive ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'}`}>
-              <div>
-                <p className="text-sm font-semibold text-gray-800">Évolution globale depuis la séance 1</p>
-                <p className="text-xs text-gray-500 mt-0.5">{totalCount} zone{totalCount > 1 ? 's' : ''} mesurée{totalCount > 1 ? 's' : ''} · {sessions.length} séances</p>
-              </div>
-              <div className={`flex items-center gap-1.5 text-2xl font-bold ${isTotalPositive ? 'text-red-600' : 'text-green-600'}`}>
-                {isTotalPositive ? <TrendingUp className="h-6 w-6" /> : <TrendingDown className="h-6 w-6" />}
-                <span>{totalDiff > 0 ? '+' : ''}{totalDiff.toFixed(1)} cm</span>
-              </div>
-            </div>
-
-            {/* Per-category cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {categories.map(cat => (
-                <div key={cat.title} className="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl p-4">
-                  <h3 className="text-sm font-semibold text-gray-700 mb-3 pb-2 border-b border-gray-100">{cat.title}</h3>
-                  <div className="space-y-1.5">
-                    {cat.items.map(item => (
-                      <div key={item.label} className="flex justify-between items-center">
-                        <span className="text-xs text-gray-500">{item.label}</span>
-                        <span className={`text-xs font-semibold flex items-center gap-0.5 ${item.value > 0 ? 'text-red-500' : item.value < 0 ? 'text-green-600' : 'text-gray-400'}`}>
-                          {item.value < 0 ? <TrendingDown className="h-3 w-3" /> : item.value > 0 ? <TrendingUp className="h-3 w-3" /> : null}
-                          {item.value > 0 ? '+' : ''}{item.value.toFixed(1)} cm
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        );
-      })()}
-
       {showAddForm && (
         <div className="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-6">Nouvelle séance</h3>
@@ -633,6 +557,74 @@ const MesojetCorpsForm: React.FC<MesojetCorpsFormProps> = ({ initialData }) => {
           </div>
         </div>
       )}
+
+      {/* Summary cards — résumé évolution par zone */}
+      {sessions.length >= 2 && zonesWithData.length > 0 && (() => {
+        const brasKeys: (keyof BodyZone)[] = ['brasHautDroit','brasHautGauche','brasMilieuDroit','brasMilieuGauche','brasBasDroit','brasBasGauche'];
+        const tronkKeys: (keyof BodyZone)[] = ['ventre','hanche','taille','fesses','sousFessier'];
+        const jambesKeys: (keyof BodyZone)[] = ['cuisseHautDroit','cuisseHautGauche','cuisseMilieuDroit','cuisseMilieuGauche','cuisseBasDroit','cuisseBasGauche','molletDroit','molletGauche'];
+
+        const categories = [
+          { title: 'Bras', keys: brasKeys },
+          { title: 'Tronc', keys: tronkKeys },
+          { title: 'Jambes', keys: jambesKeys },
+        ].map(cat => {
+          const zoneItems = cat.keys.map(k => {
+            // trouver la première et la dernière séance qui ont une valeur pour cette zone
+            const sessionsWithZone = sessions.filter(s => parseFloat(s.zones[k]) > 0);
+            if (sessionsWithZone.length < 2) return null;
+            const first = sessionsWithZone[0];
+            const last = sessionsWithZone[sessionsWithZone.length - 1];
+            const f = parseFloat(first.zones[k]);
+            const l = parseFloat(last.zones[k]);
+            if (isNaN(f) || isNaN(l)) return null;
+            return { label: zoneLabels[k], value: l - f, first: f, last: l };
+          }).filter(Boolean) as { label: string; value: number; first: number; last: number }[];
+          return { title: cat.title, items: zoneItems };
+        }).filter(c => c.items.length > 0);
+
+        if (categories.length === 0) return null;
+
+        const allItems = categories.flatMap(c => c.items);
+        const totalDiff = allItems.reduce((s, i) => s + i.value, 0);
+        const totalCount = allItems.length;
+        const isTotalPositive = totalDiff > 0;
+
+        return (
+          <div className="space-y-4">
+            {/* Global banner */}
+            <div className={`flex items-center justify-between px-5 py-4 rounded-xl border ${isTotalPositive ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'}`}>
+              <div>
+                <p className="text-sm font-semibold text-gray-800">Évolution globale des mesures</p>
+                <p className="text-xs text-gray-500 mt-0.5">{totalCount} zone{totalCount > 1 ? 's' : ''} mesurée{totalCount > 1 ? 's' : ''} · {sessions.length} séances au total</p>
+              </div>
+              <div className={`flex items-center gap-1.5 text-2xl font-bold ${isTotalPositive ? 'text-red-600' : 'text-green-600'}`}>
+                {isTotalPositive ? <TrendingUp className="h-6 w-6" /> : <TrendingDown className="h-6 w-6" />}
+                <span>{totalDiff > 0 ? '+' : ''}{totalDiff.toFixed(1)} cm</span>
+              </div>
+            </div>
+
+            {/* Per-category cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {categories.map(cat => (
+                <div key={cat.title} className="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl p-4">
+                  <h3 className="text-base font-semibold text-gray-900 mb-3">{cat.title}</h3>
+                  <div className="space-y-2">
+                    {cat.items.map(item => (
+                      <div key={item.label} className="flex justify-between items-center">
+                        <span className="text-sm text-gray-500">{item.label}</span>
+                        <span className={`text-sm font-medium ${item.value > 0 ? 'text-red-500' : item.value < 0 ? 'text-green-600' : 'text-gray-400'}`}>
+                          {item.value > 0 ? '+' : ''}{item.value.toFixed(1)} cm
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
 
       {sessions.length > 1 && zonesWithData.length > 0 && (
         <div className="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl p-6">
