@@ -129,6 +129,31 @@ const ContractSignatureModal: React.FC<ContractSignatureModalProps> = ({
     setEngagements((prev) => prev.map((v, i) => (i === index ? !v : v)));
   };
 
+  const sendContractEmail = async (pdfBase64: string) => {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    try {
+      await fetch(`${supabaseUrl}/functions/v1/send-contract-email`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          clientEmail: contractData.clientEmail,
+          clientFirstName: contractData.clientFirstName,
+          clientLastName: contractData.clientLastName,
+          centerName: contractData.centerName,
+          centerEmail: contractData.centerEmail,
+          pdfBase64,
+          signatureDate: contractData.signatureDate,
+        }),
+      });
+    } catch {
+      // email failure is non-blocking
+    }
+  };
+
   const handleValidate = async () => {
     if (!canValidate) return;
     const canvas = canvasRef.current;
@@ -139,6 +164,9 @@ const ContractSignatureModal: React.FC<ContractSignatureModalProps> = ({
       const signatureDataUrl = canvas.toDataURL('image/png');
       const pdfBase64 = await generateSignedContractPdf(contractData, signatureDataUrl);
       await saveSignedContract(clientId, centerId, clientName, pdfBase64, contractData);
+      if (contractData.clientEmail) {
+        await sendContractEmail(pdfBase64);
+      }
       toast.success('Contrat signé et enregistré avec succès');
       onSigned();
     } catch (err) {
@@ -312,3 +340,6 @@ const ContractSignatureModal: React.FC<ContractSignatureModalProps> = ({
 };
 
 export default ContractSignatureModal;
+
+
+export default ContractSignatureModal
