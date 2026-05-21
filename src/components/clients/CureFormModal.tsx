@@ -527,7 +527,7 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
 
   const DEFAULT_PRICE = 49;
   const ADDONS = {
-    luxo:   { name: 'Guide du r\u00e9\u00e9quilibrage alimentaire', detail: '', price: 19 },
+    luxo:   { name: 'Guide du r\u00e9\u00e9quilibrage alimentaire', detail: 'Offert avec la cure Luxo perte de poids', price: 19 },
     ishape: { name: 'Tenue I-Shape', detail: 'Tenue technique d\u00e9di\u00e9e \u00e0 la cure I-Shape', price: 60 }
   };
 
@@ -545,7 +545,7 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
     if (addons.length > 0) {
       html += '<div class="addon-section-label">Compl\u00e9ments inclus</div>';
       html += addons.map(a =>
-        '<div class="price-row addon-row" data-fixed-price="' + a.price + '"><div class="price-row-label"><span class="price-row-name addon-name">' + a.name + '</span>' + (a.detail ? '<span class="price-row-detail">' + a.detail + '</span>' : '') + '</div><div class="price-row-amount">' + a.price + ' \u20ac</div></div>'
+        '<div class="price-row addon-row" data-fixed-price="' + a.price + '"><div class="price-row-label"><span class="price-row-name addon-name">' + a.name + '</span><span class="price-row-detail">' + a.detail + '</span></div><div class="price-row-amount">' + a.price + ' \u20ac</div></div>'
       ).join('');
     }
     rows.innerHTML = html;
@@ -624,20 +624,9 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
     if (n === 1) return [total];
     const payments = Array(n).fill(0);
 
-    // Addons (guide 19€, tenue 60€) → 1ère échéance, uniquement si visibles
+    // Addons (guide 19€, tenue 60€) → 1ère échéance comme dans InstallmentsCalculator
     let addonTotal = 0;
-    let ishapeSessions = 0, luxoSessions = 0;
-    document.querySelectorAll('.sessions-input').forEach(inp => {
-      const key = inp.id.replace('sessions-', '');
-      if (key === 'ishape') ishapeSessions = parseFloat(inp.value) || 0;
-      if (key === 'luxo') luxoSessions = parseFloat(inp.value) || 0;
-    });
     document.querySelectorAll('[data-fixed-price]').forEach(el => {
-      const addonName = el.querySelector('.addon-name')?.textContent || '';
-      const isTenue = addonName.toLowerCase().includes('tenue');
-      const isGuide = addonName.toLowerCase().includes('guide');
-      if (isTenue && ishapeSessions === 0) return;
-      if (isGuide && luxoSessions === 0) return;
       addonTotal += parseFloat(el.dataset.fixedPrice) || 0;
     });
     payments[0] += addonTotal;
@@ -767,22 +756,12 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
         });
       }
     });
-    // Addons (guide, tenue) — uniquement si le soin lié a des séances
-    let ishapeCount = 0, luxoCount = 0;
-    document.querySelectorAll('.sessions-input').forEach(inp => {
-      const k = inp.id.replace('sessions-', '');
-      if (k === 'ishape') ishapeCount = parseFloat(inp.value) || 0;
-      if (k === 'luxo')   luxoCount   = parseFloat(inp.value) || 0;
-    });
+    // Addons (guide, tenue)
     document.querySelectorAll('[data-fixed-price]').forEach(el => {
       const addonName = el.querySelector('.addon-name')?.textContent || '';
-      const isTenue = addonName.toLowerCase().includes('tenue');
-      const isGuide = addonName.toLowerCase().includes('guide');
-      if (isTenue && ishapeCount === 0) return;
-      if (isGuide && luxoCount   === 0) return;
       let careServiceId = null;
-      if (isGuide) careServiceId = 'guide';
-      else if (isTenue) careServiceId = 'tenue';
+      if (addonName.toLowerCase().includes('guide')) careServiceId = 'guide';
+      else if (addonName.toLowerCase().includes('tenue')) careServiceId = 'tenue';
       if (careServiceId) {
         results.push({ name: addonName, sessions: 1, pricePerSession: parseFloat(el.dataset.fixedPrice) || 0, careServiceId });
       }
