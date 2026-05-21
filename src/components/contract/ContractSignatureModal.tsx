@@ -340,6 +340,3 @@ const ContractSignatureModal: React.FC<ContractSignatureModalProps> = ({
 };
 
 export default ContractSignatureModal;
-
-
-export default ContractSignatureModal
