@@ -29,7 +29,23 @@ interface AirtableClientData {
   therapist: string;
   centerId: string;
   totalAmount?: string;
+  treatment?: string;
 }
+
+const TREATMENT_LABELS: Record<string, string> = {
+  luxotherapy: 'Perte de Poids',
+  relaxation: 'Relaxation',
+  menopause: 'Ménopause',
+  cavitalyse: 'Cavita-Lyse',
+  'radiofrequency-mesojet': 'RF Mésojet',
+  adipology: 'Adipologie',
+  ishape: 'I-Shape',
+  pressodynamie: 'Pressodynamie',
+  'mesojet-corps': 'Mésojet Corps',
+  'advance-lift': 'Advance Lift',
+  mesojet: 'Mésojet Visage',
+  psio: 'PSIO',
+};
 
 export const addClientToAirtable = async (clientData: AirtableClientData): Promise<void> => {
   try {
@@ -42,8 +58,8 @@ export const addClientToAirtable = async (clientData: AirtableClientData): Promi
     };
 
     // Format date for Airtable (YYYY-MM-DD)
-    const formattedBirthDate = clientData.birthDate ? 
-      format(parseISO(clientData.birthDate), 'yyyy-MM-dd') : 
+    const formattedBirthDate = clientData.birthDate ?
+      format(parseISO(clientData.birthDate), 'yyyy-MM-dd') :
       undefined;
 
     const fields: Record<string, any> = {
@@ -63,6 +79,11 @@ export const addClientToAirtable = async (clientData: AirtableClientData): Promi
 
     if (clientData.totalAmount) {
       fields['Montant Cure'] = parseFloat(clientData.totalAmount);
+    }
+
+    if (clientData.treatment) {
+      const treatmentLabel = TREATMENT_LABELS[clientData.treatment] || clientData.treatment;
+      fields['Soins'] = treatmentLabel;
     }
 
     const response = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_ID}`, {
