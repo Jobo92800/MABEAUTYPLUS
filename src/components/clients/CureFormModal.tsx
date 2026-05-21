@@ -624,9 +624,20 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
     if (n === 1) return [total];
     const payments = Array(n).fill(0);
 
-    // Addons (guide 19€, tenue 60€) → 1ère échéance comme dans InstallmentsCalculator
+    // Addons (guide 19€, tenue 60€) → 1ère échéance, uniquement si visibles
     let addonTotal = 0;
+    let ishapeSessions = 0, luxoSessions = 0;
+    document.querySelectorAll('.sessions-input').forEach(inp => {
+      const key = inp.id.replace('sessions-', '');
+      if (key === 'ishape') ishapeSessions = parseFloat(inp.value) || 0;
+      if (key === 'luxo') luxoSessions = parseFloat(inp.value) || 0;
+    });
     document.querySelectorAll('[data-fixed-price]').forEach(el => {
+      const addonName = el.querySelector('.addon-name')?.textContent || '';
+      const isTenue = addonName.toLowerCase().includes('tenue');
+      const isGuide = addonName.toLowerCase().includes('guide');
+      if (isTenue && ishapeSessions === 0) return;
+      if (isGuide && luxoSessions === 0) return;
       addonTotal += parseFloat(el.dataset.fixedPrice) || 0;
     });
     payments[0] += addonTotal;
