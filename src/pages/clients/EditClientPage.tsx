@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   User, Scale, Ruler, FileDown, Activity,
-  Sparkles, Zap, Heart, Coffee, ArrowLeft, Pill, Brain, Droplet, MessageSquare, AlertTriangle, X
+  Sparkles, Zap, Heart, Coffee, ArrowLeft, Pill, Brain, Droplet, MessageSquare, AlertTriangle, X,
+  FileSignature, CheckCircle, Eye
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import ClientForm from '../../components/clients/ClientForm';
@@ -26,10 +27,13 @@ import { db } from '../../services/firebase';
 import { generateClientPDF } from '../../utils/pdfGenerator';
 import CureFormModal from '../../components/clients/CureFormModal';
 import ClientNoteModal from '../../components/clients/ClientNoteModal';
+import ContractSignatureModal from '../../components/contract/ContractSignatureModal';
 import type { FullClientData } from '../../types/client';
 import type { Measurement } from '../../types/measurements';
 import type { Session } from '../../types/session';
 import type { ClientCureData } from '../../types/client';
+import { buildContractData, getSignedContracts, getSignedContractPdf } from '../../services/contractService';
+import type { ContractData, SignedContractRecord } from '../../services/contractService';
 import { addDays, isAfter, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -166,6 +170,10 @@ const EditClientPage = () => {
   const [exceptionText, setExceptionText] = useState('');
   const [exceptionDraft, setExceptionDraft] = useState('');
   const [savingException, setSavingException] = useState(false);
+  const [showContractModal, setShowContractModal] = useState(false);
+  const [contractData, setContractData] = useState<ContractData | null>(null);
+  const [loadingContract, setLoadingContract] = useState(false);
+  const [signedContracts, setSignedContracts] = useState<SignedContractRecord[]>([]);
 
   // Fonction pour vérifier les compléments expirés (SOS exclu du calcul automatique)
   const checkExpiredComplements = async () => {
@@ -279,11 +287,70 @@ const EditClientPage = () => {
 
       // Vérifier les compléments expirés dès le chargement
       await checkExpiredComplements();
+
+      // Charger les contrats signés
+      if (id) {
+        try {
+          const contracts = await getSignedContracts(id);
+          setSignedContracts(contracts);
+        } catch {
+          // ignore
+        }
+      }
     } catch (err) {
       console.error('Error fetching data:', err);
       setError('Erreur lors du chargement des données');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleOpenContractModal = async () => {
+    if (!clientData) return;
+    setLoadingContract(true);
+    try {
+      const data = await buildContractData(clientData.client);
+      if (!data) {
+        toast.error('Impossible de charger les données du centre');
+        return;
+      }
+      setContractData(data);
+      setShowContractModal(true);
+    } catch (err) {
+      console.error('Error building contract:', err);
+      toast.error('Erreur lors du chargement du contrat');
+    } finally {
+      setLoadingContract(false);
+    }
+  };
+
+  const handleContractSigned = async () => {
+    setShowContractModal(false);
+    if (id) {
+      const contracts = await getSignedContracts(id);
+      setSignedContracts(contracts);
+    }
+  };
+
+  const handleDownloadSignedContract = async (contractId: string) => {
+    try {
+      const pdfBase64 = await getSignedContractPdf(contractId);
+      if (!pdfBase64) {
+        toast.error('PDF introuvable');
+        return;
+      }
+      const binary = atob(pdfBase64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      const blob = new Blob([bytes], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `contrat_${clientData?.client.lastName ?? 'client'}_${contractId.slice(0, 8)}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error('Erreur lors du téléchargement');
     }
   };
 
@@ -378,6 +445,16 @@ const EditClientPage = () => {
 
   return (
     <>
+    {showContractModal && contractData && clientData && (
+      <ContractSignatureModal
+        contractData={contractData}
+        clientId={id!}
+        centerId={centerId!}
+        clientName={`${clientData.client.firstName} ${clientData.client.lastName}`}
+        onClose={() => setShowContractModal(false)}
+        onSigned={handleContractSigned}
+      />
+    )}
     {showCureForm && (
       <CureFormModal
         clientId={id}
@@ -479,6 +556,26 @@ const EditClientPage = () => {
               <FileDown className="h-4 w-4 mr-2" />
               {generatingPDF ? 'Génération...' : 'Télécharger PDF'}
             </button>
+            <button
+              onClick={handleOpenContractModal}
+              disabled={loadingContract}
+              className={`
+                flex items-center rounded-full px-5 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-200
+                ${loadingContract
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : signedContracts.length > 0
+                    ? 'bg-emerald-500 hover:shadow-md'
+                    : 'bg-brand-pink hover:shadow-md'
+                }
+              `}
+            >
+              {signedContracts.length > 0 ? (
+                <CheckCircle className="h-4 w-4 mr-2" />
+              ) : (
+                <FileSignature className="h-4 w-4 mr-2" />
+              )}
+              {loadingContract ? 'Chargement...' : signedContracts.length > 0 ? 'Nouveau contrat' : 'Faire signer le contrat'}
+            </button>
           </div>
           {/* Ligne 2 : bouton Exception cure */}
           {exceptionText.trim() ? (
@@ -564,6 +661,35 @@ const EditClientPage = () => {
             <ClientForm onSubmit={handleSubmit} initialData={clientData} isSubmitting={isSubmitting} />
             {clientData.client.cureData && (
               <CureSummaryCard cureData={clientData.client.cureData} />
+            )}
+            {signedContracts.length > 0 && (
+              <div className="mt-6 bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-emerald-500" />
+                  <h3 className="text-base font-semibold text-gray-900">
+                    Contrat{signedContracts.length > 1 ? 's' : ''} signé{signedContracts.length > 1 ? 's' : ''}
+                  </h3>
+                </div>
+                <div className="divide-y divide-gray-50">
+                  {signedContracts.map((c) => (
+                    <div key={c.id} className="flex items-center justify-between px-6 py-3">
+                      <div>
+                        <p className="text-sm font-medium text-gray-800">
+                          Signé le {format(new Date(c.signed_at), 'd MMMM yyyy à HH:mm', { locale: fr })}
+                        </p>
+                        <p className="text-xs text-gray-400">{c.client_name} — {c.center_id}</p>
+                      </div>
+                      <button
+                        onClick={() => handleDownloadSignedContract(c.id)}
+                        className="flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold text-brand-blue bg-blue-50 hover:bg-blue-100 transition-colors"
+                      >
+                        <Eye className="h-4 w-4" />
+                        Télécharger
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
           </>
         )}
