@@ -767,12 +767,22 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
         });
       }
     });
-    // Addons (guide, tenue)
+    // Addons (guide, tenue) — uniquement si le soin lié a des séances
+    let ishapeCount = 0, luxoCount = 0;
+    document.querySelectorAll('.sessions-input').forEach(inp => {
+      const k = inp.id.replace('sessions-', '');
+      if (k === 'ishape') ishapeCount = parseFloat(inp.value) || 0;
+      if (k === 'luxo')   luxoCount   = parseFloat(inp.value) || 0;
+    });
     document.querySelectorAll('[data-fixed-price]').forEach(el => {
       const addonName = el.querySelector('.addon-name')?.textContent || '';
+      const isTenue = addonName.toLowerCase().includes('tenue');
+      const isGuide = addonName.toLowerCase().includes('guide');
+      if (isTenue && ishapeCount === 0) return;
+      if (isGuide && luxoCount   === 0) return;
       let careServiceId = null;
-      if (addonName.toLowerCase().includes('guide')) careServiceId = 'guide';
-      else if (addonName.toLowerCase().includes('tenue')) careServiceId = 'tenue';
+      if (isGuide) careServiceId = 'guide';
+      else if (isTenue) careServiceId = 'tenue';
       if (careServiceId) {
         results.push({ name: addonName, sessions: 1, pricePerSession: parseFloat(el.dataset.fixedPrice) || 0, careServiceId });
       }
