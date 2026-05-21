@@ -378,7 +378,133 @@ const ContractPreview: React.FC<ContractPreviewProps> = ({ data, id }) => {
         <div style={{ position: 'absolute', bottom: '10mm', left: '18mm', right: '18mm', textAlign: 'center' }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
             <span style={{ fontSize: '13pt', color: '#e0a0c0', letterSpacing: '0.05em' }}>✿ MAbeautyplus</span>
-            <span style={{ fontSize: '8pt', color: '#aaa' }}>3/3</span>
+            <span style={{ fontSize: '8pt', color: '#aaa' }}>3/4</span>
+          </div>
+        </div>
+      </div>
+
+      {/* PAGE BREAK */}
+      <div style={{ borderTop: '2px dashed #ddd', margin: '0' }} />
+
+      {/* PAGE 4 — CGV */}
+      <div className="contract-page" style={{ padding: '18mm 18mm 14mm 18mm', minHeight: '277mm', position: 'relative' }}>
+        {/* Title */}
+        <h1 style={{ fontSize: '24pt', fontWeight: 400, color: '#b0b0b0', fontFamily: 'Georgia, serif', marginBottom: '12px' }}>
+          Conditions Générales de Vente
+        </h1>
+        <p style={{ fontWeight: 700, margin: '0 0 2px 0' }}>MAbeautyplus</p>
+        <p style={{ fontStyle: 'italic', margin: '0 0 16px 0' }}>Dernière mise à jour : Mai 2026</p>
+
+        {/* Article 1 */}
+        <div style={{ marginBottom: '12px' }}>
+          <p style={{ fontWeight: 700, margin: '0 0 4px 0' }}>ARTICLE 1 – IDENTIFICATION DU PRESTATAIRE</p>
+          <p style={{ margin: '0 0 2px 0' }}>Les présentes Conditions Générales de Vente sont proposées par MAbeautyplus.</p>
+          <p style={{ margin: '0 0 2px 0' }}>
+            Société exploitante : <span style={{ color: '#b03030', fontWeight: 600 }}>{data.cgvSocietyName}</span>
+          </p>
+          <p style={{ margin: '0 0 2px 0' }}>Forme juridique : SAS, société par actions simplifiée</p>
+          <p style={{ margin: '0 0 2px 0' }}>Capital social : 1 000 €</p>
+          <p style={{ margin: '0 0 2px 0' }}>Siège social : 577 rue des Tamaris 30240 le Grau-Du-Roi</p>
+          <p style={{ margin: '0 0 2px 0' }}>RCS : 853 874 428 R.C.S. Nimes</p>
+          <p style={{ margin: '0 0 2px 0' }}>
+            SIREN : <span style={{ color: '#b03030', fontWeight: 600 }}>{data.cgvSiren}</span>
+          </p>
+          <p style={{ margin: '0 0 2px 0' }}>Téléphone : 04 66 73 02 00</p>
+          <p style={{ margin: '0 0 2px 0' }}>E-mail : contact.mabeautyplus@gmail.com</p>
+          <p style={{ margin: '0 0 2px 0' }}>Site internet : www.mabeautyplus.fr</p>
+          <p style={{ margin: 0 }}>Ci-après dénommé « le Prestataire ».</p>
+        </div>
+
+        {/* Article 2 */}
+        <div style={{ marginBottom: '12px' }}>
+          <p style={{ fontWeight: 700, margin: '0 0 4px 0' }}>ARTICLE 2 – OBJET</p>
+          <p style={{ margin: '0 0 4px 0' }}>Les présentes Conditions Générales de Vente ont pour objet de définir les conditions de réservation, de vente et d'exécution des prestations proposées par MAbeautyplus.</p>
+          <p style={{ margin: '0 0 2px 0' }}>Les prestations proposées comprennent notamment :</p>
+          <ul style={{ margin: '0 0 4px 16px', padding: 0 }}>
+            {['Luxothérapie', 'Électrostimulation', 'Pressothérapie', 'Soins minceur', 'Soins anti-âge', 'Soins visage et corps', 'Accompagnement personnalisé', 'Conseils en hygiène de vie et rééquilibrage alimentaire'].map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+          <p style={{ margin: 0 }}>Les présentes CGV s'appliquent à toute réservation, signature de contrat ou achat de prestation effectué auprès de MAbeautyplus.</p>
+        </div>
+
+        {/* Article 3 */}
+        <div style={{ marginBottom: '12px' }}>
+          <p style={{ fontWeight: 700, margin: '0 0 4px 0' }}>ARTICLE 3 – ACCEPTATION DES CONDITIONS GÉNÉRALES DE VENTE</p>
+          <p style={{ margin: '0 0 4px 0' }}>Toute réservation, signature de contrat ou validation d'une prestation implique l'acceptation pleine et entière des présentes Conditions Générales de Vente.</p>
+          <p style={{ margin: '0 0 4px 0' }}>Le Client reconnaît avoir pris connaissance des présentes CGV préalablement à son engagement.</p>
+          <p style={{ margin: '0 0 2px 0' }}>Les CGV peuvent être consultées :</p>
+          <ul style={{ margin: '0 0 4px 16px', padding: 0 }}>
+            <li>sur le site internet du Prestataire,</li>
+            <li>par envoi électronique,</li>
+            <li>ou sur simple demande.</li>
+          </ul>
+        </div>
+
+        {/* Article 4 */}
+        <div style={{ marginBottom: '12px' }}>
+          <p style={{ fontWeight: 700, margin: '0 0 4px 0' }}>ARTICLE 4 – NATURE DES PRESTATIONS</p>
+          <p style={{ margin: '0 0 4px 0' }}>Les prestations proposées par MAbeautyplus s'inscrivent dans une démarche de bien-être, d'accompagnement esthétique et d'hygiène de vie.</p>
+          <p style={{ margin: '0 0 4px 0' }}>Les prestations proposées ne constituent en aucun cas des actes médicaux, paramédicaux ou thérapeutiques au sens du Code de la santé publique.</p>
+          <p style={{ margin: '0 0 4px 0' }}>Le Prestataire est tenu à une obligation de moyens. Le Prestataire s'engage à mettre en œuvre l'ensemble des moyens techniques, humains et matériels raisonnablement nécessaires à l'accompagnement du Client.</p>
+          <p style={{ margin: '0 0 2px 0' }}>Le Client reconnaît que les résultats peuvent varier selon différents facteurs personnels, notamment :</p>
+          <ul style={{ margin: '0 0 4px 16px', padding: 0 }}>
+            {['le métabolisme,', "l'alimentation,", "l'hygiène de vie,", 'la régularité dans le programme,', "l'activité physique,", 'le sommeil,', 'le niveau de stress,', "ou l'état de santé général."].map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+          <p style={{ margin: 0 }}>Aucune garantie de résultat ne peut être donnée.</p>
+        </div>
+
+        {/* Article 5 */}
+        <div style={{ marginBottom: '12px' }}>
+          <p style={{ fontWeight: 700, margin: '0 0 4px 0' }}>ARTICLE 5 – TARIFS ET PAIEMENT</p>
+          <p style={{ margin: '0 0 4px 0' }}>Les tarifs des prestations sont ceux en vigueur au moment de la réservation ou de la signature du contrat.</p>
+          <p style={{ margin: '0 0 4px 0' }}>Le paiement peut être effectué par : chèque, espèces, carte bancaire, ou via un organisme de paiement fractionné partenaire (sous réserve d'acceptation).</p>
+          <p style={{ margin: 0 }}>En cas de paiement fractionné via un organisme partenaire, le Prestataire est considéré comme intégralement réglé dès la validation du financement. La relation financière est ensuite gérée directement entre le Client et l'organisme concerné.</p>
+        </div>
+
+        {/* Article 6 */}
+        <div style={{ marginBottom: '12px' }}>
+          <p style={{ fontWeight: 700, margin: '0 0 4px 0' }}>ARTICLE 6 – DROIT DE RÉTRACTATION</p>
+          <p style={{ margin: '0 0 4px 0' }}>Conformément aux articles L221-18 et suivants du Code de la consommation, le Client dispose d'un droit de rétractation de 14 jours calendaires à compter de la signature du contrat.</p>
+          <p style={{ margin: '0 0 4px 0' }}>Pour exercer ce droit, le Client doit notifier sa décision par écrit (courrier ou e-mail) avant l'expiration du délai.</p>
+          <p style={{ margin: 0 }}>Si le Client a expressément demandé l'exécution de la prestation avant l'expiration du délai de rétractation et que des séances ont déjà été réalisées, le montant correspondant aux prestations effectuées restera dû au Prestataire.</p>
+        </div>
+
+        {/* Article 7 */}
+        <div style={{ marginBottom: '12px' }}>
+          <p style={{ fontWeight: 700, margin: '0 0 4px 0' }}>ARTICLE 7 – RÉSERVATION ET ANNULATION</p>
+          <p style={{ margin: '0 0 4px 0' }}>Toute séance doit être préalablement réservée. Toute annulation doit être communiquée au moins 24 heures à l'avance.</p>
+          <p style={{ margin: 0 }}>En cas de non-présentation ou d'annulation tardive, la séance sera décomptée du forfait, sauf cas de force majeure justifié.</p>
+        </div>
+
+        {/* Article 8 */}
+        <div style={{ marginBottom: '12px' }}>
+          <p style={{ fontWeight: 700, margin: '0 0 4px 0' }}>ARTICLE 8 – RESPONSABILITÉ</p>
+          <p style={{ margin: '0 0 4px 0' }}>Le Prestataire ne pourra être tenu responsable en cas de non-respect des recommandations, d'omission d'informations relatives à l'état de santé du Client, ou de résultats ne correspondant pas aux attentes du Client.</p>
+          <p style={{ margin: 0 }}>Le Client déclare être en bonne santé et ne pas présenter de contre-indication médicale aux prestations souscrites. En cas de doute, le Client est invité à consulter un professionnel de santé avant de débuter le programme.</p>
+        </div>
+
+        {/* Article 9 */}
+        <div style={{ marginBottom: '12px' }}>
+          <p style={{ fontWeight: 700, margin: '0 0 4px 0' }}>ARTICLE 9 – DONNÉES PERSONNELLES</p>
+          <p style={{ margin: '0 0 4px 0' }}>Les données personnelles collectées sont utilisées exclusivement dans le cadre de l'exécution des prestations et de la gestion de la relation client. Elles ne sont en aucun cas transmises à des tiers.</p>
+          <p style={{ margin: 0 }}>Conformément au RGPD, le Client dispose d'un droit d'accès, de rectification et de suppression de ses données, exerçable par demande écrite à la direction.</p>
+        </div>
+
+        {/* Article 10 */}
+        <div style={{ marginBottom: '12px' }}>
+          <p style={{ fontWeight: 700, margin: '0 0 4px 0' }}>ARTICLE 10 – MÉDIATION ET LITIGES</p>
+          <p style={{ margin: '0 0 4px 0' }}>En cas de litige, le Client peut recourir à un médiateur de la consommation conformément aux articles L.612-1 et suivants du Code de la consommation.</p>
+          <p style={{ margin: 0 }}>À défaut de résolution amiable, tout litige sera soumis aux tribunaux compétents du ressort du siège social du Prestataire.</p>
+        </div>
+
+        {/* Page footer */}
+        <div style={{ position: 'absolute', bottom: '10mm', left: '18mm', right: '18mm', textAlign: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+            <span style={{ fontSize: '13pt', color: '#e0a0c0', letterSpacing: '0.05em' }}>✿ MAbeautyplus</span>
+            <span style={{ fontSize: '8pt', color: '#aaa' }}>4/4</span>
           </div>
         </div>
       </div>

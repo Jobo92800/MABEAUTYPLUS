@@ -364,6 +364,154 @@ export async function generateSignedContractPdf(
 
   pageFooter(doc, 3);
 
+  // ── PAGE 4 — CGV ────────────────────────────────────────────────────────────
+  doc.addPage();
+  y = MARGIN;
+
+  // CGV Title
+  doc.setTextColor(180, 180, 180);
+  setFont(doc, 20);
+  doc.text('Conditions Générales de Vente', MARGIN, y + 8);
+  y += 14;
+
+  doc.setTextColor(26, 26, 26);
+  setFont(doc, 8.5, 'bold');
+  doc.text('MAbeautyplus', MARGIN, y);
+  y += 5;
+  setFont(doc, 8.5, 'italic');
+  doc.text('Dernière mise à jour : Mai 2026', MARGIN, y);
+  y += 8;
+
+  setFont(doc, 9);
+  doc.setTextColor(26, 26, 26);
+
+  // ARTICLE 1
+  y = sectionTitle(doc, 'ARTICLE 1 – IDENTIFICATION DU PRESTATAIRE', y);
+  y = paragraph(doc, 'Les présentes Conditions Générales de Vente sont proposées par MAbeautyplus.', y, SMALL_LINE_H);
+
+  const cgvLines: Array<{ label: string; value: string; highlight?: boolean }> = [
+    { label: 'Société exploitante : ', value: data.cgvSocietyName, highlight: true },
+    { label: 'Forme juridique : ', value: 'SAS, société par actions simplifiée' },
+    { label: 'Capital social : ', value: '1 000 €' },
+    { label: 'Siège social : ', value: '577 rue des Tamaris 30240 le Grau-Du-Roi' },
+    { label: 'RCS : ', value: '853 874 428 R.C.S. Nimes' },
+    { label: 'SIREN : ', value: data.cgvSiren, highlight: true },
+    { label: 'Téléphone : ', value: '04 66 73 02 00' },
+    { label: 'E-mail : ', value: 'contact.mabeautyplus@gmail.com' },
+    { label: 'Site internet : ', value: 'www.mabeautyplus.fr' },
+  ];
+
+  for (const line of cgvLines) {
+    setFont(doc, 9);
+    doc.setTextColor(26, 26, 26);
+    const labelW = doc.getTextWidth(line.label);
+    doc.text(line.label, MARGIN, y);
+    if (line.highlight) {
+      doc.setTextColor(180, 60, 60);
+    }
+    doc.text(line.value, MARGIN + labelW, y);
+    doc.setTextColor(26, 26, 26);
+    y += SMALL_LINE_H;
+  }
+
+  y = paragraph(doc, 'Ci-après dénommé « le Prestataire ».', y, SMALL_LINE_H);
+  y += 3;
+
+  // ARTICLE 2
+  y = sectionTitle(doc, 'ARTICLE 2 – OBJET', y);
+  y = paragraph(doc, 'Les présentes Conditions Générales de Vente ont pour objet de définir les conditions de réservation, de vente et d\'exécution des prestations proposées par MAbeautyplus.', y, SMALL_LINE_H);
+  y = paragraph(doc, 'Les prestations proposées comprennent notamment :', y, SMALL_LINE_H);
+  y = bulletList(doc, [
+    'Luxothérapie',
+    'Électrostimulation',
+    'Pressothérapie',
+    'Soins minceur',
+    'Soins anti-âge',
+    'Soins visage et corps',
+    'Accompagnement personnalisé',
+    'Conseils en hygiène de vie et rééquilibrage alimentaire',
+  ], y);
+  y = paragraph(doc, 'Les présentes CGV s\'appliquent à toute réservation, signature de contrat ou achat de prestation effectué auprès de MAbeautyplus.', y, SMALL_LINE_H);
+  y += 3;
+
+  // ARTICLE 3
+  y = sectionTitle(doc, 'ARTICLE 3 – ACCEPTATION DES CONDITIONS GÉNÉRALES DE VENTE', y);
+  y = paragraph(doc, 'Toute réservation, signature de contrat ou validation d\'une prestation implique l\'acceptation pleine et entière des présentes Conditions Générales de Vente.', y, SMALL_LINE_H);
+  y = paragraph(doc, 'Le Client reconnaît avoir pris connaissance des présentes CGV préalablement à son engagement.', y, SMALL_LINE_H);
+  y = paragraph(doc, 'Les CGV peuvent être consultées :', y, SMALL_LINE_H);
+  y = bulletList(doc, [
+    'sur le site internet du Prestataire,',
+    'par envoi électronique,',
+    'ou sur simple demande.',
+  ], y);
+  y += 3;
+
+  // ARTICLE 4
+  y = sectionTitle(doc, 'ARTICLE 4 – NATURE DES PRESTATIONS', y);
+  y = paragraph(doc, 'Les prestations proposées par MAbeautyplus s\'inscrivent dans une démarche de bien-être, d\'accompagnement esthétique et d\'hygiène de vie.', y, SMALL_LINE_H);
+  y = paragraph(doc, 'Les prestations proposées ne constituent en aucun cas des actes médicaux, paramédicaux ou thérapeutiques au sens du Code de la santé publique.', y, SMALL_LINE_H);
+  y = paragraph(doc, 'Le Prestataire est tenu à une obligation de moyens.', y, SMALL_LINE_H);
+  y = paragraph(doc, 'Le Prestataire s\'engage à mettre en œuvre l\'ensemble des moyens techniques, humains et matériels raisonnablement nécessaires à l\'accompagnement du Client.', y, SMALL_LINE_H);
+  y = paragraph(doc, 'Le Client reconnaît que les résultats peuvent varier selon différents facteurs personnels, notamment :', y, SMALL_LINE_H);
+  y = bulletList(doc, [
+    'le métabolisme,',
+    'l\'alimentation,',
+    'l\'hygiène de vie,',
+    'la régularité dans le programme,',
+    'l\'activité physique,',
+    'le sommeil,',
+    'le niveau de stress,',
+    'ou l\'état de santé général.',
+  ], y);
+  y = paragraph(doc, 'Aucune garantie de résultat ne peut être donnée.', y, SMALL_LINE_H);
+  y += 3;
+
+  // ARTICLE 5
+  y = sectionTitle(doc, 'ARTICLE 5 – TARIFS ET PAIEMENT', y);
+  y = paragraph(doc, 'Les tarifs des prestations sont ceux en vigueur au moment de la réservation ou de la signature du contrat.', y, SMALL_LINE_H);
+  y = paragraph(doc, 'Le paiement peut être effectué par : chèque, espèces, carte bancaire, ou via un organisme de paiement fractionné partenaire (sous réserve d\'acceptation).', y, SMALL_LINE_H);
+  y = paragraph(doc, 'En cas de paiement fractionné via un organisme partenaire, le Prestataire est considéré comme intégralement réglé dès la validation du financement. La relation financière est ensuite gérée directement entre le Client et l\'organisme concerné.', y, SMALL_LINE_H);
+  y += 3;
+
+  // ARTICLE 6
+  y = sectionTitle(doc, 'ARTICLE 6 – DROIT DE RÉTRACTATION', y);
+  y = paragraph(doc, 'Conformément aux articles L221-18 et suivants du Code de la consommation, le Client dispose d\'un droit de rétractation de 14 jours calendaires à compter de la signature du contrat.', y, SMALL_LINE_H);
+  y = paragraph(doc, 'Pour exercer ce droit, le Client doit notifier sa décision par écrit (courrier ou e-mail) avant l\'expiration du délai.', y, SMALL_LINE_H);
+  y = paragraph(doc, 'Si le Client a expressément demandé l\'exécution de la prestation avant l\'expiration du délai de rétractation et que des séances ont déjà été réalisées, le montant correspondant aux prestations effectuées restera dû au Prestataire.', y, SMALL_LINE_H);
+  y += 3;
+
+  // ARTICLE 7
+  y = sectionTitle(doc, 'ARTICLE 7 – RÉSERVATION ET ANNULATION', y);
+  y = paragraph(doc, 'Toute séance doit être préalablement réservée. Toute annulation doit être communiquée au moins 24 heures à l\'avance.', y, SMALL_LINE_H);
+  y = paragraph(doc, 'En cas de non-présentation ou d\'annulation tardive, la séance sera décomptée du forfait, sauf cas de force majeure justifié.', y, SMALL_LINE_H);
+  y += 3;
+
+  // ARTICLE 8
+  y = sectionTitle(doc, 'ARTICLE 8 – RESPONSABILITÉ', y);
+  y = paragraph(doc, 'Le Prestataire ne pourra être tenu responsable en cas de non-respect des recommandations, d\'omission d\'informations relatives à l\'état de santé du Client, ou de résultats ne correspondant pas aux attentes du Client.', y, SMALL_LINE_H);
+  y = paragraph(doc, 'Le Client déclare être en bonne santé et ne pas présenter de contre-indication médicale aux prestations souscrites. En cas de doute, le Client est invité à consulter un professionnel de santé avant de débuter le programme.', y, SMALL_LINE_H);
+  y += 3;
+
+  // ARTICLE 9
+  y = sectionTitle(doc, 'ARTICLE 9 – DONNÉES PERSONNELLES', y);
+  y = paragraph(doc, 'Les données personnelles collectées sont utilisées exclusivement dans le cadre de l\'exécution des prestations et de la gestion de la relation client. Elles ne sont en aucun cas transmises à des tiers.', y, SMALL_LINE_H);
+  y = paragraph(doc, 'Conformément au RGPD, le Client dispose d\'un droit d\'accès, de rectification et de suppression de ses données, exerçable par demande écrite à la direction.', y, SMALL_LINE_H);
+  y += 3;
+
+  // ARTICLE 10
+  y = sectionTitle(doc, 'ARTICLE 10 – MÉDIATION ET LITIGES', y);
+  y = paragraph(doc, 'En cas de litige, le Client peut recourir à un médiateur de la consommation conformément aux articles L.612-1 et suivants du Code de la consommation.', y, SMALL_LINE_H);
+  y = paragraph(doc, 'À défaut de résolution amiable, tout litige sera soumis aux tribunaux compétents du ressort du siège social du Prestataire.', y, SMALL_LINE_H);
+
+  // CGV footer
+  doc.setTextColor(200, 160, 192);
+  setFont(doc, 10);
+  doc.text('✿ MAbeautyplus', A4_W / 2, A4_H - 8, { align: 'center' });
+  doc.setTextColor(170, 170, 170);
+  setFont(doc, 7);
+  doc.text('4/4', A4_W / 2, A4_H - 4, { align: 'center' });
+  doc.setTextColor(26, 26, 26);
+
   // Return base64 string
   return doc.output('datauristring').split(',')[1];
 }

@@ -41,6 +41,9 @@ export interface ContractData {
   siegeSocialAddress: string;
   siegeSocialPostalCode: string;
   siegeSocialCity: string;
+  // CGV dynamic fields
+  cgvSocietyName: string;
+  cgvSiren: string;
   // Contract
   signatureDate: string;
   signatureCity: string;
@@ -180,6 +183,8 @@ export async function buildContractData(client: Client): Promise<ContractData | 
     siegeSocialAddress: centerConfig.siegeSocial.address,
     siegeSocialPostalCode: centerConfig.siegeSocial.postalCode,
     siegeSocialCity: centerConfig.siegeSocial.city,
+    cgvSocietyName: centerConfig.societyName,
+    cgvSiren: centerConfig.siren.replace(/\s/g, ''),
     signatureDate: format(new Date(), 'dd MMMM yyyy', { locale: fr }),
     signatureCity: centerConfig.city,
     careItems,
