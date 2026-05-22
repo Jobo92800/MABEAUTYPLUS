@@ -527,7 +527,7 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
 
   const DEFAULT_PRICE = 49;
   const ADDONS = {
-    luxo:   { name: 'Guide du r\u00e9\u00e9quilibrage alimentaire', detail: 'Offert avec la cure Luxo perte de poids', price: 19 },
+    luxo:   { name: 'Guide du r\u00e9\u00e9quilibrage alimentaire', detail: '', price: 19 },
     ishape: { name: 'Tenue I-Shape', detail: 'Tenue technique d\u00e9di\u00e9e \u00e0 la cure I-Shape', price: 60 }
   };
 
@@ -545,7 +545,7 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
     if (addons.length > 0) {
       html += '<div class="addon-section-label">Compl\u00e9ments inclus</div>';
       html += addons.map(a =>
-        '<div class="price-row addon-row" data-fixed-price="' + a.price + '"><div class="price-row-label"><span class="price-row-name addon-name">' + a.name + '</span><span class="price-row-detail">' + a.detail + '</span></div><div class="price-row-amount">' + a.price + ' \u20ac</div></div>'
+        '<div class="price-row addon-row" data-fixed-price="' + a.price + '"><div class="price-row-label"><span class="price-row-name addon-name">' + a.name + '</span>' + (a.detail ? '<span class="price-row-detail">' + a.detail + '</span>' : '') + '</div><div class="price-row-amount">' + a.price + ' \u20ac</div></div>'
       ).join('');
     }
     rows.innerHTML = html;
