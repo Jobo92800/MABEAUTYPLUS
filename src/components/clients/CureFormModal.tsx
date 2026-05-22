@@ -527,7 +527,7 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
 
   const DEFAULT_PRICE = 49;
   const ADDONS = {
-    luxo:   { name: 'Guide du r\u00e9\u00e9quilibrage alimentaire', detail: '', price: 19 },
+    luxo:   { name: 'Guide du r\u00e9\u00e9quilibrage alimentaire', detail: 'Offert avec la cure Luxo perte de poids', price: 19 },
     ishape: { name: 'Tenue I-Shape', detail: 'Tenue technique d\u00e9di\u00e9e \u00e0 la cure I-Shape', price: 60 }
   };
 

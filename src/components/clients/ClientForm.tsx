@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Lock, Unlock } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useFormData } from '../../hooks/useFormData';
 import { useHasFormData } from '../../hooks/useHasFormData';
 import PaymentForm from '../PaymentForm';
@@ -68,7 +68,6 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, initialData, centerId
   const navigate = useNavigate();
   const [selectedTreatment, setSelectedTreatment] = useState(initialData?.client.treatment || 'luxotherapy');
   const [city, setCity] = useState(initialData?.client.city || '');
-  const [coordsLocked, setCoordsLocked] = useState(!!initialData);
 
   const currentCenterId = centerId || initialData?.client.centerId;
 
@@ -160,32 +159,8 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, initialData, centerId
             headerClassName="bg-brand-blue"
             defaultOpen={true}
             className="mb-8"
-            headerExtra={
-              initialData ? (
-                <button
-                  type="button"
-                  onClick={() => setCoordsLocked((v) => !v)}
-                  className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition-all duration-200 ${
-                    coordsLocked
-                      ? 'bg-white/20 text-white hover:bg-white/30'
-                      : 'bg-white text-brand-blue hover:bg-white/90'
-                  }`}
-                >
-                  {coordsLocked ? (
-                    <><Lock className="h-3.5 w-3.5" /> Verrouillé</>
-                  ) : (
-                    <><Unlock className="h-3.5 w-3.5" /> Déverrouillé</>
-                  )}
-                </button>
-              ) : undefined
-            }
           >
           <div className="space-y-6">
-            {coordsLocked && (
-              <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-                Les coordonnées sont verrouillées. Cliquez sur "Verrouillé" pour les modifier.
-              </p>
-            )}
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
               <div>
                 <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">Nom</label>
@@ -194,8 +169,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, initialData, centerId
                   name="lastName"
                   id="lastName"
                   defaultValue={initialData?.client.lastName}
-                  disabled={coordsLocked}
-                  className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue ${coordsLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : ''}`}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue"
                 />
               </div>
               <div>
@@ -205,8 +179,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, initialData, centerId
                   name="firstName"
                   id="firstName"
                   defaultValue={initialData?.client.firstName}
-                  disabled={coordsLocked}
-                  className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue ${coordsLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : ''}`}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue"
                 />
               </div>
               <div>
@@ -216,8 +189,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, initialData, centerId
                   name="birthDate"
                   id="birthDate"
                   defaultValue={initialData?.client.birthDate}
-                  disabled={coordsLocked}
-                  className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue ${coordsLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : ''}`}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue"
                 />
               </div>
               <div>
@@ -228,8 +200,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, initialData, centerId
                   id="age"
                   defaultValue={initialData?.client.age}
                   onWheel={(e) => e.currentTarget.blur()}
-                  disabled={coordsLocked}
-                  className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue ${coordsLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : ''}`}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue"
                 />
               </div>
               <div className="sm:col-span-2">
@@ -239,8 +210,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, initialData, centerId
                   name="address"
                   id="address"
                   defaultValue={initialData?.client.address}
-                  disabled={coordsLocked}
-                  className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue ${coordsLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : ''}`}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue"
                 />
               </div>
               <div>
@@ -253,8 +223,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, initialData, centerId
                   onChange={handlePostalCodeChange}
                   maxLength={5}
                   pattern="[0-9]{5}"
-                  disabled={coordsLocked}
-                  className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue ${coordsLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : ''}`}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue"
                 />
               </div>
               <div>
@@ -265,8 +234,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, initialData, centerId
                   id="city"
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
-                  disabled={coordsLocked}
-                  className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue ${coordsLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : ''}`}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue"
                 />
               </div>
               <div>
@@ -276,8 +244,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, initialData, centerId
                   name="email"
                   id="email"
                   defaultValue={initialData?.client.email}
-                  disabled={coordsLocked}
-                  className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue ${coordsLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : ''}`}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue"
                 />
               </div>
               <div>
@@ -287,8 +254,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, initialData, centerId
                   name="phone"
                   id="phone"
                   defaultValue={initialData?.client.phone}
-                  disabled={coordsLocked}
-                  className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue ${coordsLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : ''}`}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue"
                 />
               </div>
               <div>
@@ -298,8 +264,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, initialData, centerId
                   name="referral"
                   id="referral"
                   defaultValue={initialData?.client.referral}
-                  disabled={coordsLocked}
-                  className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue ${coordsLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : ''}`}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue"
                 />
               </div>
               <div>
@@ -309,8 +274,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, initialData, centerId
                   name="therapist"
                   id="therapist"
                   defaultValue={initialData?.client.therapist}
-                  disabled={coordsLocked}
-                  className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue ${coordsLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : ''}`}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue"
                 />
               </div>
             </div>
