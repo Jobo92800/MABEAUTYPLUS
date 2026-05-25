@@ -181,7 +181,9 @@ const ContractSignatureModal: React.FC<ContractSignatureModalProps> = ({
         contractData.clientLastName,
         centerId,
         clientId,
-        contractData.activeServiceIds
+        contractData.activeServiceIds,
+        signatureDataUrl,
+        contractData.signatureDate,
       ).catch(() => {});
       toast.success('Contrat signé et enregistré avec succès');
       onSigned();

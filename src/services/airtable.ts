@@ -542,36 +542,19 @@ export const uploadContractToAirtable = async (
   }
 };
 
-// Maps individual care service IDs to their consent PDF filename(s)
-const CONSENT_PDF_MAP: Record<string, string[]> = {
-  'luxo-pdp':     ['Consentement_LUXO_-_PDP_.pdf'],
-  'luxo-relax':   ['Consentement_LUXO_-_RELAX_copie.pdf'],
-  'luxo-meno':    ['Consentement_LUXO_-_Ménopause_.pdf'],
-  'ishape':       ['Consentement_I-Shape_.pdf'],
-  'presso':       ['Consentement_Presso.pdf'],
-  'meso-corps':   ['Consentement_MÉSOJET_CORPS_.pdf'],
-  'meso-visage':  ['Consentement_MÉSOJET_VISAGE_.pdf'],
-  'advance-lift': ['Consentement_MÉSOJET_VISAGE_.pdf'],
-  'adipologie':   ['Consentement_MÉSOJET_CORPS_.pdf'],
-  'cavitalyse':   ['Consentement_MÉSOJET_CORPS_.pdf'],
-};
-
 export const uploadConsentsToAirtable = async (
   firstName: string,
   lastName: string,
   centerId: string,
   clientId: string,
-  activeServiceIds: string[]
+  activeServiceIds: string[],
+  signatureDataUrl: string,
+  date: string,
 ): Promise<void> => {
   try {
-    // Deduplicate consent filenames based on active service IDs
-    const filenamesSet = new Set<string>();
-    for (const serviceId of activeServiceIds) {
-      const pdfs = CONSENT_PDF_MAP[serviceId];
-      if (pdfs) pdfs.forEach((f) => filenamesSet.add(f));
-    }
-
-    if (filenamesSet.size === 0) return;
+    const { generateSignedConsents } = await import('./consentPdfService');
+    const consents = generateSignedConsents(activeServiceIds, firstName, lastName, signatureDataUrl, date);
+    if (consents.length === 0) return;
 
     // Find Airtable record
     const centerNames: Record<string, string> = {
@@ -595,33 +578,30 @@ export const uploadConsentsToAirtable = async (
     }
     const recordId = data.records[0].id;
 
-    // Upload each PDF to Supabase Storage and collect public URLs
+    // Upload each generated consent PDF to Supabase Storage and collect public URLs
     const attachments: { url: string; filename: string }[] = [];
-    for (const filename of filenamesSet) {
-      const encodedFilename = encodeURIComponent(filename);
-      const pdfResponse = await fetch(`/${encodedFilename}`);
-      if (!pdfResponse.ok) {
-        console.warn(`[Airtable] Consentement PDF introuvable: ${filename}`);
-        continue;
-      }
-      const pdfBlob = await pdfResponse.blob();
-      const storagePath = `${clientId}/consents/${filename}`;
+    for (const consent of consents) {
+      const byteChars = atob(consent.pdfBase64);
+      const byteNums = new Array(byteChars.length);
+      for (let i = 0; i < byteChars.length; i++) byteNums[i] = byteChars.charCodeAt(i);
+      const pdfBlob = new Blob([new Uint8Array(byteNums)], { type: 'application/pdf' });
+
+      const storagePath = `${clientId}/consents/${consent.filename}`;
       const { error: uploadError } = await supabase.storage
         .from('contracts')
         .upload(storagePath, pdfBlob, { contentType: 'application/pdf', upsert: true });
 
       if (uploadError) {
-        console.error(`[Airtable] Erreur upload consentement ${filename}:`, uploadError);
+        console.error(`[Airtable] Erreur upload consentement ${consent.filename}:`, uploadError);
         continue;
       }
 
       const { data: urlData } = supabase.storage.from('contracts').getPublicUrl(storagePath);
-      attachments.push({ url: urlData.publicUrl, filename });
+      attachments.push({ url: urlData.publicUrl, filename: consent.filename });
     }
 
     if (attachments.length === 0) return;
 
-    // Update Airtable with all consent attachments
     const updateResponse = await fetch(
       `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_ID}/${recordId}`,
       {
@@ -637,7 +617,7 @@ export const uploadConsentsToAirtable = async (
       return;
     }
 
-    console.log(`[Airtable] ✓ ${attachments.length} consentement(s) uploadé(s) avec succès`);
+    console.log(`[Airtable] ✓ ${attachments.length} consentement(s) signé(s) uploadé(s) avec succès`);
   } catch (error) {
     console.error('[Airtable] Erreur uploadConsentsToAirtable:', error);
   }
