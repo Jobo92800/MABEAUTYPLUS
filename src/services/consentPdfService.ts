@@ -95,20 +95,27 @@ function header(doc: Doc, titleText: string, clientName: string, date: string): 
   return y;
 }
 
-function imageRightSection(doc: Doc, label: string, photoText: string[], signatureDataUrl: string, y: number): number {
+function imageRightSection(doc: Doc, label: string, photoText: string[], photoChecked: boolean[], signatureDataUrl: string, y: number): number {
   const boxY = y + 2;
 
-  // Photo authorization checkboxes (empty boxes — to be filled by hand or ignored)
   setFont(doc, 9, 'bold');
   doc.setTextColor(26, 26, 26);
   txt(doc, 'Droit à l\'image :', MARGIN, boxY);
   let dy = boxY + LINE_H;
   setFont(doc, 9, 'normal');
-  for (const line of photoText) {
+  for (let i = 0; i < photoText.length; i++) {
+    const checked = photoChecked[i] ?? false;
     doc.setDrawColor(80, 80, 80);
-    doc.setFillColor(255, 255, 255);
-    doc.rect(MARGIN, dy - 3, 3.5, 3.5, 'D');
-    const wrapped = doc.splitTextToSize(line, CONTENT_W - 8);
+    doc.setFillColor(checked ? 30 : 255, checked ? 30 : 255, checked ? 30 : 255);
+    doc.rect(MARGIN, dy - 3, 3.5, 3.5, checked ? 'FD' : 'D');
+    if (checked) {
+      doc.setTextColor(255, 255, 255);
+      setFont(doc, 7, 'bold');
+      doc.text('✓', MARGIN + 0.3, dy - 0.2);
+      doc.setTextColor(26, 26, 26);
+      setFont(doc, 9, 'normal');
+    }
+    const wrapped = doc.splitTextToSize(photoText[i], CONTENT_W - 8);
     doc.text(wrapped, MARGIN + 5, dy);
     dy += wrapped.length * SMALL_LINE_H + 1.5;
   }
@@ -150,6 +157,7 @@ interface ConsentContext {
   clientName: string;
   date: string;
   signatureDataUrl: string;
+  photoChecked: boolean[];
 }
 
 // ─── MÉSOJET CORPS ────────────────────────────────────────────────────────────
@@ -214,7 +222,7 @@ export function generateMesojetCorpsConsent(ctx: ConsentContext): string {
       'J\'autorise la prise de photographies avant/après et leur utilisation interne, une fois anonymisées, à des fins de présentation par les thérapeutes du centre MAbeautyplus.',
       'J\'autorise la diffusion de ces photographies sur les réseaux sociaux du centre MAbeautyplus.',
     ],
-    ctx.signatureDataUrl, y);
+    ctx.photoChecked, ctx.signatureDataUrl, y);
 
   footer(doc);
   return doc.output('datauristring').split(',')[1];
@@ -284,7 +292,7 @@ export function generateMesojetVisageConsent(ctx: ConsentContext): string {
       'J\'autorise la prise de photographies avant/après et leur utilisation interne, une fois anonymisées, à des fins de présentation par les thérapeutes du centre MAbeautyplus.',
       'J\'autorise la diffusion de ces photographies sur les réseaux sociaux du centre MAbeautyplus.',
     ],
-    ctx.signatureDataUrl, y);
+    ctx.photoChecked, ctx.signatureDataUrl, y);
 
   footer(doc);
   return doc.output('datauristring').split(',')[1];
@@ -333,7 +341,7 @@ export function generatePressoConsent(ctx: ConsentContext): string {
       'J\'autorise la prise de photographies avant/après et leur utilisation interne, une fois anonymisées, à des fins de présentation par les thérapeutes du centre MAbeautyplus.',
       'J\'autorise la diffusion de ces photographies sur les réseaux sociaux du centre MAbeautyplus.',
     ],
-    ctx.signatureDataUrl, y);
+    ctx.photoChecked, ctx.signatureDataUrl, y);
 
   footer(doc);
   return doc.output('datauristring').split(',')[1];
@@ -380,7 +388,7 @@ export function generateIShapeConsent(ctx: ConsentContext): string {
       'J\'autorise la prise de photographies avant/après et leur utilisation interne, une fois anonymisées, à des fins de présentation par les thérapeutes du centre MAbeautyplus.',
       'J\'autorise la diffusion de ces photographies sur les réseaux sociaux du centre MAbeautyplus.',
     ],
-    ctx.signatureDataUrl, y);
+    ctx.photoChecked, ctx.signatureDataUrl, y);
 
   footer(doc);
   return doc.output('datauristring').split(',')[1];
@@ -422,7 +430,7 @@ export function generateLuxoMenopauseConsent(ctx: ConsentContext): string {
   imageRightSection(doc,
     'Signature, nom et prénom du/de la client(e)',
     [],
-    ctx.signatureDataUrl, y);
+    [], ctx.signatureDataUrl, y);
 
   footer(doc);
   return doc.output('datauristring').split(',')[1];
@@ -464,7 +472,7 @@ export function generateLuxoRelaxConsent(ctx: ConsentContext): string {
   imageRightSection(doc,
     'Signature, nom et prénom du/de la client(e)',
     [],
-    ctx.signatureDataUrl, y);
+    [], ctx.signatureDataUrl, y);
 
   footer(doc);
   return doc.output('datauristring').split(',')[1];
@@ -509,7 +517,7 @@ export function generateLuxoPdpConsent(ctx: ConsentContext): string {
       'J\'autorise la prise de photographies avant/après et leur utilisation interne, une fois anonymisées, à des fins de présentation par les thérapeutes du centre MAbeautyplus.',
       'J\'autorise la diffusion de ces photographies sur les réseaux sociaux du centre MAbeautyplus.',
     ],
-    ctx.signatureDataUrl, y);
+    ctx.photoChecked, ctx.signatureDataUrl, y);
 
   footer(doc);
   return doc.output('datauristring').split(',')[1];
@@ -562,9 +570,10 @@ export function generateSignedConsents(
   clientLastName: string,
   signatureDataUrl: string,
   date: string,
+  photoChecked: boolean[] = [],
 ): GeneratedConsent[] {
   const clientName = `${clientFirstName} ${clientLastName}`;
-  const ctx: ConsentContext = { clientName, date, signatureDataUrl };
+  const ctx: ConsentContext = { clientName, date, signatureDataUrl, photoChecked };
 
   const seen = new Set<string>();
   const results: GeneratedConsent[] = [];

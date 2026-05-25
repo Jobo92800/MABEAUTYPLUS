@@ -64,14 +64,36 @@ const ConsentHeader: React.FC<HeaderProps> = ({ title, clientName, date }) => (
 
 interface PhotoAuthProps {
   items: string[];
+  checked: boolean[];
+  onToggle: (index: number) => void;
 }
 
-const PhotoAuth: React.FC<PhotoAuthProps> = ({ items }) => (
+const PhotoAuth: React.FC<PhotoAuthProps> = ({ items, checked, onToggle }) => (
   <div style={{ margin: '12px 0 8px 0' }}>
     <p style={{ ...sectionTitleStyle, margin: '0 0 6px 0' }}>Droit à l'image :</p>
     {items.map((item, i) => (
-      <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '4px' }}>
-        <div style={{ flexShrink: 0, width: '12px', height: '12px', border: '1px solid #555', marginTop: '2px' }} />
+      <div
+        key={i}
+        onClick={() => onToggle(i)}
+        style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '6px', cursor: 'pointer' }}
+      >
+        <div style={{
+          flexShrink: 0,
+          width: '14px',
+          height: '14px',
+          border: '1.5px solid #555',
+          marginTop: '1px',
+          backgroundColor: checked[i] ? '#1a1a1a' : '#fff',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          {checked[i] && (
+            <svg width="9" height="9" viewBox="0 0 12 12" fill="none">
+              <path d="M2 6l3 3 5-5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          )}
+        </div>
         <p style={{ margin: 0, fontSize: '9pt' }}>{item}</p>
       </div>
     ))}
@@ -79,7 +101,7 @@ const PhotoAuth: React.FC<PhotoAuthProps> = ({ items }) => (
 );
 
 // ─── MÉSOJET CORPS ────────────────────────────────────────────────────────────
-export const ConsentMesojetCorps: React.FC<{ clientName: string; date: string }> = ({ clientName, date }) => (
+export const ConsentMesojetCorps: React.FC<{ clientName: string; date: string; photoChecked: boolean[]; onPhotoToggle: (i: number) => void }> = ({ clientName, date, photoChecked, onPhotoToggle }) => (
   <div style={pageStyle} className="bg-white">
     <div style={innerPageStyle}>
       <ConsentHeader title="Consentement mutuel - Mésojet Corps" clientName={clientName} date={date} />
@@ -106,13 +128,13 @@ export const ConsentMesojetCorps: React.FC<{ clientName: string; date: string }>
       <ul style={listStyle}>
         {['Ne pas réaliser de peeling dans les 7 jours avant et après un soin Mésojet','Ne pas utiliser de cosmétiques abrasifs, gommages, exfoliants avant un soin','Ne pas appliquer un produit à base d\'alcool sur la peau avant un soin','Ne raser ou épiler la zone traitée juste avant et après un soin par radiofréquence','Ne pas s\'exposer au soleil avant (coup de soleil) et après le soin','Appliquer un SPF 50 ou 50+ les jours qui suivent un soin'].map((item, i) => <li key={i} style={liStyle}>{item}</li>)}
       </ul>
-      <PhotoAuth items={['J\'autorise la prise de photographies avant/après et leur utilisation interne, une fois anonymisées, à des fins de présentation par les thérapeutes du centre MAbeautyplus.','J\'autorise la diffusion de ces photographies sur les réseaux sociaux du centre MAbeautyplus.']} />
+      <PhotoAuth items={['J\'autorise la prise de photographies avant/après et leur utilisation interne, une fois anonymisées, à des fins de présentation par les thérapeutes du centre MAbeautyplus.','J\'autorise la diffusion de ces photographies sur les réseaux sociaux du centre MAbeautyplus.']} checked={photoChecked} onToggle={onPhotoToggle} />
     </div>
   </div>
 );
 
 // ─── MÉSOJET VISAGE ───────────────────────────────────────────────────────────
-export const ConsentMesojetVisage: React.FC<{ clientName: string; date: string }> = ({ clientName, date }) => (
+export const ConsentMesojetVisage: React.FC<{ clientName: string; date: string; photoChecked: boolean[]; onPhotoToggle: (i: number) => void }> = ({ clientName, date, photoChecked, onPhotoToggle }) => (
   <div style={pageStyle} className="bg-white">
     <div style={innerPageStyle}>
       <ConsentHeader title="Consentement mutuel - Mésojet Visage" clientName={clientName} date={date} />
@@ -135,13 +157,13 @@ export const ConsentMesojetVisage: React.FC<{ clientName: string; date: string }
       <ul style={listStyle}>
         {['Ne pas réaliser de peeling dans les 7 jours avant et après un soin Mésojet','Ne pas utiliser de cosmétiques abrasifs, gommages, exfoliants avant un soin','Ne pas appliquer un produit à base d\'alcool sur la peau avant un soin','Ne raser ou épiler la zone traitée juste avant et après un soin par radiofréquence','Ne pas s\'exposer au soleil avant (coup de soleil) et après le soin','Appliquer un SPF 50 ou 50+ les jours qui suivent un soin','Retirer ses lentilles de contact avant le soin','Respecter un délais d\'un mois après une injection d\'acide hyaluronique ou de Botox'].map((item, i) => <li key={i} style={liStyle}>{item}</li>)}
       </ul>
-      <PhotoAuth items={['J\'autorise la prise de photographies avant/après et leur utilisation interne, une fois anonymisées, à des fins de présentation par les thérapeutes du centre MAbeautyplus.','J\'autorise la diffusion de ces photographies sur les réseaux sociaux du centre MAbeautyplus.']} />
+      <PhotoAuth items={['J\'autorise la prise de photographies avant/après et leur utilisation interne, une fois anonymisées, à des fins de présentation par les thérapeutes du centre MAbeautyplus.','J\'autorise la diffusion de ces photographies sur les réseaux sociaux du centre MAbeautyplus.']} checked={photoChecked} onToggle={onPhotoToggle} />
     </div>
   </div>
 );
 
 // ─── PRESSODYNAMIE ────────────────────────────────────────────────────────────
-export const ConsentPresso: React.FC<{ clientName: string; date: string }> = ({ clientName, date }) => (
+export const ConsentPresso: React.FC<{ clientName: string; date: string; photoChecked: boolean[]; onPhotoToggle: (i: number) => void }> = ({ clientName, date, photoChecked, onPhotoToggle }) => (
   <div style={pageStyle} className="bg-white">
     <div style={innerPageStyle}>
       <ConsentHeader title="Consentement mutuel - Pressodynamie" clientName={clientName} date={date} />
@@ -155,13 +177,13 @@ export const ConsentPresso: React.FC<{ clientName: string; date: string }> = ({ 
         {['Œdèmes lymphatique sévère','Varices œdémateuses','Fragilité capillaire, hémophilie, artériopathie sévère stade 3 et 4 (dépôt de cholestérol)','Thromboses veineuses profondes ou phlébite non traitée (caillot sanguin)','Etat inflammatoire local ou général','Infection de la peau, plaie, dermatose ou problème cutané','Tumeur maligne','Diabète sucré (sang sirupeux), insuffisance rénale','Insuffisance cardiaque non traitée, Pacemaker','Vagotomie (section du nerf vague)','Prothèse récente','Femme enceinte','Pour le traitement du ventre : hernies abdominales, inflammations chroniques du tube digestif'].map((item, i) => <li key={i} style={liStyle}>{item}</li>)}
       </ul>
       <p style={paraStyle}>Selon les cas, un certificat médical écrit pourra être demandé par le centre de soins.</p>
-      <PhotoAuth items={['J\'autorise la prise de photographies avant/après et leur utilisation interne, une fois anonymisées, à des fins de présentation par les thérapeutes du centre MAbeautyplus.','J\'autorise la diffusion de ces photographies sur les réseaux sociaux du centre MAbeautyplus.']} />
+      <PhotoAuth items={['J\'autorise la prise de photographies avant/après et leur utilisation interne, une fois anonymisées, à des fins de présentation par les thérapeutes du centre MAbeautyplus.','J\'autorise la diffusion de ces photographies sur les réseaux sociaux du centre MAbeautyplus.']} checked={photoChecked} onToggle={onPhotoToggle} />
     </div>
   </div>
 );
 
 // ─── I-SHAPE ──────────────────────────────────────────────────────────────────
-export const ConsentIShape: React.FC<{ clientName: string; date: string }> = ({ clientName, date }) => (
+export const ConsentIShape: React.FC<{ clientName: string; date: string; photoChecked: boolean[]; onPhotoToggle: (i: number) => void }> = ({ clientName, date, photoChecked, onPhotoToggle }) => (
   <div style={pageStyle} className="bg-white">
     <div style={innerPageStyle}>
       <ConsentHeader title="Consentement mutuel - Electrostimulation" clientName={clientName} date={date} />
@@ -175,7 +197,7 @@ export const ConsentIShape: React.FC<{ clientName: string; date: string }> = ({ 
         {['Pacemaker ou dispositif médical actif','Maladie ou anomalie cardiaque (arythmie, tachycardie, fragilité cardiaque...)','Epilepsie','Présence ou antécédant d\'hernie abdominale ou inguinale (aine), éventration','Phlébites (obstruction d\'une veine par un caillot), thrombose (caillot)','Tumeur ou cancer','Troubles circulatoires graves, hémophilie','Blessure non cicatrisée ou affection cutanée (eczéma, brûlure, irritation...) sur la zone de traitement','Maladie du foie, diabète sucré (sang sirupeux)','Maladie neurologique grave','Enfants, adolescents, femme enceinte'].map((item, i) => <li key={i} style={liStyle}>{item}</li>)}
       </ul>
       <p style={paraStyle}>Selon les cas, un certificat médical écrit pourra être demandé par le centre de soins.</p>
-      <PhotoAuth items={['J\'autorise la prise de photographies avant/après et leur utilisation interne, une fois anonymisées, à des fins de présentation par les thérapeutes du centre MAbeautyplus.','J\'autorise la diffusion de ces photographies sur les réseaux sociaux du centre MAbeautyplus.']} />
+      <PhotoAuth items={['J\'autorise la prise de photographies avant/après et leur utilisation interne, une fois anonymisées, à des fins de présentation par les thérapeutes du centre MAbeautyplus.','J\'autorise la diffusion de ces photographies sur les réseaux sociaux du centre MAbeautyplus.']} checked={photoChecked} onToggle={onPhotoToggle} />
     </div>
   </div>
 );
@@ -225,7 +247,7 @@ export const ConsentLuxoRelax: React.FC<{ clientName: string; date: string }> = 
 );
 
 // ─── LUXO PERTE DE POIDS ──────────────────────────────────────────────────────
-export const ConsentLuxoPdp: React.FC<{ clientName: string; date: string }> = ({ clientName, date }) => (
+export const ConsentLuxoPdp: React.FC<{ clientName: string; date: string; photoChecked: boolean[]; onPhotoToggle: (i: number) => void }> = ({ clientName, date, photoChecked, onPhotoToggle }) => (
   <div style={pageStyle} className="bg-white">
     <div style={innerPageStyle}>
       <ConsentHeader title="Consentement mutuel - Perte de poids" clientName={clientName} date={date} />
@@ -239,14 +261,18 @@ export const ConsentLuxoPdp: React.FC<{ clientName: string; date: string }> = ({
         {['Troubles épileptiques','Maladie grave (nécessitant une prise en charge hospitalière ou de la convalescence)','Pathologie infectieuse ou bactérienne','Pathologie cancéreuse active ou non stabilisée','Femme enceinte'].map((item, i) => <li key={i} style={liStyle}>{item}</li>)}
       </ul>
       <p style={paraStyle}>Selon les cas, un certificat médical écrit pourra être demandé par le centre de soins.</p>
-      <PhotoAuth items={['J\'autorise la prise de photographies avant/après et leur utilisation interne, une fois anonymisées, à des fins de présentation par les thérapeutes du centre MAbeautyplus.','J\'autorise la diffusion de ces photographies sur les réseaux sociaux du centre MAbeautyplus.']} />
+      <PhotoAuth items={['J\'autorise la prise de photographies avant/après et leur utilisation interne, une fois anonymisées, à des fins de présentation par les thérapeutes du centre MAbeautyplus.','J\'autorise la diffusion de ces photographies sur les réseaux sociaux du centre MAbeautyplus.']} checked={photoChecked} onToggle={onPhotoToggle} />
     </div>
   </div>
 );
 
 // ─── DISPATCHER ───────────────────────────────────────────────────────────────
 
-type ConsentComponent = React.FC<{ clientName: string; date: string }>;
+export type ConsentComponent = React.FC<{ clientName: string; date: string; photoChecked: boolean[]; onPhotoToggle: (i: number) => void }>;
+
+// Components without photo auth still need to satisfy the type
+const NoopPhotoConsent = (Base: React.FC<{ clientName: string; date: string }>): ConsentComponent =>
+  ({ clientName, date }) => <Base clientName={clientName} date={date} />;
 
 export const CONSENT_COMPONENTS: Record<string, ConsentComponent> = {
   'meso-corps':   ConsentMesojetCorps,
@@ -256,8 +282,8 @@ export const CONSENT_COMPONENTS: Record<string, ConsentComponent> = {
   'advance-lift': ConsentMesojetVisage,
   'presso':       ConsentPresso,
   'ishape':       ConsentIShape,
-  'luxo-meno':    ConsentLuxoMenopause,
-  'luxo-relax':   ConsentLuxoRelax,
+  'luxo-meno':    NoopPhotoConsent(ConsentLuxoMenopause),
+  'luxo-relax':   NoopPhotoConsent(ConsentLuxoRelax),
   'luxo-pdp':     ConsentLuxoPdp,
 };
 
@@ -274,10 +300,19 @@ const CONSENT_TITLES: Record<string, string> = {
   'luxo-pdp':     'Perte de poids',
 };
 
+const CONSENT_HAS_PHOTO: Record<string, boolean> = {
+  'meso-corps': true, 'adipologie': true, 'cavitalyse': true,
+  'meso-visage': true, 'advance-lift': true,
+  'presso': true, 'ishape': true,
+  'luxo-meno': false, 'luxo-relax': false,
+  'luxo-pdp': true,
+};
+
 export interface ConsentEntry {
   key: string;
   title: string;
   Component: ConsentComponent;
+  hasPhotoAuth: boolean;
 }
 
 export function getConsentEntries(activeServiceIds: string[]): ConsentEntry[] {
@@ -290,7 +325,10 @@ export function getConsentEntries(activeServiceIds: string[]): ConsentEntry[] {
     const key = title;
     if (seen.has(key)) continue;
     seen.add(key);
-    entries.push({ key, title, Component });
+    entries.push({ key, title, Component, hasPhotoAuth: CONSENT_HAS_PHOTO[id] ?? false });
   }
   return entries;
 }
+
+
+export { getConsentEntries }

@@ -42,6 +42,18 @@ const ContractSignatureModal: React.FC<ContractSignatureModalProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [showScrollHint, setShowScrollHint] = useState(true);
   const contentRef = useRef<HTMLDivElement>(null);
+  // Per-consent photo rights state: map of consent key → [bool, bool]
+  const [consentPhotoChecked, setConsentPhotoChecked] = useState<Record<string, boolean[]>>({});
+
+  const handlePhotoToggle = (consentKey: string, index: number) => {
+    setConsentPhotoChecked((prev) => {
+      const current = prev[consentKey] ?? [false, false];
+      const updated = current.map((v, i) => (i === index ? !v : v));
+      return { ...prev, [consentKey]: updated };
+    });
+  };
+
+  const flatPhotoChecked = Object.values(consentPhotoChecked).flat();
 
   const allChecked = engagements.every(Boolean);
   const canValidate = allChecked && hasSignature;
@@ -187,6 +199,7 @@ const ContractSignatureModal: React.FC<ContractSignatureModalProps> = ({
         contractData.activeServiceIds,
         signatureDataUrl,
         contractData.signatureDate,
+        flatPhotoChecked,
       ).catch(() => {});
       toast.success('Contrat signé et enregistré avec succès');
       onSigned();
@@ -243,13 +256,18 @@ const ContractSignatureModal: React.FC<ContractSignatureModalProps> = ({
               <p className="text-center text-sm font-semibold text-gray-500 uppercase tracking-widest mb-6">
                 Consentements mutuels
               </p>
-              {entries.map(({ key, title, Component }, idx) => (
+              {entries.map(({ key, title, Component, hasPhotoAuth }, idx) => (
                 <div key={key}>
                   {idx > 0 && <div className="border-t border-gray-200 my-6" />}
                   <div className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-2 pl-1">
                     Consentement — {title}
                   </div>
-                  <Component clientName={clientName} date={today} />
+                  <Component
+                    clientName={clientName}
+                    date={today}
+                    photoChecked={hasPhotoAuth ? (consentPhotoChecked[key] ?? [false, false]) : []}
+                    onPhotoToggle={(i) => handlePhotoToggle(key, i)}
+                  />
                 </div>
               ))}
               <div className="border-t-2 border-dashed border-gray-300 my-6" />

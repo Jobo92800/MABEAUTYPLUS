@@ -550,10 +550,11 @@ export const uploadConsentsToAirtable = async (
   activeServiceIds: string[],
   signatureDataUrl: string,
   date: string,
+  photoChecked: boolean[] = [],
 ): Promise<void> => {
   try {
     const { generateSignedConsents } = await import('./consentPdfService');
-    const consents = generateSignedConsents(activeServiceIds, firstName, lastName, signatureDataUrl, date);
+    const consents = generateSignedConsents(activeServiceIds, firstName, lastName, signatureDataUrl, date, photoChecked);
     if (consents.length === 0) return;
 
     // Find Airtable record

@@ -42,13 +42,15 @@ function checkboxRow(doc: PdfDoc, label: string, x: number, y: number, checked: 
   return y + LINE_H;
 }
 
-function engagementCheckbox(doc: PdfDoc, label: string, x: number, y: number): number {
+function engagementCheckbox(doc: PdfDoc, label: string, x: number, y: number, checked = false): number {
   doc.setDrawColor(80, 80, 80);
-  doc.setFillColor(30, 30, 30);
-  doc.rect(x, y - 3, 3.5, 3.5, 'FD');
-  doc.setTextColor(255, 255, 255);
-  setFont(doc, 7, 'bold');
-  doc.text('✓', x + 0.3, y - 0.2);
+  doc.setFillColor(checked ? 30 : 255, checked ? 30 : 255, checked ? 30 : 255);
+  doc.rect(x, y - 3, 3.5, 3.5, checked ? 'FD' : 'D');
+  if (checked) {
+    doc.setTextColor(255, 255, 255);
+    setFont(doc, 7, 'bold');
+    doc.text('✓', x + 0.3, y - 0.2);
+  }
   doc.setTextColor(26, 26, 26);
   setFont(doc, 9);
   const lines = doc.splitTextToSize(label, CONTENT_W - 8);
