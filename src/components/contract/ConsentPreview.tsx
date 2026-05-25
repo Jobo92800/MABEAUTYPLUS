@@ -329,6 +329,3 @@ export function getConsentEntries(activeServiceIds: string[]): ConsentEntry[] {
   }
   return entries;
 }
-
-
-export { getConsentEntries }
