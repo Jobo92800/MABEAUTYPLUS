@@ -5,6 +5,7 @@ import ContractPreview from './ContractPreview';
 import type { ContractData } from '../../services/contractService';
 import { saveSignedContract } from '../../services/contractService';
 import { generateSignedContractPdf } from '../../services/contractPdfService';
+import { uploadContractToAirtable } from '../../services/airtable';
 
 interface ContractSignatureModalProps {
   contractData: ContractData;
@@ -167,6 +168,14 @@ const ContractSignatureModal: React.FC<ContractSignatureModalProps> = ({
       if (contractData.clientEmail) {
         await sendContractEmail(pdfBase64);
       }
+      // Upload PDF to Airtable (non-blocking)
+      uploadContractToAirtable(
+        contractData.clientFirstName,
+        contractData.clientLastName,
+        centerId,
+        clientId,
+        pdfBase64
+      ).catch(() => {});
       toast.success('Contrat signé et enregistré avec succès');
       onSigned();
     } catch (err) {

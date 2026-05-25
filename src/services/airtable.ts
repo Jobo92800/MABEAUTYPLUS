@@ -1,4 +1,5 @@
 import { format, parseISO } from 'date-fns';
+import { supabase } from './supabase';
 
 // Configuration Airtable
 const AIRTABLE_ACCESS_TOKEN = 'patl2Z5JpLllHOn7G.eb220d4d725d40eb8e7e748618208cc33c853025400bada00df48dbf37ff41f8';
@@ -461,5 +462,82 @@ export const getClientPaymentDataFromAirtable = async (
   } catch (error) {
     console.error('Error fetching client payment data from Airtable:', error);
     return null;
+  }
+};
+
+export const uploadContractToAirtable = async (
+  firstName: string,
+  lastName: string,
+  centerId: string,
+  clientId: string,
+  pdfBase64: string
+): Promise<void> => {
+  try {
+    // Convert base64 to Blob and upload to Supabase Storage
+    const byteChars = atob(pdfBase64);
+    const byteNums = new Array(byteChars.length);
+    for (let i = 0; i < byteChars.length; i++) {
+      byteNums[i] = byteChars.charCodeAt(i);
+    }
+    const pdfBlob = new Blob([new Uint8Array(byteNums)], { type: 'application/pdf' });
+
+    const filename = `${clientId}/${Date.now()}.pdf`;
+    const { error: uploadError } = await supabase.storage
+      .from('contracts')
+      .upload(filename, pdfBlob, { contentType: 'application/pdf', upsert: true });
+
+    if (uploadError) {
+      console.error('[Airtable] Erreur upload Supabase Storage:', uploadError);
+      return;
+    }
+
+    const { data: urlData } = supabase.storage.from('contracts').getPublicUrl(filename);
+    const publicUrl = urlData.publicUrl;
+
+    // Find the Airtable record
+    const centerNames: Record<string, string> = {
+      'grau-du-roi': 'Le Grau-du-Roi',
+      'le-cres': 'Le Crès',
+      'serignant': 'Sérignan',
+      'cabestany': 'Cabestany',
+      'avignon': 'Avignon'
+    };
+    const centerName = centerNames[centerId] || centerId;
+    const filterFormula = `AND({Prénom}='${firstName}', {Nom}='${lastName}', {Centre}='${centerName}')`;
+    const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_ID}?filterByFormula=${encodeURIComponent(filterFormula)}`;
+
+    const getResponse = await fetch(url, {
+      headers: { 'Authorization': `Bearer ${AIRTABLE_ACCESS_TOKEN}`, 'Content-Type': 'application/json' }
+    });
+    if (!getResponse.ok) return;
+
+    const data = await getResponse.json();
+    if (!data.records || data.records.length === 0) {
+      console.warn('[Airtable] Client non trouvé pour upload contrat');
+      return;
+    }
+
+    const recordId = data.records[0].id;
+
+    // Airtable attachment fields require an array of { url } objects
+    const updateResponse = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_ID}/${recordId}`, {
+      method: 'PATCH',
+      headers: { 'Authorization': `Bearer ${AIRTABLE_ACCESS_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fields: {
+          'Contrat': [{ url: publicUrl, filename: `Contrat_${lastName}_${firstName}.pdf` }]
+        }
+      })
+    });
+
+    if (!updateResponse.ok) {
+      const err = await updateResponse.json();
+      console.error('[Airtable] Erreur upload contrat:', err);
+      return;
+    }
+
+    console.log('[Airtable] ✓ Contrat uploadé avec succès');
+  } catch (error) {
+    console.error('[Airtable] Erreur uploadContractToAirtable:', error);
   }
 };
