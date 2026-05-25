@@ -1,7 +1,10 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { X, Trash2, FileCheck, ChevronDown } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 import ContractPreview from './ContractPreview';
+import { getConsentEntries } from './ConsentPreview';
 import type { ContractData } from '../../services/contractService';
 import { saveSignedContract } from '../../services/contractService';
 import { generateSignedContractPdf } from '../../services/contractPdfService';
@@ -228,14 +231,41 @@ const ContractSignatureModal: React.FC<ContractSignatureModalProps> = ({
           <ContractPreview data={contractData} id="contract-preview-content" />
         </div>
 
+        {/* Consent previews */}
+        {(() => {
+          const entries = getConsentEntries(contractData.activeServiceIds);
+          if (entries.length === 0) return null;
+          const today = format(new Date(), 'dd/MM/yyyy', { locale: fr });
+          const clientName = `${contractData.clientFirstName} ${contractData.clientLastName}`;
+          return (
+            <div className="max-w-4xl mx-auto px-4 pb-2">
+              <div className="border-t-2 border-dashed border-gray-300 my-4" />
+              <p className="text-center text-sm font-semibold text-gray-500 uppercase tracking-widest mb-6">
+                Consentements mutuels
+              </p>
+              {entries.map(({ key, title, Component }, idx) => (
+                <div key={key}>
+                  {idx > 0 && <div className="border-t border-gray-200 my-6" />}
+                  <div className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-2 pl-1">
+                    Consentement — {title}
+                  </div>
+                  <Component clientName={clientName} date={today} />
+                </div>
+              ))}
+              <div className="border-t-2 border-dashed border-gray-300 my-6" />
+            </div>
+          );
+        })()}
+
         {/* Engagement + Signature section */}
         <div className="max-w-4xl mx-auto px-4 pb-8">
           <div className="bg-gray-50 border border-gray-200 rounded-2xl overflow-hidden">
             {/* Engagement checkboxes */}
             <div className="px-6 py-5 border-b border-gray-200">
-              <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider mb-4">
+              <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider mb-1">
                 Engagements du client
               </h3>
+              <p className="text-xs text-gray-500 mb-4">Valable pour le contrat de prestation et l'ensemble des consentements ci-dessus.</p>
               <div className="space-y-3">
                 {ENGAGEMENT_ITEMS.map((text, i) => (
                   <label
@@ -328,7 +358,7 @@ const ContractSignatureModal: React.FC<ContractSignatureModalProps> = ({
                 }`}
               >
                 <FileCheck className="h-5 w-5" />
-                {isSaving ? 'Enregistrement...' : 'Valider et signer le contrat'}
+                {isSaving ? 'Enregistrement...' : 'Valider et signer le contrat et les consentements'}
               </button>
               {!canValidate && !isSaving && (
                 <p className="text-center text-xs text-gray-400 mt-2">

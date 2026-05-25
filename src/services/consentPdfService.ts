@@ -549,6 +549,13 @@ export interface GeneratedConsent {
   pdfBase64: string;
 }
 
+function sanitizeFilename(s: string): string {
+  return s
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9_-]/g, '_');
+}
+
 export function generateSignedConsents(
   activeServiceIds: string[],
   clientFirstName: string,
@@ -559,7 +566,6 @@ export function generateSignedConsents(
   const clientName = `${clientFirstName} ${clientLastName}`;
   const ctx: ConsentContext = { clientName, date, signatureDataUrl };
 
-  // Deduplicate: one consent per generator (avoid duplicates for adipologie+cavitalyse+meso-corps)
   const seen = new Set<string>();
   const results: GeneratedConsent[] = [];
 
@@ -571,7 +577,8 @@ export function generateSignedConsents(
     seen.add(filename);
 
     const pdfBase64 = generator(ctx);
-    results.push({ serviceId, filename: `${filename}_${clientLastName}_${clientFirstName}.pdf`, pdfBase64 });
+    const safe = `${filename}_${sanitizeFilename(clientLastName)}_${sanitizeFilename(clientFirstName)}.pdf`;
+    results.push({ serviceId, filename: safe, pdfBase64 });
   }
 
   return results;
