@@ -33,18 +33,18 @@ interface AirtableClientData {
 }
 
 const TREATMENT_LABELS: Record<string, string> = {
-  luxotherapy: 'Perte de Poids',
-  relaxation: 'Relaxation',
+  luxotherapy: 'Perte de poids',
+  ishape: 'Perte de poids',
+  cavitalyse: 'Perte de poids',
+  adipology: 'Perte de poids',
+  pressodynamie: 'Perte de poids',
+  'mesojet-corps': 'Perte de poids',
+  'radiofrequency-mesojet': 'Perte de poids',
+  mesojet: 'Anti-Âge',
+  'advance-lift': 'Anti-Âge',
   menopause: 'Ménopause',
-  cavitalyse: 'Cavita-Lyse',
-  'radiofrequency-mesojet': 'RF Mésojet',
-  adipology: 'Adipologie',
-  ishape: 'I-Shape',
-  pressodynamie: 'Pressodynamie',
-  'mesojet-corps': 'Mésojet Corps',
-  'advance-lift': 'Advance Lift',
-  mesojet: 'Mésojet Visage',
-  psio: 'PSIO',
+  relaxation: 'Relax',
+  psio: 'Psio',
 };
 
 export const addClientToAirtable = async (clientData: AirtableClientData): Promise<void> => {
