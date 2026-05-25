@@ -49,6 +49,7 @@ export interface ContractData {
   signatureCity: string;
   // Cure
   careItems: ContractCareItem[];
+  activeServiceIds: string[];
   totalAmount: string;
   installmentCount: number;
   deposit: ContractInstallment | null;
@@ -111,6 +112,17 @@ export async function buildContractData(client: Client): Promise<ContractData | 
 
   // Use first category for the contract (primary cure)
   const category = paymentCategories[0] ?? null;
+
+  // Collect individual active care service IDs for consent mapping
+  const activeServiceIds: string[] = [];
+  if (category?.careServices) {
+    for (const cs of category.careServices as Array<{ id: string; sessions: string }>) {
+      const n = parseInt(cs.sessions, 10);
+      if (!isNaN(n) && n > 0) {
+        activeServiceIds.push(cs.id);
+      }
+    }
+  }
 
   // Build care items from payment category careServices
   const careItems: ContractCareItem[] = CONTRACT_LINES.map((line) => {
@@ -188,6 +200,7 @@ export async function buildContractData(client: Client): Promise<ContractData | 
     signatureDate: format(new Date(), 'dd MMMM yyyy', { locale: fr }),
     signatureCity: centerConfig.city,
     careItems,
+    activeServiceIds,
     totalAmount,
     installmentCount,
     deposit,
