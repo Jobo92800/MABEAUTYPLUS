@@ -4,9 +4,11 @@ import type { ContractData } from '../../services/contractService';
 interface ContractPreviewProps {
   data: ContractData;
   id?: string;
+  engagements?: boolean[];
+  onEngagementToggle?: (index: number) => void;
 }
 
-const ContractPreview: React.FC<ContractPreviewProps> = ({ data, id }) => {
+const ContractPreview: React.FC<ContractPreviewProps> = ({ data, id, engagements, onEngagementToggle }) => {
   return (
     <div
       id={id}
@@ -332,12 +334,25 @@ const ContractPreview: React.FC<ContractPreviewProps> = ({ data, id }) => {
             'Le Client reconnaît avoir reçu toutes les informations nécessaires avant la signature du présent contrat et avoir pu poser l\'ensemble de ses questions.',
             'Le Client reconnaît avoir été informé de mon droit légal de rétractation de 14 jours conformément aux articles L221-18 et suivants du Code de la consommation.',
             'Le Client reconnaît avoir pris connaissance et accepté les Conditions Générales de Vente remises préalablement à la signature du présent contrat.',
-          ].map((text, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-              <span style={{ display: 'inline-block', width: '14px', height: '14px', border: '1.5px solid #555', marginTop: '1px', flexShrink: 0, backgroundColor: '#fff' }} />
-              <span>{text}</span>
-            </div>
-          ))}
+          ].map((text, i) => {
+            const checked = engagements?.[i] ?? false;
+            return (
+              <div
+                key={i}
+                onClick={() => onEngagementToggle?.(i)}
+                style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', cursor: onEngagementToggle ? 'pointer' : 'default' }}
+              >
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  width: '14px', height: '14px', border: '1.5px solid #555', marginTop: '1px',
+                  flexShrink: 0, backgroundColor: checked ? '#1a1a1a' : '#fff',
+                }}>
+                  {checked && <span style={{ color: 'white', fontSize: '10px', fontWeight: 700, lineHeight: 1 }}>✓</span>}
+                </span>
+                <span>{text}</span>
+              </div>
+            );
+          })}
         </div>
 
         {/* Signature zone */}

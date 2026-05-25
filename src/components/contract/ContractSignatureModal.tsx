@@ -241,7 +241,12 @@ const ContractSignatureModal: React.FC<ContractSignatureModalProps> = ({
       >
         {/* Contract preview */}
         <div className="max-w-4xl mx-auto px-4 py-6">
-          <ContractPreview data={contractData} id="contract-preview-content" />
+          <ContractPreview
+            data={contractData}
+            id="contract-preview-content"
+            engagements={engagements}
+            onEngagementToggle={(i) => setEngagements((prev) => prev.map((v, idx) => idx === i ? !v : v))}
+          />
         </div>
 
         {/* Consent previews */}
