@@ -66,7 +66,7 @@ const treatmentCategories = [
 
 const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, initialData, centerId }) => {
   const navigate = useNavigate();
-  const [selectedTreatment, setSelectedTreatment] = useState(initialData?.client.treatment || 'luxotherapy');
+  const [selectedTreatment, setSelectedTreatment] = useState(initialData?.client.treatment || '');
   const [city, setCity] = useState(initialData?.client.city || '');
 
   const currentCenterId = centerId || initialData?.client.centerId;
