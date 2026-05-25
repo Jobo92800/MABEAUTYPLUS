@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Lock } from 'lucide-react';
 
 const SESSION_KEY = 'mab_auth';
-const CORRECT_PASSWORD = 'MBPRO34!';
+const CORRECT_PASSWORD = 'MAbeautyplus64!';
 
 interface PasswordGateProps {
   children: React.ReactNode;
