@@ -428,13 +428,19 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
     return 'bg-red-50 border-red-200';
   };
 
-  const handleCalculatorValidate = async (data: { total: number; installments: number[] }) => {
+  const handleCalculatorValidate = async (data: { total: number; installments: number[]; careServiceIds: string[] }) => {
     const categoryIdToUpdate = activeCategoryId || categories[0]?.id;
 
     const updatedCategories = categories.map(cat => {
       if (cat.id === categoryIdToUpdate) {
+        // Merge existing care services with newly detected ones (no duplicates)
+        const existingIds = new Set(cat.careServices.map((cs: any) => cs.id));
+        const newServices = data.careServiceIds
+          .filter(id => !existingIds.has(id))
+          .map(id => ({ id, sessions: '' }));
         return {
           ...cat,
+          careServices: [...cat.careServices, ...newServices],
           totalAmount: data.total.toString(),
           installments: data.installments.map((amount, index) => ({
             amount: amount.toString(),

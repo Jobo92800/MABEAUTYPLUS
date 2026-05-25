@@ -210,11 +210,61 @@ function computeInstallments(inputs: Record<string, number>, N: number): number[
 const ordinal = ["1ère","2ème","3ème","4ème","5ème","6ème"];
 const fmt = (n: number) => n.toLocaleString("fr-FR",{minimumFractionDigits:0,maximumFractionDigits:0})+" €";
 
+// Maps calculator category ids to PaymentForm care service ids
+const CATEGORY_TO_CARE_SERVICE: Record<string, string[]> = {
+  corpo:    [], // individual item mapping below
+  extras:   ['guide', 'tenue'],
+  lift:     ['advance-lift'],
+  adipo:    ['adipologie'],
+  flash:    [],
+  meso_ar:  ['meso-visage'],
+  meso_ce:  ['meso-visage'],
+  meso_pb:  ['meso-visage'],
+  meso_rfv: ['meso-visage'],
+  meso_ec:  ['meso-visage'],
+  meso_c1:  ['meso-corps'],
+  meso_c2:  ['meso-corps'],
+  meso_c3:  ['meso-corps'],
+  dome:     ['dome'],
+  psio:     ['psio'],
+  compl:    [],
+};
+
+// Individual item key overrides within corpo category
+const ITEM_KEY_TO_CARE_SERVICE: Record<string, string> = {
+  B4:  'luxo-pdp',
+  B5:  'ishape',
+  B15: 'presso',
+  B10: 'cavitalyse',
+  B11: 'cavitalyse',
+  B12: 'cavitalyse',
+  B6:  'guide',
+  B7:  'tenue',
+};
+
+function detectCareServices(inputs: Record<string, number>): string[] {
+  const found = new Set<string>();
+  CATEGORIES.forEach(cat => {
+    cat.items.forEach(it => {
+      if ((Number(inputs[it.key]) || 0) > 0) {
+        // Item-level override first
+        if (ITEM_KEY_TO_CARE_SERVICE[it.key]) {
+          found.add(ITEM_KEY_TO_CARE_SERVICE[it.key]);
+        } else {
+          // Category-level mapping
+          (CATEGORY_TO_CARE_SERVICE[cat.id] || []).forEach(s => found.add(s));
+        }
+      }
+    });
+  });
+  return Array.from(found);
+}
+
 interface InstallmentsCalculatorProps {
   isOpen: boolean;
   onClose: () => void;
   clientName?: string;
-  onValidate?: (data: { total: number; installments: number[] }) => void;
+  onValidate?: (data: { total: number; installments: number[]; careServiceIds: string[] }) => void;
 }
 
 export const InstallmentsCalculator: React.FC<InstallmentsCalculatorProps> = ({ isOpen, onClose, clientName = "", onValidate }) => {
@@ -242,7 +292,7 @@ export const InstallmentsCalculator: React.FC<InstallmentsCalculatorProps> = ({ 
 
   const handleValidate = () => {
     if (onValidate && total > 0) {
-      onValidate({ total, installments: payments });
+      onValidate({ total, installments: payments, careServiceIds: detectCareServices(inputs) });
       onClose();
     }
   };
