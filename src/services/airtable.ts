@@ -332,6 +332,84 @@ export const updateClientAvoirInAirtable = async (
   }
 };
 
+const CARE_SERVICE_TO_SOIN: Record<string, string> = {
+  'luxo-pdp':     'Perte de poids',
+  'ishape':       'Perte de poids',
+  'cavitalyse':   'Perte de poids',
+  'adipologie':   'Perte de poids',
+  'presso':       'Perte de poids',
+  'meso-corps':   'Perte de poids',
+  'meso-visage':  'Anti-Âge',
+  'advance-lift': 'Anti-Âge',
+  'luxo-meno':    'Ménopause',
+  'luxo-relax':   'Relax',
+  'psio':         'Psio',
+};
+
+// Priority order: when multiple soins are checked, pick the first match in this list
+const SOIN_PRIORITY = ['Anti-Âge', 'Ménopause', 'Relax', 'Psio', 'Perte de poids'];
+
+export function resolveSoinFromCareServices(careServiceIds: string[]): string | null {
+  const labels = careServiceIds
+    .map(id => CARE_SERVICE_TO_SOIN[id])
+    .filter(Boolean);
+  if (labels.length === 0) return null;
+  for (const priority of SOIN_PRIORITY) {
+    if (labels.includes(priority)) return priority;
+  }
+  return labels[0];
+}
+
+export const updateClientSoinsInAirtable = async (
+  firstName: string,
+  lastName: string,
+  centerId: string,
+  careServiceIds: string[]
+): Promise<void> => {
+  try {
+    const soin = resolveSoinFromCareServices(careServiceIds);
+    if (!soin) return;
+
+    const centerNames: Record<string, string> = {
+      'grau-du-roi': 'Le Grau-du-Roi',
+      'le-cres': 'Le Crès',
+      'serignant': 'Sérignan',
+      'cabestany': 'Cabestany',
+      'avignon': 'Avignon'
+    };
+
+    const centerName = centerNames[centerId] || centerId;
+    const filterFormula = `AND({Prénom}='${firstName}', {Nom}='${lastName}', {Centre}='${centerName}')`;
+    const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_ID}?filterByFormula=${encodeURIComponent(filterFormula)}`;
+
+    const getResponse = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${AIRTABLE_ACCESS_TOKEN}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!getResponse.ok) return;
+
+    const data = await getResponse.json();
+    if (!data.records || data.records.length === 0) return;
+
+    const recordId = data.records[0].id;
+
+    await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_ID}/${recordId}`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${AIRTABLE_ACCESS_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ fields: { 'Soins': soin } })
+    });
+  } catch (error) {
+    console.error('[Airtable] Erreur mise à jour Soins:', error);
+  }
+};
+
 export const getClientPaymentDataFromAirtable = async (
   firstName: string,
   lastName: string,

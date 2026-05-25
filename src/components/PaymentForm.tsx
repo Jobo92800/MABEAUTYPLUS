@@ -3,7 +3,7 @@ import { Plus, X, CreditCard, Calendar, Euro, Trash2, Calculator } from 'lucide-
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { PAYMENT_COLLECTION } from '../services/collections';
-import { getClientPaymentDataFromAirtable, updateClientTherapistInAirtable, updateClientMontantCureInAirtable, updateClientAvoirInAirtable } from '../services/airtable';
+import { getClientPaymentDataFromAirtable, updateClientTherapistInAirtable, updateClientMontantCureInAirtable, updateClientAvoirInAirtable, updateClientSoinsInAirtable } from '../services/airtable';
 import { InstallmentsCalculator } from './InstallmentsCalculator';
 
 interface PaymentLine {
@@ -327,6 +327,11 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
     });
     setCategories(newCategories);
     savePaymentData(newCategories);
+
+    if (clientFirstName && clientLastName && centerId) {
+      const allCareServiceIds = newCategories.flatMap(cat => cat.careServices.map((cs: any) => cs.id));
+      updateClientSoinsInAirtable(clientFirstName, clientLastName, centerId, allCareServiceIds).catch(() => {});
+    }
   };
 
   const handleCareServiceSessionsChange = (categoryId: string, serviceId: string, sessions: string) => {
@@ -481,6 +486,9 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
           console.error('✗ Échec de la mise à jour du Montant Cure dans Airtable:', error);
         }
       }
+
+      const allCareServiceIds = updatedCategories.flatMap(cat => cat.careServices.map((cs: any) => cs.id));
+      updateClientSoinsInAirtable(clientFirstName, clientLastName, centerId, allCareServiceIds).catch(() => {});
     }
   };
 
