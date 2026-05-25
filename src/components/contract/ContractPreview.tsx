@@ -334,9 +334,7 @@ const ContractPreview: React.FC<ContractPreviewProps> = ({ data, id }) => {
             'Le Client reconnaît avoir pris connaissance et accepté les Conditions Générales de Vente remises préalablement à la signature du présent contrat.',
           ].map((text, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-              <span style={{ display: 'inline-block', width: '14px', height: '14px', border: '1.5px solid #555', marginTop: '1px', flexShrink: 0, backgroundColor: '#1a1a1a', position: 'relative' }}>
-                <span style={{ position: 'absolute', top: '-1px', left: '1px', color: 'white', fontSize: '10px', fontWeight: 700 }}>✓</span>
-              </span>
+              <span style={{ display: 'inline-block', width: '14px', height: '14px', border: '1.5px solid #555', marginTop: '1px', flexShrink: 0, backgroundColor: '#fff' }} />
               <span>{text}</span>
             </div>
           ))}
