@@ -51,11 +51,11 @@ export const processFormData = (formData: FormData, collectionName: string) => {
   return { data, hasData };
 };
 
-export const saveFormData = async (clientId: string, formData: FormData, collections: string[]) => {
+export const saveFormData = async (clientId: string, formData: FormData, collections: string[], forceWrite = false) => {
   try {
     const savePromises = collections.map(async (collectionName) => {
       const { data, hasData } = processFormData(formData, collectionName);
-      if (hasData) {
+      if (hasData || forceWrite) {
         const docRef = doc(db, collectionName, clientId);
         await setDoc(docRef, data, { merge: true });
       }

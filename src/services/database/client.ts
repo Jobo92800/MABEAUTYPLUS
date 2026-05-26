@@ -62,7 +62,7 @@ export const saveClient = async (formData: FormData, centerId: string): Promise<
     const clientRef = await addDoc(collection(db, 'clients'), clientData);
     const treatment = formData.get('treatment') as keyof typeof TREATMENT_COLLECTIONS;
     const collections = TREATMENT_COLLECTIONS[treatment] || [];
-    await saveFormData(clientRef.id, formData, collections);
+    await saveFormData(clientRef.id, formData, collections, true);
 
     try {
       await addClientToAirtable({ ...clientData, centerId });
