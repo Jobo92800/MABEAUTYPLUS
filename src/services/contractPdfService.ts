@@ -10,10 +10,12 @@ const MARGIN = 18;
 const CONTENT_W = A4_W - MARGIN * 2;
 const LINE_H = 5.5;
 const SMALL_LINE_H = 4.8;
+// Bottom safety margin — content must not exceed this Y position
+const PAGE_BOTTOM = A4_H - 18;
 
 type PdfDoc = jsPDF;
 
-function px(mm: number) { return mm; }
+let _currentPage = 0;
 
 function setFont(doc: PdfDoc, size: number, style: 'normal' | 'bold' | 'italic' = 'normal') {
   doc.setFontSize(size);
@@ -24,8 +26,21 @@ function text(doc: PdfDoc, txt: string, x: number, y: number, opts?: { maxWidth?
   doc.text(txt, x, y, opts as any);
 }
 
+function addPage(doc: PdfDoc): number {
+  doc.addPage();
+  _currentPage++;
+  return MARGIN;
+}
+
+function ensureSpace(doc: PdfDoc, y: number, needed: number): number {
+  if (y + needed > PAGE_BOTTOM) {
+    return addPage(doc);
+  }
+  return y;
+}
+
 function checkboxRow(doc: PdfDoc, label: string, x: number, y: number, checked: boolean, sessions?: number): number {
-  // Draw checkbox
+  y = ensureSpace(doc, y, LINE_H + 2);
   doc.setDrawColor(80, 80, 80);
   doc.setFillColor(checked ? 30 : 255, checked ? 30 : 255, checked ? 30 : 255);
   doc.rect(x, y - 3, 3.5, 3.5, checked ? 'FD' : 'D');
@@ -43,6 +58,9 @@ function checkboxRow(doc: PdfDoc, label: string, x: number, y: number, checked: 
 }
 
 function engagementCheckbox(doc: PdfDoc, label: string, x: number, y: number, checked = false): number {
+  const lines = doc.splitTextToSize(label, CONTENT_W - 8);
+  const blockH = lines.length * SMALL_LINE_H + 4;
+  y = ensureSpace(doc, y, blockH);
   doc.setDrawColor(80, 80, 80);
   doc.setFillColor(checked ? 30 : 255, checked ? 30 : 255, checked ? 30 : 255);
   doc.rect(x, y - 3, 3.5, 3.5, checked ? 'FD' : 'D');
@@ -53,12 +71,12 @@ function engagementCheckbox(doc: PdfDoc, label: string, x: number, y: number, ch
   }
   doc.setTextColor(26, 26, 26);
   setFont(doc, 9);
-  const lines = doc.splitTextToSize(label, CONTENT_W - 8);
   doc.text(lines, x + 5, y);
   return y + lines.length * SMALL_LINE_H + 2;
 }
 
 function sectionTitle(doc: PdfDoc, title: string, y: number): number {
+  y = ensureSpace(doc, y, LINE_H + 8);
   setFont(doc, 9.5, 'bold');
   doc.setTextColor(26, 26, 26);
   text(doc, title, MARGIN, y);
@@ -69,8 +87,10 @@ function paragraph(doc: PdfDoc, txt: string, y: number, lineH = LINE_H): number 
   setFont(doc, 9);
   doc.setTextColor(26, 26, 26);
   const lines = doc.splitTextToSize(txt, CONTENT_W);
+  const blockH = lines.length * lineH;
+  y = ensureSpace(doc, y, blockH);
   doc.text(lines, MARGIN, y);
-  return y + lines.length * lineH + 2;
+  return y + blockH + 2;
 }
 
 function bulletList(doc: PdfDoc, items: string[], y: number): number {
@@ -78,16 +98,18 @@ function bulletList(doc: PdfDoc, items: string[], y: number): number {
   doc.setTextColor(26, 26, 26);
   for (const item of items) {
     const lines = doc.splitTextToSize(`• ${item}`, CONTENT_W - 4);
+    const blockH = lines.length * LINE_H;
+    y = ensureSpace(doc, y, blockH);
     doc.text(lines, MARGIN + 4, y);
-    y += lines.length * LINE_H;
+    y += blockH;
   }
   return y + 2;
 }
 
-function pageFooter(doc: PdfDoc, pageNum: number) {
+function pageFooter(doc: PdfDoc, pageNum: number, total: number) {
   doc.setTextColor(170, 170, 170);
   setFont(doc, 7);
-  doc.text(`${pageNum}/3`, A4_W / 2, A4_H - 4, { align: 'center' });
+  doc.text(`${pageNum}/${total}`, A4_W / 2, A4_H - 4, { align: 'center' });
   doc.setTextColor(26, 26, 26);
 }
 
@@ -97,8 +119,8 @@ export async function generateSignedContractPdf(
   engagements?: boolean[]
 ): Promise<string> {
   const doc = new jsPDF({ unit: 'mm', format: 'a4', compress: true });
+  _currentPage = 1;
 
-  // ── PAGE 1 ──────────────────────────────────────────────────────────────────
   let y = MARGIN;
 
   // Title
@@ -121,6 +143,7 @@ export async function generateSignedContractPdf(
   y += 1;
 
   // Client info table
+  y = ensureSpace(doc, y, LINE_H * 2 + 4);
   setFont(doc, 9, 'bold');
   doc.text('Nom/Prénom :', MARGIN, y);
   doc.text(`${data.clientLastName} ${data.clientFirstName}`, MARGIN + 22, y);
@@ -176,11 +199,7 @@ export async function generateSignedContractPdf(
   y = paragraph(doc, 'L\'éventuel acompte versé lors de la signature du présent contrat correspond à la réservation anticipée du ou des créneaux de séance programmés pour le Client, ainsi qu\'au temps consacré à l\'organisation administrative du dossier, à la planification du programme personnalisé et à la mobilisation des ressources nécessaires à l\'exécution de la prestation. Ces créneaux étant réservés spécifiquement pour le Client et rendus indisponibles pour d\'autres réservations, l\'acompte sera déduit du montant total du forfait.', y, SMALL_LINE_H);
   y = paragraph(doc, 'En cas d\'annulation imputable au Client après expiration du délai légal de rétractation, l\'acompte restera acquis au Prestataire au titre des frais de réservation, d\'organisation et de planification engagés.', y, SMALL_LINE_H);
 
-  pageFooter(doc, 1);
-
-  // ── PAGE 2 ──────────────────────────────────────────────────────────────────
-  doc.addPage();
-  y = MARGIN;
+  y = addPage(doc);
 
   y = paragraph(doc, 'Le Client reconnaît que le présent contrat correspond à un forfait global incluant notamment l\'organisation du programme, la réservation des créneaux, l\'accompagnement personnalisé, les conseils et le savoir-faire du Prestataire. Les éventuelles échéances mises en place constituent uniquement une facilité de paiement accordée par le Prestataire et ne remettent pas en cause l\'engagement du Client sur l\'ensemble du forfait souscrit.', y, SMALL_LINE_H);
   y = paragraph(doc, 'En cas de règlement en plusieurs échéances directement auprès du Prestataire, les modalités de paiement acceptées sont déterminées au moment de la signature du présent contrat. Le Prestataire se réserve le droit de refuser certains moyens de paiement pour les règlements fractionnés.', y, SMALL_LINE_H);
@@ -192,7 +211,11 @@ export async function generateSignedContractPdf(
   y = paragraph(doc, 'Les éventuels frais bancaires liés à un incident de paiement pourront être répercutés au Client.', y, SMALL_LINE_H);
   y += 4;
 
-  // Payment schedule box
+  // Payment schedule box — estimate height first
+  const installmentLines = (data.deposit ? 1 : 0) + data.installments.length;
+  const boxEstH = 9 + LINE_H + 1 + installmentLines * LINE_H + 6;
+  y = ensureSpace(doc, y, boxEstH);
+
   doc.setDrawColor(200, 200, 200);
   doc.setFillColor(250, 250, 250);
   const boxStartY = y;
@@ -267,11 +290,7 @@ export async function generateSignedContractPdf(
   ], y);
   y = paragraph(doc, 'Tout comportement jugé inapproprié ou contraire aux présentes clauses peut entraîner une suspension immédiate des prestations. Les prestations déjà réalisées ainsi que les sommes encaissées restent acquises au titre des prestations engagées.', y, SMALL_LINE_H);
 
-  pageFooter(doc, 2);
-
-  // ── PAGE 3 ──────────────────────────────────────────────────────────────────
-  doc.addPage();
-  y = MARGIN;
+  y = addPage(doc);
 
   // Article 10
   y = sectionTitle(doc, 'Article 10 – Responsabilité', y);
@@ -321,7 +340,8 @@ export async function generateSignedContractPdf(
   }
   y += 6;
 
-  // Signature section
+  // Signature section — needs ~50mm for all columns
+  y = ensureSpace(doc, y, 50);
   const sigY = y;
 
   // Column 1: Fait en
@@ -349,7 +369,6 @@ export async function generateSignedContractPdf(
   doc.text('"Lu et approuvé"', col3X, sigY + LINE_H);
   setFont(doc, 9);
 
-  // Signature image
   const sigImgY = sigY + LINE_H * 2;
   const sigImgH = 30;
   try {
@@ -358,15 +377,11 @@ export async function generateSignedContractPdf(
     // signature image failed
   }
 
-  // Signature border
   doc.setDrawColor(200, 200, 200);
   doc.rect(col3X, sigImgY, CONTENT_W - 130, sigImgH, 'D');
 
-  pageFooter(doc, 3);
-
-  // ── PAGE 4 — CGV ────────────────────────────────────────────────────────────
-  doc.addPage();
-  y = MARGIN;
+  // ── PAGE CGV ─────────────────────────────────────────────────────────────────
+  y = addPage(doc);
 
   // CGV Title
   doc.setTextColor(180, 180, 180);
@@ -402,6 +417,7 @@ export async function generateSignedContractPdf(
   ];
 
   for (const line of cgvLines) {
+    y = ensureSpace(doc, y, SMALL_LINE_H);
     setFont(doc, 9);
     doc.setTextColor(26, 26, 26);
     const labelW = doc.getTextWidth(line.label);
@@ -503,12 +519,17 @@ export async function generateSignedContractPdf(
   y = paragraph(doc, 'En cas de litige, le Client peut recourir à un médiateur de la consommation conformément aux articles L.612-1 et suivants du Code de la consommation.', y, SMALL_LINE_H);
   y = paragraph(doc, 'À défaut de résolution amiable, tout litige sera soumis aux tribunaux compétents du ressort du siège social du Prestataire.', y, SMALL_LINE_H);
 
-  // CGV footer
-  doc.setTextColor(170, 170, 170);
-  setFont(doc, 7);
-  doc.text('4/4', A4_W / 2, A4_H - 4, { align: 'center' });
-  doc.setTextColor(26, 26, 26);
+  // Go back and add page footers to all pages
+  // jsPDF doesn't support retroactive footer injection easily, so we use the
+  // internal page list to navigate back
+  const totalPageCount = doc.getNumberOfPages();
+  for (let p = 1; p <= totalPageCount; p++) {
+    doc.setPage(p);
+    doc.setTextColor(170, 170, 170);
+    setFont(doc, 7);
+    doc.text(`${p}/${totalPageCount}`, A4_W / 2, A4_H - 4, { align: 'center' });
+    doc.setTextColor(26, 26, 26);
+  }
 
-  // Return base64 string
   return doc.output('datauristring').split(',')[1];
 }
