@@ -22,10 +22,7 @@ const UL: React.CSSProperties = { margin: '0 0 5px 16px', padding: 0 };
 
 const PageFooter: React.FC<{ page: number; total: number }> = ({ page, total }) => (
   <div style={{ marginTop: '12px', textAlign: 'center' }}>
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1px' }}>
-      <span style={{ fontSize: '11pt', color: '#e0a0c0', letterSpacing: '0.05em' }}>✿ MAbeautyplus</span>
-      <span style={{ fontSize: '8pt', color: '#aaa' }}>{page}/{total}</span>
-    </div>
+    <span style={{ fontSize: '8pt', color: '#aaa' }}>{page}/{total}</span>
   </div>
 );
 
@@ -334,7 +331,6 @@ const ContractPreview: React.FC<ContractPreviewProps> = ({ data, id, engagements
             <p style={{ margin: '0 0 2px 0' }}>Adresse : {data.siegeSocialAddress}</p>
             <p style={{ margin: '0 0 2px 0' }}>Téléphone : {data.centerPhone}</p>
             <p style={{ margin: '0 0 2px 0' }}>Email : {data.centerEmail}</p>
-            <p style={{ margin: '4px 0 0 0', fontSize: '11pt', color: '#e0a0c0', letterSpacing: '0.05em' }}>✿ MAbeautyplus</p>
           </div>
           <div>
             <p style={{ fontStyle: 'italic', margin: '0 0 6px 0' }}>Signature du Client, "Lu et approuvé"</p>

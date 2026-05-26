@@ -85,9 +85,6 @@ function bulletList(doc: PdfDoc, items: string[], y: number): number {
 }
 
 function pageFooter(doc: PdfDoc, pageNum: number) {
-  doc.setTextColor(200, 160, 192);
-  setFont(doc, 10);
-  doc.text('✿ MAbeautyplus', A4_W / 2, A4_H - 8, { align: 'center' });
   doc.setTextColor(170, 170, 170);
   setFont(doc, 7);
   doc.text(`${pageNum}/3`, A4_W / 2, A4_H - 4, { align: 'center' });
@@ -96,7 +93,8 @@ function pageFooter(doc: PdfDoc, pageNum: number) {
 
 export async function generateSignedContractPdf(
   data: ContractData,
-  signatureDataUrl: string
+  signatureDataUrl: string,
+  engagements?: boolean[]
 ): Promise<string> {
   const doc = new jsPDF({ unit: 'mm', format: 'a4', compress: true });
 
@@ -318,8 +316,8 @@ export async function generateSignedContractPdf(
     'Le Client reconnaît avoir été informé de mon droit légal de rétractation de 14 jours conformément aux articles L221-18 et suivants du Code de la consommation.',
     'Le Client reconnaît avoir pris connaissance et accepté les Conditions Générales de Vente remises préalablement à la signature du présent contrat.',
   ];
-  for (const t of engagementTexts) {
-    y = engagementCheckbox(doc, t, MARGIN, y);
+  for (let i = 0; i < engagementTexts.length; i++) {
+    y = engagementCheckbox(doc, engagementTexts[i], MARGIN, y, engagements?.[i] ?? false);
   }
   y += 6;
 
@@ -506,9 +504,6 @@ export async function generateSignedContractPdf(
   y = paragraph(doc, 'À défaut de résolution amiable, tout litige sera soumis aux tribunaux compétents du ressort du siège social du Prestataire.', y, SMALL_LINE_H);
 
   // CGV footer
-  doc.setTextColor(200, 160, 192);
-  setFont(doc, 10);
-  doc.text('✿ MAbeautyplus', A4_W / 2, A4_H - 8, { align: 'center' });
   doc.setTextColor(170, 170, 170);
   setFont(doc, 7);
   doc.text('4/4', A4_W / 2, A4_H - 4, { align: 'center' });

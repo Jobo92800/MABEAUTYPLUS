@@ -178,7 +178,7 @@ const ContractSignatureModal: React.FC<ContractSignatureModalProps> = ({
     setIsSaving(true);
     try {
       const signatureDataUrl = canvas.toDataURL('image/png');
-      const pdfBase64 = await generateSignedContractPdf(contractData, signatureDataUrl);
+      const pdfBase64 = await generateSignedContractPdf(contractData, signatureDataUrl, engagements);
       await saveSignedContract(clientId, centerId, clientName, pdfBase64, contractData);
       if (contractData.clientEmail) {
         await sendContractEmail(pdfBase64);
