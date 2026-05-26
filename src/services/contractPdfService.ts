@@ -15,8 +15,6 @@ const PAGE_BOTTOM = A4_H - 18;
 
 type PdfDoc = jsPDF;
 
-let _currentPage = 0;
-
 function setFont(doc: PdfDoc, size: number, style: 'normal' | 'bold' | 'italic' = 'normal') {
   doc.setFontSize(size);
   doc.setFont('helvetica', style);
@@ -28,7 +26,6 @@ function text(doc: PdfDoc, txt: string, x: number, y: number, opts?: { maxWidth?
 
 function addPage(doc: PdfDoc): number {
   doc.addPage();
-  _currentPage++;
   return MARGIN;
 }
 
@@ -119,7 +116,6 @@ export async function generateSignedContractPdf(
   engagements?: boolean[]
 ): Promise<string> {
   const doc = new jsPDF({ unit: 'mm', format: 'a4', compress: true });
-  _currentPage = 1;
 
   let y = MARGIN;
 
@@ -198,8 +194,6 @@ export async function generateSignedContractPdf(
   y = paragraph(doc, 'Moyens acceptés : chèques, espèces, carte bancaire, paiement fractionné via organisme partenaire (sous réserve d\'acceptation).', y, SMALL_LINE_H);
   y = paragraph(doc, 'L\'éventuel acompte versé lors de la signature du présent contrat correspond à la réservation anticipée du ou des créneaux de séance programmés pour le Client, ainsi qu\'au temps consacré à l\'organisation administrative du dossier, à la planification du programme personnalisé et à la mobilisation des ressources nécessaires à l\'exécution de la prestation. Ces créneaux étant réservés spécifiquement pour le Client et rendus indisponibles pour d\'autres réservations, l\'acompte sera déduit du montant total du forfait.', y, SMALL_LINE_H);
   y = paragraph(doc, 'En cas d\'annulation imputable au Client après expiration du délai légal de rétractation, l\'acompte restera acquis au Prestataire au titre des frais de réservation, d\'organisation et de planification engagés.', y, SMALL_LINE_H);
-
-  y = addPage(doc);
 
   y = paragraph(doc, 'Le Client reconnaît que le présent contrat correspond à un forfait global incluant notamment l\'organisation du programme, la réservation des créneaux, l\'accompagnement personnalisé, les conseils et le savoir-faire du Prestataire. Les éventuelles échéances mises en place constituent uniquement une facilité de paiement accordée par le Prestataire et ne remettent pas en cause l\'engagement du Client sur l\'ensemble du forfait souscrit.', y, SMALL_LINE_H);
   y = paragraph(doc, 'En cas de règlement en plusieurs échéances directement auprès du Prestataire, les modalités de paiement acceptées sont déterminées au moment de la signature du présent contrat. Le Prestataire se réserve le droit de refuser certains moyens de paiement pour les règlements fractionnés.', y, SMALL_LINE_H);
@@ -289,8 +283,6 @@ export async function generateSignedContractPdf(
     'adopter un comportement respectueux.',
   ], y);
   y = paragraph(doc, 'Tout comportement jugé inapproprié ou contraire aux présentes clauses peut entraîner une suspension immédiate des prestations. Les prestations déjà réalisées ainsi que les sommes encaissées restent acquises au titre des prestations engagées.', y, SMALL_LINE_H);
-
-  y = addPage(doc);
 
   // Article 10
   y = sectionTitle(doc, 'Article 10 – Responsabilité', y);
