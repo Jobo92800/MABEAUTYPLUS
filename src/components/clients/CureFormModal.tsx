@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { saveCureData } from '../../services/database';
@@ -565,8 +565,8 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
         '<div style="display:flex;align-items:center;gap:8px;"><input type="number" class="sessions-input" id="sessions-' + key + '" min="1" step="1" oninput="updateTotal()" value="' + (key === 'relax' ? Math.min(sessionsCount, 10) : sessionsCount) + '"><span style="font-size:14px;color:var(--ink-soft);">s\u00e9ances</span></div></div>';
     }).join('');
     const addons = [];
-    if (keys.includes('luxo'))   addons.push({ ...ADDONS.luxo, key: 'guide' });
-    if (keys.includes('ishape')) addons.push({ ...ADDONS.ishape, key: 'tenue' });
+    if (keys.includes('luxo'))   addons.push({ name: ADDONS.luxo.name, detail: ADDONS.luxo.detail, price: ADDONS.luxo.price, key: 'guide' });
+    if (keys.includes('ishape')) addons.push({ name: ADDONS.ishape.name, detail: ADDONS.ishape.detail, price: ADDONS.ishape.price, key: 'tenue' });
     if (addons.length > 0) {
       html += '<div class="addon-section-label">Compl\u00e9ments inclus</div>';
       html += addons.map(a => {
@@ -606,14 +606,16 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
       const isTenue = addonName.toLowerCase().includes('tenue');
       const isGuide = addonName.toLowerCase().includes('guide');
       const isManuallyExcluded = excludedAddons.has(addonKey);
-      // Strike-through when excluded
+      const isAutoHidden = (isTenue && ishapeSessions === 0) || (isGuide && luxoSessions === 0);
       const amountEl = el.querySelector('.price-row-amount');
-      if (amountEl) amountEl.style.textDecoration = isManuallyExcluded ? 'line-through' : 'none';
-      if (isManuallyExcluded || (isTenue && ishapeSessions === 0) || (isGuide && luxoSessions === 0)) {
-        el.style.display = (isTenue && ishapeSessions === 0) || (isGuide && luxoSessions === 0) ? 'none' : el.style.display;
-        // Don't add to total if excluded
+      if (isAutoHidden) {
+        el.style.display = 'none';
+      } else if (isManuallyExcluded) {
+        el.style.display = '';
+        if (amountEl) amountEl.style.textDecoration = 'line-through';
       } else {
         el.style.display = '';
+        if (amountEl) amountEl.style.textDecoration = 'none';
         total += parseFloat(el.dataset.fixedPrice) || 0;
       }
     });
@@ -864,8 +866,11 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
 </body>
 </html>`;
 
-  const blob = new Blob([htmlContent], { type: 'text/html' });
-  const url = URL.createObjectURL(blob);
+  const url = useMemo(() => {
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    return URL.createObjectURL(blob);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clientName]);
 
   useEffect(() => {
     return () => URL.revokeObjectURL(url);
