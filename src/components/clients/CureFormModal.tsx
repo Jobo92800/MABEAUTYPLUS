@@ -531,6 +531,31 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
     ishape: { name: 'Tenue I-Shape', detail: 'Tenue technique d\u00e9di\u00e9e \u00e0 la cure I-Shape', price: 60 }
   };
 
+  // Tracks addons manually removed by the user
+  const excludedAddons = new Set();
+
+  function toggleAddon(addonKey) {
+    if (excludedAddons.has(addonKey)) {
+      excludedAddons.delete(addonKey);
+    } else {
+      excludedAddons.add(addonKey);
+    }
+    updateTotal();
+    // Re-render addon rows to update button state without full re-render
+    document.querySelectorAll('[data-addon-key]').forEach(el => {
+      const key = el.dataset.addonKey;
+      const isExcluded = excludedAddons.has(key);
+      el.style.opacity = isExcluded ? '0.45' : '1';
+      const btn = el.querySelector('.addon-remove-btn');
+      if (btn) {
+        btn.title = isExcluded ? 'R\u00e9inclure' : 'Retirer';
+        btn.style.background = isExcluded ? 'var(--bg-soft)' : 'transparent';
+        btn.style.color = isExcluded ? 'var(--ink-soft)' : '#e53e3e';
+        btn.textContent = isExcluded ? '+' : '\u00d7';
+      }
+    });
+  }
+
   function renderPricingRows(recommended, sessionsCount) {
     const rows = document.getElementById('priceRows');
     const keys = recommended.map(([k]) => k);
@@ -540,13 +565,19 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
         '<div style="display:flex;align-items:center;gap:8px;"><input type="number" class="sessions-input" id="sessions-' + key + '" min="1" step="1" oninput="updateTotal()" value="' + (key === 'relax' ? Math.min(sessionsCount, 10) : sessionsCount) + '"><span style="font-size:14px;color:var(--ink-soft);">s\u00e9ances</span></div></div>';
     }).join('');
     const addons = [];
-    if (keys.includes('luxo'))   addons.push(ADDONS.luxo);
-    if (keys.includes('ishape')) addons.push(ADDONS.ishape);
+    if (keys.includes('luxo'))   addons.push({ ...ADDONS.luxo, key: 'guide' });
+    if (keys.includes('ishape')) addons.push({ ...ADDONS.ishape, key: 'tenue' });
     if (addons.length > 0) {
       html += '<div class="addon-section-label">Compl\u00e9ments inclus</div>';
-      html += addons.map(a =>
-        '<div class="price-row addon-row" data-fixed-price="' + a.price + '"><div class="price-row-label"><span class="price-row-name addon-name">' + a.name + '</span>' + (a.detail ? '<span class="price-row-detail">' + a.detail + '</span>' : '') + '</div><div class="price-row-amount">' + a.price + ' \u20ac</div></div>'
-      ).join('');
+      html += addons.map(a => {
+        const isExcluded = excludedAddons.has(a.key);
+        return '<div class="price-row addon-row" data-addon-key="' + a.key + '" data-fixed-price="' + a.price + '" style="opacity:' + (isExcluded ? '0.45' : '1') + '">' +
+          '<div class="price-row-label"><span class="price-row-name addon-name">' + a.name + '</span>' + (a.detail ? '<span class="price-row-detail">' + a.detail + '</span>' : '') + '</div>' +
+          '<div style="display:flex;align-items:center;gap:10px;">' +
+          '<div class="price-row-amount" style="text-decoration:' + (isExcluded ? 'line-through' : 'none') + '">' + a.price + ' \u20ac</div>' +
+          '<button class="addon-remove-btn" onclick="toggleAddon(\'' + a.key + '\')" title="' + (isExcluded ? 'R\u00e9inclure' : 'Retirer') + '" style="width:22px;height:22px;border-radius:50%;border:1px solid currentColor;background:' + (isExcluded ? 'var(--bg-soft)' : 'transparent') + ';color:' + (isExcluded ? 'var(--ink-soft)' : '#e53e3e') + ';cursor:pointer;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:1;flex-shrink:0;">' + (isExcluded ? '+' : '\u00d7') + '</button>' +
+          '</div></div>';
+      }).join('');
     }
     rows.innerHTML = html;
     updateTotal();
@@ -571,12 +602,16 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
     });
     document.querySelectorAll('[data-fixed-price]').forEach(el => {
       const addonName = el.querySelector('.addon-name')?.textContent || '';
+      const addonKey = el.dataset.addonKey || '';
       const isTenue = addonName.toLowerCase().includes('tenue');
       const isGuide = addonName.toLowerCase().includes('guide');
-      if (isTenue && ishapeSessions === 0) {
-        el.style.display = 'none';
-      } else if (isGuide && luxoSessions === 0) {
-        el.style.display = 'none';
+      const isManuallyExcluded = excludedAddons.has(addonKey);
+      // Strike-through when excluded
+      const amountEl = el.querySelector('.price-row-amount');
+      if (amountEl) amountEl.style.textDecoration = isManuallyExcluded ? 'line-through' : 'none';
+      if (isManuallyExcluded || (isTenue && ishapeSessions === 0) || (isGuide && luxoSessions === 0)) {
+        el.style.display = (isTenue && ishapeSessions === 0) || (isGuide && luxoSessions === 0) ? 'none' : el.style.display;
+        // Don't add to total if excluded
       } else {
         el.style.display = '';
         total += parseFloat(el.dataset.fixedPrice) || 0;
@@ -624,10 +659,13 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
     if (n === 1) return [total];
     const payments = Array(n).fill(0);
 
-    // Addons (guide 19€, tenue 60€) → 1ère échéance comme dans InstallmentsCalculator
+    // Addons (guide 19€, tenue 60€) → 1ère échéance, sauf si manuellement exclus
     let addonTotal = 0;
     document.querySelectorAll('[data-fixed-price]').forEach(el => {
-      addonTotal += parseFloat(el.dataset.fixedPrice) || 0;
+      const addonKey = el.dataset.addonKey || '';
+      if (!excludedAddons.has(addonKey)) {
+        addonTotal += parseFloat(el.dataset.fixedPrice) || 0;
+      }
     });
     payments[0] += addonTotal;
 
@@ -654,8 +692,10 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
     });
     document.querySelectorAll('[data-fixed-price]').forEach(el => {
       const addonName = el.querySelector('.addon-name')?.textContent || '';
+      const addonKey = el.dataset.addonKey || '';
       const isTenue = addonName.toLowerCase().includes('tenue');
       const isGuide = addonName.toLowerCase().includes('guide');
+      if (excludedAddons.has(addonKey)) return;
       if (isTenue && ishapeSessions === 0) return;
       if (isGuide && luxoSessions === 0) return;
       total += parseFloat(el.dataset.fixedPrice) || 0;
@@ -756,8 +796,10 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
         });
       }
     });
-    // Addons (guide, tenue)
+    // Addons (guide, tenue) — sauf si manuellement exclus
     document.querySelectorAll('[data-fixed-price]').forEach(el => {
+      const addonKey = el.dataset.addonKey || '';
+      if (excludedAddons.has(addonKey)) return;
       const addonName = el.querySelector('.addon-name')?.textContent || '';
       let careServiceId = null;
       if (addonName.toLowerCase().includes('guide')) careServiceId = 'guide';
