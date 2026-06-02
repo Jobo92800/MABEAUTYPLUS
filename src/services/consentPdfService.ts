@@ -58,12 +58,8 @@ function sectionTitle(doc: Doc, s: string, y: number): number {
   return y + LINE_H;
 }
 
-function footer(doc: Doc) {
-  setFont(doc, 7, 'normal');
-  doc.setTextColor(200, 160, 192);
-  txt(doc, '✿ MAbeautyplus', A4_W / 2, A4_H - 8, { align: 'center' });
-  doc.setTextColor(170, 170, 170);
-  txt(doc, '1/1', A4_W / 2, A4_H - 4, { align: 'center' });
+function footer(_doc: Doc) {
+  // footer vide — plus de logo ni de numérotation
 }
 
 function header(doc: Doc, titleText: string, clientName: string, date: string): number {
@@ -121,30 +117,21 @@ function imageRightSection(doc: Doc, label: string, photoText: string[], photoCh
   }
   dy += 4;
 
-  // Signature boxes
-  const boxW = (CONTENT_W - 6) / 2;
+  // Signature client uniquement (pleine largeur)
   const boxH = 36;
 
-  // Institute signature box
   doc.setDrawColor(180, 180, 180);
   doc.setFillColor(255, 255, 255);
-  doc.rect(MARGIN, dy, boxW, boxH, 'D');
+  doc.rect(MARGIN, dy, CONTENT_W, boxH, 'D');
   setFont(doc, 8, 'italic');
   doc.setTextColor(120, 120, 120);
-  txt(doc, 'Signature en tampon de l\'institut', MARGIN + 2, dy + 5);
-
-  // Client signature box
-  const col2X = MARGIN + boxW + 6;
-  doc.rect(col2X, dy, boxW, boxH, 'D');
-  setFont(doc, 8, 'italic');
-  txt(doc, `${label}`, col2X + 2, dy + 5);
+  txt(doc, label, MARGIN + 2, dy + 5);
   setFont(doc, 7, 'italic');
-  txt(doc, 'avec la mention "lu et approuvé"', col2X + 2, dy + 9);
+  txt(doc, 'avec la mention "lu et approuvé"', MARGIN + 2, dy + 9);
 
-  // Embed signature
   if (signatureDataUrl) {
     try {
-      doc.addImage(signatureDataUrl, 'PNG', col2X + 2, dy + 12, boxW - 4, 20);
+      doc.addImage(signatureDataUrl, 'PNG', MARGIN + 2, dy + 12, CONTENT_W - 4, 20);
     } catch {
       // silently skip
     }
