@@ -62,6 +62,55 @@ const ConsentHeader: React.FC<HeaderProps> = ({ title, clientName, date }) => (
   </>
 );
 
+interface CheckboxItemProps {
+  label: string;
+  checked: boolean;
+  onToggle: () => void;
+  bold?: boolean;
+}
+
+const CheckboxItem: React.FC<CheckboxItemProps> = ({ label, checked, onToggle, bold }) => (
+  <div
+    onClick={onToggle}
+    style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '6px', cursor: 'pointer' }}
+  >
+    <div style={{
+      flexShrink: 0,
+      width: '14px',
+      height: '14px',
+      border: '1.5px solid #555',
+      marginTop: '1px',
+      backgroundColor: checked ? '#1a1a1a' : '#fff',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}>
+      {checked && (
+        <svg width="9" height="9" viewBox="0 0 12 12" fill="none">
+          <path d="M2 6l3 3 5-5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      )}
+    </div>
+    <p style={{ margin: 0, fontSize: '9pt', fontWeight: bold ? 700 : 400 }}>{label}</p>
+  </div>
+);
+
+interface ConsentAcceptanceProps {
+  accepted: boolean;
+  onToggle: () => void;
+}
+
+const ConsentAcceptance: React.FC<ConsentAcceptanceProps> = ({ accepted, onToggle }) => (
+  <div style={{ margin: '16px 0 8px 0', borderTop: '1.5px solid #e0e0e0', paddingTop: '12px' }}>
+    <CheckboxItem
+      label="J'accepte le présent consentement, certifie avoir lu et compris l'ensemble des informations ci-dessus, et confirme qu'aucune des contre-indications mentionnées ne me concerne."
+      checked={accepted}
+      onToggle={onToggle}
+      bold
+    />
+  </div>
+);
+
 interface PhotoAuthProps {
   items: string[];
   checked: boolean[];
@@ -72,36 +121,13 @@ const PhotoAuth: React.FC<PhotoAuthProps> = ({ items, checked, onToggle }) => (
   <div style={{ margin: '12px 0 8px 0' }}>
     <p style={{ ...sectionTitleStyle, margin: '0 0 6px 0' }}>Droit à l'image :</p>
     {items.map((item, i) => (
-      <div
-        key={i}
-        onClick={() => onToggle(i)}
-        style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '6px', cursor: 'pointer' }}
-      >
-        <div style={{
-          flexShrink: 0,
-          width: '14px',
-          height: '14px',
-          border: '1.5px solid #555',
-          marginTop: '1px',
-          backgroundColor: checked[i] ? '#1a1a1a' : '#fff',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}>
-          {checked[i] && (
-            <svg width="9" height="9" viewBox="0 0 12 12" fill="none">
-              <path d="M2 6l3 3 5-5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          )}
-        </div>
-        <p style={{ margin: 0, fontSize: '9pt' }}>{item}</p>
-      </div>
+      <CheckboxItem key={i} label={item} checked={checked[i]} onToggle={() => onToggle(i)} />
     ))}
   </div>
 );
 
 // ─── MÉSOJET CORPS ────────────────────────────────────────────────────────────
-export const ConsentMesojetCorps: React.FC<{ clientName: string; date: string; photoChecked: boolean[]; onPhotoToggle: (i: number) => void }> = ({ clientName, date, photoChecked, onPhotoToggle }) => (
+export const ConsentMesojetCorps: React.FC<{ clientName: string; date: string; photoChecked: boolean[]; onPhotoToggle: (i: number) => void; accepted: boolean; onAccept: () => void }> = ({ clientName, date, photoChecked, onPhotoToggle, accepted, onAccept }) => (
   <div style={pageStyle} className="bg-white">
     <div style={innerPageStyle}>
       <ConsentHeader title="Consentement mutuel - Mésojet Corps" clientName={clientName} date={date} />
@@ -129,12 +155,13 @@ export const ConsentMesojetCorps: React.FC<{ clientName: string; date: string; p
         {['Ne pas réaliser de peeling dans les 7 jours avant et après un soin Mésojet','Ne pas utiliser de cosmétiques abrasifs, gommages, exfoliants avant un soin','Ne pas appliquer un produit à base d\'alcool sur la peau avant un soin','Ne raser ou épiler la zone traitée juste avant et après un soin par radiofréquence','Ne pas s\'exposer au soleil avant (coup de soleil) et après le soin','Appliquer un SPF 50 ou 50+ les jours qui suivent un soin'].map((item, i) => <li key={i} style={liStyle}>{item}</li>)}
       </ul>
       <PhotoAuth items={['J\'autorise la prise de photographies avant/après et leur utilisation interne, une fois anonymisées, à des fins de présentation par les thérapeutes du centre MAbeautyplus.','J\'autorise la diffusion de ces photographies sur les réseaux sociaux du centre MAbeautyplus.']} checked={photoChecked} onToggle={onPhotoToggle} />
+      <ConsentAcceptance accepted={accepted} onToggle={onAccept} />
     </div>
   </div>
 );
 
 // ─── MÉSOJET VISAGE ───────────────────────────────────────────────────────────
-export const ConsentMesojetVisage: React.FC<{ clientName: string; date: string; photoChecked: boolean[]; onPhotoToggle: (i: number) => void }> = ({ clientName, date, photoChecked, onPhotoToggle }) => (
+export const ConsentMesojetVisage: React.FC<{ clientName: string; date: string; photoChecked: boolean[]; onPhotoToggle: (i: number) => void; accepted: boolean; onAccept: () => void }> = ({ clientName, date, photoChecked, onPhotoToggle, accepted, onAccept }) => (
   <div style={pageStyle} className="bg-white">
     <div style={innerPageStyle}>
       <ConsentHeader title="Consentement mutuel - Mésojet Visage" clientName={clientName} date={date} />
@@ -158,12 +185,13 @@ export const ConsentMesojetVisage: React.FC<{ clientName: string; date: string; 
         {['Ne pas réaliser de peeling dans les 7 jours avant et après un soin Mésojet','Ne pas utiliser de cosmétiques abrasifs, gommages, exfoliants avant un soin','Ne pas appliquer un produit à base d\'alcool sur la peau avant un soin','Ne raser ou épiler la zone traitée juste avant et après un soin par radiofréquence','Ne pas s\'exposer au soleil avant (coup de soleil) et après le soin','Appliquer un SPF 50 ou 50+ les jours qui suivent un soin','Retirer ses lentilles de contact avant le soin','Respecter un délais d\'un mois après une injection d\'acide hyaluronique ou de Botox'].map((item, i) => <li key={i} style={liStyle}>{item}</li>)}
       </ul>
       <PhotoAuth items={['J\'autorise la prise de photographies avant/après et leur utilisation interne, une fois anonymisées, à des fins de présentation par les thérapeutes du centre MAbeautyplus.','J\'autorise la diffusion de ces photographies sur les réseaux sociaux du centre MAbeautyplus.']} checked={photoChecked} onToggle={onPhotoToggle} />
+      <ConsentAcceptance accepted={accepted} onToggle={onAccept} />
     </div>
   </div>
 );
 
 // ─── PRESSODYNAMIE ────────────────────────────────────────────────────────────
-export const ConsentPresso: React.FC<{ clientName: string; date: string; photoChecked: boolean[]; onPhotoToggle: (i: number) => void }> = ({ clientName, date, photoChecked, onPhotoToggle }) => (
+export const ConsentPresso: React.FC<{ clientName: string; date: string; photoChecked: boolean[]; onPhotoToggle: (i: number) => void; accepted: boolean; onAccept: () => void }> = ({ clientName, date, photoChecked, onPhotoToggle, accepted, onAccept }) => (
   <div style={pageStyle} className="bg-white">
     <div style={innerPageStyle}>
       <ConsentHeader title="Consentement mutuel - Pressodynamie" clientName={clientName} date={date} />
@@ -178,12 +206,13 @@ export const ConsentPresso: React.FC<{ clientName: string; date: string; photoCh
       </ul>
       <p style={paraStyle}>Selon les cas, un certificat médical écrit pourra être demandé par le centre de soins.</p>
       <PhotoAuth items={['J\'autorise la prise de photographies avant/après et leur utilisation interne, une fois anonymisées, à des fins de présentation par les thérapeutes du centre MAbeautyplus.','J\'autorise la diffusion de ces photographies sur les réseaux sociaux du centre MAbeautyplus.']} checked={photoChecked} onToggle={onPhotoToggle} />
+      <ConsentAcceptance accepted={accepted} onToggle={onAccept} />
     </div>
   </div>
 );
 
 // ─── I-SHAPE ──────────────────────────────────────────────────────────────────
-export const ConsentIShape: React.FC<{ clientName: string; date: string; photoChecked: boolean[]; onPhotoToggle: (i: number) => void }> = ({ clientName, date, photoChecked, onPhotoToggle }) => (
+export const ConsentIShape: React.FC<{ clientName: string; date: string; photoChecked: boolean[]; onPhotoToggle: (i: number) => void; accepted: boolean; onAccept: () => void }> = ({ clientName, date, photoChecked, onPhotoToggle, accepted, onAccept }) => (
   <div style={pageStyle} className="bg-white">
     <div style={innerPageStyle}>
       <ConsentHeader title="Consentement mutuel - Electrostimulation" clientName={clientName} date={date} />
@@ -198,12 +227,13 @@ export const ConsentIShape: React.FC<{ clientName: string; date: string; photoCh
       </ul>
       <p style={paraStyle}>Selon les cas, un certificat médical écrit pourra être demandé par le centre de soins.</p>
       <PhotoAuth items={['J\'autorise la prise de photographies avant/après et leur utilisation interne, une fois anonymisées, à des fins de présentation par les thérapeutes du centre MAbeautyplus.','J\'autorise la diffusion de ces photographies sur les réseaux sociaux du centre MAbeautyplus.']} checked={photoChecked} onToggle={onPhotoToggle} />
+      <ConsentAcceptance accepted={accepted} onToggle={onAccept} />
     </div>
   </div>
 );
 
 // ─── LUXO MÉNOPAUSE ───────────────────────────────────────────────────────────
-export const ConsentLuxoMenopause: React.FC<{ clientName: string; date: string }> = ({ clientName, date }) => (
+export const ConsentLuxoMenopause: React.FC<{ clientName: string; date: string; accepted: boolean; onAccept: () => void }> = ({ clientName, date, accepted, onAccept }) => (
   <div style={pageStyle} className="bg-white">
     <div style={innerPageStyle}>
       <ConsentHeader title="Consentement mutuel - Ménopause" clientName={clientName} date={date} />
@@ -220,12 +250,13 @@ export const ConsentLuxoMenopause: React.FC<{ clientName: string; date: string }
         {['Troubles épileptiques','Maladie grave (nécessitant une prise en charge hospitalière ou de la convalescence)','Pathologie infectieuse ou bactérienne','Pathologie cancéreuse active ou non stabilisée','Femme enceinte'].map((item, i) => <li key={i} style={liStyle}>{item}</li>)}
       </ul>
       <p style={paraStyle}>Selon les cas, un certificat médical écrit pourra être demandé par le centre de soins.</p>
+      <ConsentAcceptance accepted={accepted} onToggle={onAccept} />
     </div>
   </div>
 );
 
 // ─── LUXO RELAXATION ──────────────────────────────────────────────────────────
-export const ConsentLuxoRelax: React.FC<{ clientName: string; date: string }> = ({ clientName, date }) => (
+export const ConsentLuxoRelax: React.FC<{ clientName: string; date: string; accepted: boolean; onAccept: () => void }> = ({ clientName, date, accepted, onAccept }) => (
   <div style={pageStyle} className="bg-white">
     <div style={innerPageStyle}>
       <ConsentHeader title="Consentement mutuel - Relaxation" clientName={clientName} date={date} />
@@ -242,12 +273,13 @@ export const ConsentLuxoRelax: React.FC<{ clientName: string; date: string }> = 
         {['Troubles épileptiques','Maladie grave (nécessitant une prise en charge hospitalière ou de la convalescence)','Pathologie infectieuse ou bactérienne','Pathologie cancéreuse active ou non stabilisée','Femme enceinte'].map((item, i) => <li key={i} style={liStyle}>{item}</li>)}
       </ul>
       <p style={paraStyle}>Selon les cas, un certificat médical écrit pourra être demandé par le centre de soins.</p>
+      <ConsentAcceptance accepted={accepted} onToggle={onAccept} />
     </div>
   </div>
 );
 
 // ─── LUXO PERTE DE POIDS ──────────────────────────────────────────────────────
-export const ConsentLuxoPdp: React.FC<{ clientName: string; date: string; photoChecked: boolean[]; onPhotoToggle: (i: number) => void }> = ({ clientName, date, photoChecked, onPhotoToggle }) => (
+export const ConsentLuxoPdp: React.FC<{ clientName: string; date: string; photoChecked: boolean[]; onPhotoToggle: (i: number) => void; accepted: boolean; onAccept: () => void }> = ({ clientName, date, photoChecked, onPhotoToggle, accepted, onAccept }) => (
   <div style={pageStyle} className="bg-white">
     <div style={innerPageStyle}>
       <ConsentHeader title="Consentement mutuel - Perte de poids" clientName={clientName} date={date} />
@@ -262,17 +294,12 @@ export const ConsentLuxoPdp: React.FC<{ clientName: string; date: string; photoC
       </ul>
       <p style={paraStyle}>Selon les cas, un certificat médical écrit pourra être demandé par le centre de soins.</p>
       <PhotoAuth items={['J\'autorise la prise de photographies avant/après et leur utilisation interne, une fois anonymisées, à des fins de présentation par les thérapeutes du centre MAbeautyplus.','J\'autorise la diffusion de ces photographies sur les réseaux sociaux du centre MAbeautyplus.']} checked={photoChecked} onToggle={onPhotoToggle} />
+      <ConsentAcceptance accepted={accepted} onToggle={onAccept} />
     </div>
   </div>
 );
 
-// ─── DISPATCHER ───────────────────────────────────────────────────────────────
-
-export type ConsentComponent = React.FC<{ clientName: string; date: string; photoChecked: boolean[]; onPhotoToggle: (i: number) => void }>;
-
-// Components without photo auth still need to satisfy the type
-const NoopPhotoConsent = (Base: React.FC<{ clientName: string; date: string }>): ConsentComponent =>
-  ({ clientName, date }) => <Base clientName={clientName} date={date} />;
+export type ConsentComponent = React.FC<{ clientName: string; date: string; photoChecked: boolean[]; onPhotoToggle: (i: number) => void; accepted: boolean; onAccept: () => void }>;
 
 export const CONSENT_COMPONENTS: Record<string, ConsentComponent> = {
   'meso-corps':   ConsentMesojetCorps,
@@ -282,8 +309,8 @@ export const CONSENT_COMPONENTS: Record<string, ConsentComponent> = {
   'advance-lift': ConsentMesojetVisage,
   'presso':       ConsentPresso,
   'ishape':       ConsentIShape,
-  'luxo-meno':    NoopPhotoConsent(ConsentLuxoMenopause),
-  'luxo-relax':   NoopPhotoConsent(ConsentLuxoRelax),
+  'luxo-meno':    ({ clientName, date, accepted, onAccept }) => <ConsentLuxoMenopause clientName={clientName} date={date} accepted={accepted} onAccept={onAccept} />,
+  'luxo-relax':   ({ clientName, date, accepted, onAccept }) => <ConsentLuxoRelax clientName={clientName} date={date} accepted={accepted} onAccept={onAccept} />,
   'luxo-pdp':     ConsentLuxoPdp,
 };
 

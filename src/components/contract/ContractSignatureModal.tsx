@@ -44,6 +44,7 @@ const ContractSignatureModal: React.FC<ContractSignatureModalProps> = ({
   const contentRef = useRef<HTMLDivElement>(null);
   // Per-consent photo rights state: map of consent key → [bool, bool]
   const [consentPhotoChecked, setConsentPhotoChecked] = useState<Record<string, boolean[]>>({});
+  const [consentAccepted, setConsentAccepted] = useState<Record<string, boolean>>({});
 
   const handlePhotoToggle = (consentKey: string, index: number) => {
     setConsentPhotoChecked((prev) => {
@@ -53,10 +54,16 @@ const ContractSignatureModal: React.FC<ContractSignatureModalProps> = ({
     });
   };
 
+  const handleConsentAccept = (consentKey: string) => {
+    setConsentAccepted((prev) => ({ ...prev, [consentKey]: !prev[consentKey] }));
+  };
+
   const flatPhotoChecked = Object.values(consentPhotoChecked).flat();
 
   const allChecked = engagements.every(Boolean);
-  const canValidate = allChecked && hasSignature;
+  const consentEntries = getConsentEntries(contractData.activeServiceIds);
+  const allConsentsAccepted = consentEntries.length === 0 || consentEntries.every(({ key }) => consentAccepted[key]);
+  const canValidate = allChecked && hasSignature && allConsentsAccepted;
 
   // Canvas drawing helpers
   const getPos = useCallback((e: MouseEvent | TouchEvent, canvas: HTMLCanvasElement) => {
@@ -272,6 +279,8 @@ const ContractSignatureModal: React.FC<ContractSignatureModalProps> = ({
                     date={today}
                     photoChecked={hasPhotoAuth ? (consentPhotoChecked[key] ?? [false, false]) : []}
                     onPhotoToggle={(i) => handlePhotoToggle(key, i)}
+                    accepted={consentAccepted[key] ?? false}
+                    onAccept={() => handleConsentAccept(key)}
                   />
                 </div>
               ))}
@@ -288,7 +297,7 @@ const ContractSignatureModal: React.FC<ContractSignatureModalProps> = ({
               <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider mb-1">
                 Engagements du client
               </h3>
-              <p className="text-xs text-gray-500 mb-4">Valable pour le contrat de prestation et l'ensemble des consentements ci-dessus.</p>
+              <p className="text-xs text-gray-500 mb-4">Valable pour le contrat de prestation et l'ensemble des consentements ci-dessus. Chaque consentement doit également être accepté individuellement.</p>
               <div className="space-y-3">
                 {ENGAGEMENT_ITEMS.map((text, i) => (
                   <label
@@ -385,8 +394,10 @@ const ContractSignatureModal: React.FC<ContractSignatureModalProps> = ({
               </button>
               {!canValidate && !isSaving && (
                 <p className="text-center text-xs text-gray-400 mt-2">
-                  {!allChecked && !hasSignature
+                  {!allChecked && !hasSignature && !allConsentsAccepted
                     ? 'Cochez toutes les cases et apposez votre signature'
+                    : !allConsentsAccepted
+                    ? 'Acceptez l\'ensemble des consentements de soins'
                     : !allChecked
                     ? 'Cochez toutes les cases d\'engagement'
                     : 'Apposez votre signature'}
