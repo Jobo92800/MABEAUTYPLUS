@@ -185,7 +185,9 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
       const amount = parseFloat(value || '0');
       if (!isNaN(amount) && amount > 0 && categoryIndex >= 0) {
         const cureIndex = categoryIndex + 1;
-        updateClientMontantCureByIndexInAirtable(clientFirstName, clientLastName, centerId, cureIndex, amount).catch(() => {});
+        console.log(`[PaymentForm] Mise à jour Montant Cure ${cureIndex} dans Airtable:`, amount);
+        updateClientMontantCureByIndexInAirtable(clientFirstName, clientLastName, centerId, cureIndex, amount)
+          .catch(err => console.error(`[PaymentForm] Erreur Montant Cure ${cureIndex}:`, err));
       }
     }
   };
@@ -458,10 +460,11 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
 
     if (clientFirstName && clientLastName && centerId) {
       const categoryIndex = updatedCategories.findIndex(cat => cat.id === categoryIdToUpdate);
-      const amount = parseFloat(updatedCategories[categoryIndex]?.totalAmount || '0');
-      if (!isNaN(amount) && amount > 0 && categoryIndex >= 0) {
+      if (categoryIndex >= 0 && data.total > 0) {
         const cureIndex = categoryIndex + 1;
-        updateClientMontantCureByIndexInAirtable(clientFirstName, clientLastName, centerId, cureIndex, amount).catch(() => {});
+        console.log(`[PaymentForm] Mise à jour Montant Cure ${cureIndex} dans Airtable:`, data.total);
+        updateClientMontantCureByIndexInAirtable(clientFirstName, clientLastName, centerId, cureIndex, data.total)
+          .catch(err => console.error(`[PaymentForm] Erreur Montant Cure ${cureIndex}:`, err));
       }
 
       const allCareServiceIds = updatedCategories.flatMap(cat => cat.careServices.map((cs: any) => cs.id));

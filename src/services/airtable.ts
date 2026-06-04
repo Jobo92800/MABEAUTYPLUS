@@ -240,8 +240,8 @@ export const updateClientMontantCureByIndexInAirtable = async (
 
     if (!updateResponse.ok) {
       const errorData = await updateResponse.json();
-      console.error(`[Airtable] Erreur PATCH ${fieldName}:`, errorData);
-      return;
+      console.error(`[Airtable] Erreur PATCH ${fieldName}:`, JSON.stringify(errorData));
+      throw new Error(`Airtable field "${fieldName}" update failed: ${JSON.stringify(errorData)}`);
     }
 
     console.log(`[Airtable] ✓ ${fieldName} mis à jour avec succès: ${montantCure}`);
