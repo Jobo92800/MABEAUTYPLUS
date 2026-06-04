@@ -210,61 +210,91 @@ function computeInstallments(inputs: Record<string, number>, N: number): number[
 const ordinal = ["1ère","2ème","3ème","4ème","5ème","6ème"];
 const fmt = (n: number) => n.toLocaleString("fr-FR",{minimumFractionDigits:0,maximumFractionDigits:0})+" €";
 
-// Maps calculator category ids to PaymentForm care service ids
-const CATEGORY_TO_CARE_SERVICE: Record<string, string[]> = {
-  corpo:    [], // individual item mapping below
-  extras:   ['guide', 'tenue'],
-  lift:     ['advance-lift'],
-  adipo:    ['adipologie'],
-  flash:    [],
-  meso_ar:  ['meso-visage'],
-  meso_ce:  ['meso-visage'],
-  meso_pb:  ['meso-visage'],
-  meso_rfv: ['meso-visage'],
-  meso_ec:  ['meso-visage'],
-  meso_c1:  ['meso-corps'],
-  meso_c2:  ['meso-corps'],
-  meso_c3:  ['meso-corps'],
-  dome:     ['dome'],
-  psio:     ['psio'],
-  compl:    [],
-};
+// Maps individual item keys to their care service ID and aggregation key for session counting
+const ITEM_SESSION_MAPPING: Array<{ key: string; careServiceId: string }> = [
+  { key: 'B4',  careServiceId: 'luxo-pdp'    },
+  { key: 'B5',  careServiceId: 'ishape'       },
+  { key: 'B15', careServiceId: 'presso'       },
+  { key: 'B10', careServiceId: 'cavitalyse'   },
+  { key: 'B11', careServiceId: 'cavitalyse'   },
+  { key: 'B12', careServiceId: 'cavitalyse'   },
+  { key: 'B6',  careServiceId: 'guide'        },
+  { key: 'B7',  careServiceId: 'tenue'        },
+  { key: 'B38', careServiceId: 'dome'         },
+];
 
-// Individual item key overrides within corpo category
-const ITEM_KEY_TO_CARE_SERVICE: Record<string, string> = {
-  B4:  'luxo-pdp',
-  B5:  'ishape',
-  B15: 'presso',
-  B10: 'cavitalyse',
-  B11: 'cavitalyse',
-  B12: 'cavitalyse',
-  B6:  'guide',
-  B7:  'tenue',
-};
+// Package items map to a care service with total qty = 1 (it's a package, not a session count)
+const PACKAGE_ITEM_MAPPING: Array<{ key: string; careServiceId: string }> = [
+  { key: 'B18',  careServiceId: 'adipologie'  },
+  { key: 'B21',  careServiceId: 'advance-lift' },
+  { key: 'B22',  careServiceId: 'advance-lift' },
+  { key: 'B23',  careServiceId: 'advance-lift' },
+  { key: 'B24',  careServiceId: 'advance-lift' },
+  { key: 'B25',  careServiceId: 'advance-lift' },
+  { key: 'B26',  careServiceId: 'advance-lift' },
+  { key: 'B27',  careServiceId: 'meso-corps'  },
+  { key: 'M01',  careServiceId: 'meso-visage' },
+  { key: 'M02',  careServiceId: 'meso-visage' },
+  { key: 'M03',  careServiceId: 'meso-visage' },
+  { key: 'M04',  careServiceId: 'meso-visage' },
+  { key: 'M05',  careServiceId: 'meso-visage' },
+  { key: 'M06',  careServiceId: 'meso-visage' },
+  { key: 'M07',  careServiceId: 'meso-visage' },
+  { key: 'M08',  careServiceId: 'meso-visage' },
+  { key: 'M09',  careServiceId: 'meso-visage' },
+  { key: 'M10',  careServiceId: 'meso-visage' },
+  { key: 'M11',  careServiceId: 'meso-visage' },
+  { key: 'M12',  careServiceId: 'meso-visage' },
+  { key: 'M13',  careServiceId: 'meso-visage' },
+  { key: 'M14',  careServiceId: 'meso-visage' },
+  { key: 'M15',  careServiceId: 'meso-visage' },
+  { key: 'M16',  careServiceId: 'meso-visage' },
+  { key: 'M17',  careServiceId: 'meso-visage' },
+  { key: 'M18',  careServiceId: 'meso-visage' },
+  { key: 'M19',  careServiceId: 'meso-corps'  },
+  { key: 'M20',  careServiceId: 'meso-corps'  },
+  { key: 'M21',  careServiceId: 'meso-corps'  },
+  { key: 'M22',  careServiceId: 'meso-corps'  },
+  { key: 'M23',  careServiceId: 'meso-corps'  },
+  { key: 'M24',  careServiceId: 'meso-corps'  },
+  { key: 'M25',  careServiceId: 'meso-corps'  },
+  { key: 'M26',  careServiceId: 'meso-corps'  },
+  { key: 'M27',  careServiceId: 'meso-corps'  },
+  { key: 'P01',  careServiceId: 'psio'        },
+  { key: 'P02',  careServiceId: 'psio'        },
+];
+
+function detectCareServicesWithSessions(inputs: Record<string, number>): Array<{ id: string; sessions: string }> {
+  const sessionTotals: Record<string, number> = {};
+
+  // Session-based items: aggregate quantities per care service
+  for (const { key, careServiceId } of ITEM_SESSION_MAPPING) {
+    const qty = Number(inputs[key]) || 0;
+    if (qty > 0) {
+      sessionTotals[careServiceId] = (sessionTotals[careServiceId] ?? 0) + qty;
+    }
+  }
+
+  // Package items: aggregate package quantities per care service
+  for (const { key, careServiceId } of PACKAGE_ITEM_MAPPING) {
+    const qty = Number(inputs[key]) || 0;
+    if (qty > 0) {
+      sessionTotals[careServiceId] = (sessionTotals[careServiceId] ?? 0) + qty;
+    }
+  }
+
+  return Object.entries(sessionTotals).map(([id, sessions]) => ({ id, sessions: sessions.toString() }));
+}
 
 function detectCareServices(inputs: Record<string, number>): string[] {
-  const found = new Set<string>();
-  CATEGORIES.forEach(cat => {
-    cat.items.forEach(it => {
-      if ((Number(inputs[it.key]) || 0) > 0) {
-        // Item-level override first
-        if (ITEM_KEY_TO_CARE_SERVICE[it.key]) {
-          found.add(ITEM_KEY_TO_CARE_SERVICE[it.key]);
-        } else {
-          // Category-level mapping
-          (CATEGORY_TO_CARE_SERVICE[cat.id] || []).forEach(s => found.add(s));
-        }
-      }
-    });
-  });
-  return Array.from(found);
+  return detectCareServicesWithSessions(inputs).map(cs => cs.id);
 }
 
 interface InstallmentsCalculatorProps {
   isOpen: boolean;
   onClose: () => void;
   clientName?: string;
-  onValidate?: (data: { total: number; installments: number[]; careServiceIds: string[] }) => void;
+  onValidate?: (data: { total: number; installments: number[]; careServiceIds: string[]; careServicesWithSessions: Array<{ id: string; sessions: string }> }) => void;
 }
 
 export const InstallmentsCalculator: React.FC<InstallmentsCalculatorProps> = ({ isOpen, onClose, clientName = "", onValidate }) => {
@@ -292,7 +322,8 @@ export const InstallmentsCalculator: React.FC<InstallmentsCalculatorProps> = ({ 
 
   const handleValidate = () => {
     if (onValidate && total > 0) {
-      onValidate({ total, installments: payments, careServiceIds: detectCareServices(inputs) });
+      const careServicesWithSessions = detectCareServicesWithSessions(inputs);
+      onValidate({ total, installments: payments, careServiceIds: detectCareServices(inputs), careServicesWithSessions });
       onClose();
     }
   };

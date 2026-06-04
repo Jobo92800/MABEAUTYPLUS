@@ -433,19 +433,30 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
     return 'bg-red-50 border-red-200';
   };
 
-  const handleCalculatorValidate = async (data: { total: number; installments: number[]; careServiceIds: string[] }) => {
+  const handleCalculatorValidate = async (data: { total: number; installments: number[]; careServiceIds: string[]; careServicesWithSessions: Array<{ id: string; sessions: string }> }) => {
     const categoryIdToUpdate = activeCategoryId || categories[0]?.id;
 
     const updatedCategories = categories.map(cat => {
       if (cat.id === categoryIdToUpdate) {
-        // Merge existing care services with newly detected ones (no duplicates)
+        // Build updated care services: merge existing with new, preserving existing sessions,
+        // using calculator sessions for new or already-checked services
+        const incomingMap = new Map(data.careServicesWithSessions.map(cs => [cs.id, cs.sessions]));
         const existingIds = new Set(cat.careServices.map((cs: any) => cs.id));
-        const newServices = data.careServiceIds
-          .filter(id => !existingIds.has(id))
-          .map(id => ({ id, sessions: '' }));
+
+        // Update sessions on existing services that are in the new selection
+        const updatedExisting = cat.careServices.map((cs: any) => ({
+          ...cs,
+          sessions: incomingMap.has(cs.id) ? incomingMap.get(cs.id)! : cs.sessions,
+        }));
+
+        // Add brand new services not already in the list
+        const newServices = data.careServicesWithSessions
+          .filter(cs => !existingIds.has(cs.id))
+          .map(cs => ({ id: cs.id, name: CARE_SERVICES.find(s => s.id === cs.id)?.name || '', sessions: cs.sessions }));
+
         return {
           ...cat,
-          careServices: [...cat.careServices, ...newServices],
+          careServices: [...updatedExisting, ...newServices],
           totalAmount: data.total.toString(),
           installments: data.installments.map((amount, index) => ({
             amount: amount.toString(),
