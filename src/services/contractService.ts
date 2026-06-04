@@ -91,7 +91,33 @@ function formatDate(dateStr: string): string {
   }
 }
 
-export async function buildContractData(client: Client): Promise<ContractData | null> {
+export interface PaymentCategoryInfo {
+  index: number;
+  name: string;
+  careServices: Array<{ id: string; name: string; sessions: string }>;
+  totalAmount: string;
+}
+
+export async function loadPaymentCategories(clientId: string): Promise<PaymentCategoryInfo[]> {
+  try {
+    const paymentDoc = await getDoc(doc(db, PAYMENT_COLLECTION, clientId));
+    if (!paymentDoc.exists()) return [];
+    const categories: any[] = paymentDoc.data().categories ?? [];
+    return categories.map((cat: any, index: number) => ({
+      index,
+      name: cat.ruleName || cat.name || '',
+      careServices: (cat.careServices ?? []).filter((cs: any) => {
+        const n = parseInt(cs.sessions, 10);
+        return !isNaN(n) && n > 0;
+      }),
+      totalAmount: cat.totalAmount ?? '',
+    }));
+  } catch {
+    return [];
+  }
+}
+
+export async function buildContractData(client: Client, categoryIndex = 0): Promise<ContractData | null> {
   const centerId = client.centerId;
   const centerConfig = getCenterConfig(centerId);
   if (!centerConfig) return null;
@@ -110,8 +136,8 @@ export async function buildContractData(client: Client): Promise<ContractData | 
     }
   }
 
-  // Use first category for the contract (primary cure)
-  const category = paymentCategories[0] ?? null;
+  // Use selected category for the contract
+  const category = paymentCategories[categoryIndex] ?? paymentCategories[0] ?? null;
 
   // Collect individual active care service IDs for consent mapping
   const activeServiceIds: string[] = [];

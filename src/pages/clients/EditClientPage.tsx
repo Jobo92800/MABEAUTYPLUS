@@ -1,10 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import {
-  User, Scale, Ruler, FileDown, Activity,
-  Sparkles, Zap, Heart, Coffee, ArrowLeft, Pill, Brain, Droplet, MessageSquare, AlertTriangle, X,
-  FileSignature, CheckCircle, Eye
-} from 'lucide-react';
+import { User, Scale, Ruler, FileDown, Activity, Sparkles, Zap, Heart, Coffee, ArrowLeft, Pill, Brain, Droplet, MessageSquare, AlertTriangle, X, Ligature as FileSignature, CheckCircle, Eye } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import ClientForm from '../../components/clients/ClientForm';
 import SessionsTab from '../../components/clients/SessionsTab';
@@ -28,12 +24,13 @@ import { generateClientPDF } from '../../utils/pdfGenerator';
 import CureFormModal from '../../components/clients/CureFormModal';
 import ClientNoteModal from '../../components/clients/ClientNoteModal';
 import ContractSignatureModal from '../../components/contract/ContractSignatureModal';
+import RuleSelectionModal from '../../components/contract/RuleSelectionModal';
 import type { FullClientData } from '../../types/client';
 import type { Measurement } from '../../types/measurements';
 import type { Session } from '../../types/session';
 import type { ClientCureData } from '../../types/client';
-import { buildContractData, getSignedContracts, getSignedContractPdf } from '../../services/contractService';
-import type { ContractData, SignedContractRecord } from '../../services/contractService';
+import { buildContractData, loadPaymentCategories, getSignedContracts, getSignedContractPdf } from '../../services/contractService';
+import type { ContractData, SignedContractRecord, PaymentCategoryInfo } from '../../services/contractService';
 import { addDays, isAfter, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -174,6 +171,8 @@ const EditClientPage = () => {
   const [contractData, setContractData] = useState<ContractData | null>(null);
   const [loadingContract, setLoadingContract] = useState(false);
   const [signedContracts, setSignedContracts] = useState<SignedContractRecord[]>([]);
+  const [showRuleSelection, setShowRuleSelection] = useState(false);
+  const [paymentCategories, setPaymentCategories] = useState<PaymentCategoryInfo[]>([]);
 
   // Fonction pour vérifier les compléments expirés (SOS exclu du calcul automatique)
   const checkExpiredComplements = async () => {
@@ -306,10 +305,36 @@ const EditClientPage = () => {
   };
 
   const handleOpenContractModal = async () => {
-    if (!clientData) return;
+    if (!clientData || !id) return;
     setLoadingContract(true);
     try {
-      const data = await buildContractData(clientData.client);
+      const categories = await loadPaymentCategories(id);
+      if (categories.length > 1) {
+        setPaymentCategories(categories);
+        setShowRuleSelection(true);
+      } else {
+        const data = await buildContractData(clientData.client, 0);
+        if (!data) {
+          toast.error('Impossible de charger les données du centre');
+          return;
+        }
+        setContractData(data);
+        setShowContractModal(true);
+      }
+    } catch (err) {
+      console.error('Error building contract:', err);
+      toast.error('Erreur lors du chargement du contrat');
+    } finally {
+      setLoadingContract(false);
+    }
+  };
+
+  const handleRuleSelected = async (categoryIndex: number) => {
+    if (!clientData) return;
+    setShowRuleSelection(false);
+    setLoadingContract(true);
+    try {
+      const data = await buildContractData(clientData.client, categoryIndex);
       if (!data) {
         toast.error('Impossible de charger les données du centre');
         return;
@@ -453,6 +478,14 @@ const EditClientPage = () => {
         clientName={`${clientData.client.firstName} ${clientData.client.lastName}`}
         onClose={() => setShowContractModal(false)}
         onSigned={handleContractSigned}
+      />
+    )}
+    {showRuleSelection && clientData && (
+      <RuleSelectionModal
+        clientName={`${clientData.client.firstName} ${clientData.client.lastName}`}
+        categories={paymentCategories}
+        onSelect={handleRuleSelected}
+        onClose={() => setShowRuleSelection(false)}
       />
     )}
     {showCureForm && (
