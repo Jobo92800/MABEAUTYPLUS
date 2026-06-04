@@ -3,7 +3,7 @@ import { Plus, X, CreditCard, Calendar, Euro, Trash2, Calculator } from 'lucide-
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { PAYMENT_COLLECTION } from '../services/collections';
-import { getClientPaymentDataFromAirtable, updateClientTherapistInAirtable, updateClientMontantCureInAirtable, updateClientAvoirInAirtable, updateClientSoinsInAirtable } from '../services/airtable';
+import { getClientPaymentDataFromAirtable, updateClientTherapistInAirtable, updateClientMontantCureInAirtable, updateClientMontantCureByIndexInAirtable, updateClientAvoirInAirtable, updateClientSoinsInAirtable } from '../services/airtable';
 import { InstallmentsCalculator } from './InstallmentsCalculator';
 
 interface PaymentLine {
@@ -180,31 +180,13 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
     setCategories(newCategories);
     await savePaymentData(newCategories);
 
-    // Calculer le montant total de toutes les catégories
     if (clientFirstName && clientLastName && centerId) {
-      const totalMontantCure = newCategories.reduce((sum, cat) => {
-        const amount = parseFloat(cat.totalAmount || '0');
-        return sum + (isNaN(amount) ? 0 : amount);
-      }, 0);
-
-      console.log('Mise à jour Montant Cure:', {
-        clientFirstName,
-        clientLastName,
-        centerId,
-        totalMontantCure,
-        categories: newCategories.map(c => ({ id: c.id, amount: c.totalAmount }))
-      });
-
-      if (totalMontantCure > 0) {
-        try {
-          await updateClientMontantCureInAirtable(clientFirstName, clientLastName, centerId, totalMontantCure);
-          console.log('✓ Montant Cure mis à jour avec succès dans Airtable');
-        } catch (error) {
-          console.error('✗ Échec de la mise à jour du Montant Cure dans Airtable:', error);
-        }
+      const categoryIndex = newCategories.findIndex(cat => cat.id === categoryId);
+      const amount = parseFloat(value || '0');
+      if (!isNaN(amount) && amount > 0 && categoryIndex >= 0) {
+        const cureIndex = categoryIndex + 1;
+        updateClientMontantCureByIndexInAirtable(clientFirstName, clientLastName, centerId, cureIndex, amount).catch(() => {});
       }
-    } else {
-      console.log('Informations client manquantes:', { clientFirstName, clientLastName, centerId });
     }
   };
 
@@ -474,28 +456,12 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
     setCategories(updatedCategories);
     await savePaymentData(updatedCategories);
 
-    // Mettre à jour le Montant Cure dans Airtable
     if (clientFirstName && clientLastName && centerId) {
-      const totalMontantCure = updatedCategories.reduce((sum, cat) => {
-        const amount = parseFloat(cat.totalAmount || '0');
-        return sum + (isNaN(amount) ? 0 : amount);
-      }, 0);
-
-      console.log('Mise à jour Montant Cure (via calculateur):', {
-        clientFirstName,
-        clientLastName,
-        centerId,
-        totalMontantCure,
-        categories: updatedCategories.map(c => ({ id: c.id, amount: c.totalAmount }))
-      });
-
-      if (totalMontantCure > 0) {
-        try {
-          await updateClientMontantCureInAirtable(clientFirstName, clientLastName, centerId, totalMontantCure);
-          console.log('✓ Montant Cure mis à jour avec succès dans Airtable (via calculateur)');
-        } catch (error) {
-          console.error('✗ Échec de la mise à jour du Montant Cure dans Airtable:', error);
-        }
+      const categoryIndex = updatedCategories.findIndex(cat => cat.id === categoryIdToUpdate);
+      const amount = parseFloat(updatedCategories[categoryIndex]?.totalAmount || '0');
+      if (!isNaN(amount) && amount > 0 && categoryIndex >= 0) {
+        const cureIndex = categoryIndex + 1;
+        updateClientMontantCureByIndexInAirtable(clientFirstName, clientLastName, centerId, cureIndex, amount).catch(() => {});
       }
 
       const allCareServiceIds = updatedCategories.flatMap(cat => cat.careServices.map((cs: any) => cs.id));
