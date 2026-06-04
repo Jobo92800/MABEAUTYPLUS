@@ -20,6 +20,7 @@ import DomeTab from '../../components/clients/DomeTab';
 import { getFullClientData, getMeasurements, getSessions, updateClient } from '../../services/database';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../../services/firebase';
+import { PAYMENT_COLLECTION } from '../../services/collections';
 import { generateClientPDF } from '../../utils/pdfGenerator';
 import CureFormModal from '../../components/clients/CureFormModal';
 import ClientNoteModal from '../../components/clients/ClientNoteModal';
@@ -28,66 +29,176 @@ import RuleSelectionModal from '../../components/contract/RuleSelectionModal';
 import type { FullClientData } from '../../types/client';
 import type { Measurement } from '../../types/measurements';
 import type { Session } from '../../types/session';
-import type { ClientCureData } from '../../types/client';
 import { buildContractData, loadPaymentCategories, getSignedContracts, getSignedContractPdf } from '../../services/contractService';
 import type { ContractData, SignedContractRecord, PaymentCategoryInfo } from '../../services/contractService';
 import { addDays, isAfter, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 const ordinalFr = ['1ère', '2ème', '3ème', '4ème', '5ème', '6ème'];
+// ordinalFr kept for use in other parts of this file
 
-const CureSummaryCard: React.FC<{ cureData: ClientCureData }> = ({ cureData }) => {
-  const fmt = (n: number) => n.toLocaleString('fr-FR') + ' €';
+const CARE_SERVICE_LABELS: Record<string, string> = {
+  'luxo-pdp': 'Luxothérapie Perte de Poids',
+  'luxo-relax': 'Luxothérapie Relaxation',
+  'luxo-meno': 'Luxothérapie Ménopause',
+  'ishape': 'I-Shape',
+  'cavitalyse': 'Cavitalyse',
+  'adipologie': 'Adipologie',
+  'presso': 'Presso',
+  'meso-corps': 'Méso Corps',
+  'meso-visage': 'Méso Visage',
+  'advance-lift': 'Advance Lift',
+  'psio': 'Psio',
+  'guide': 'Guide rééquilibrage alimentaire',
+  'tenue': 'Tenue I-Shape',
+  'dome': 'Dôme',
+};
+
+const CURE_TAB_COLORS = [
+  { tab: 'bg-blue-500 text-white', inactive: 'bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100', amount: 'text-blue-600' },
+  { tab: 'bg-green-500 text-white', inactive: 'bg-green-50 text-green-600 border-green-200 hover:bg-green-100', amount: 'text-green-600' },
+  { tab: 'bg-amber-500 text-white', inactive: 'bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100', amount: 'text-amber-600' },
+  { tab: 'bg-rose-500 text-white', inactive: 'bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-100', amount: 'text-rose-600' },
+  { tab: 'bg-teal-500 text-white', inactive: 'bg-teal-50 text-teal-600 border-teal-200 hover:bg-teal-100', amount: 'text-teal-600' },
+  { tab: 'bg-orange-500 text-white', inactive: 'bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100', amount: 'text-orange-600' },
+];
+
+interface PaymentCategoryRaw {
+  id: string;
+  ruleName?: string;
+  name?: string;
+  careServices: Array<{ id: string; name?: string; sessions: string }>;
+  totalAmount: string;
+  deposit?: { amount: string; date: string; method: string; isPaid: boolean; isGiven: boolean };
+  installments: Array<{ amount: string; date: string; purpose: string; method: string; isPaid: boolean; isGiven: boolean }>;
+}
+
+const CuresPanel: React.FC<{ clientId: string }> = ({ clientId }) => {
+  const [categories, setCategories] = useState<PaymentCategoryRaw[]>([]);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const fmt = (n: number) => n.toLocaleString('fr-FR', { minimumFractionDigits: 0 }) + ' €';
+  const ordinals = ['1ère', '2ème', '3ème', '4ème', '5ème', '6ème'];
+  const tabOrdinals = ['1er', '2ème', '3ème', '4ème', '5ème', '6ème'];
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const snap = await getDoc(doc(db, PAYMENT_COLLECTION, clientId));
+        if (snap.exists()) {
+          const cats: PaymentCategoryRaw[] = snap.data().categories ?? [];
+          setCategories(cats.filter(c => c.totalAmount && parseFloat(c.totalAmount) > 0));
+        }
+      } catch {
+        // ignore
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [clientId]);
+
+  if (loading || categories.length === 0) return null;
+
+  const cat = categories[activeIndex];
+  const total = parseFloat(cat.totalAmount) || 0;
+  const activeServices = (cat.careServices ?? []).filter(cs => {
+    const n = parseInt(cs.sessions, 10);
+    return !isNaN(n) && n > 0;
+  });
+  const installments = (cat.installments ?? []).filter(i => i.amount && parseFloat(i.amount) > 0);
+  const color = CURE_TAB_COLORS[activeIndex % CURE_TAB_COLORS.length];
+
   return (
     <div className="mt-6 bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl overflow-hidden">
-      <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
-        <div>
-          <h3 className="text-base font-semibold text-gray-900">Cure enregistrée</h3>
-          {cureData.savedAt && (
-            <p className="text-xs text-gray-400 mt-0.5">
-              Enregistrée le {format(new Date(cureData.savedAt), 'd MMMM yyyy', { locale: fr })}
-            </p>
-          )}
-        </div>
-        <div className="text-right">
-          <div className="text-2xl font-bold text-brand-blue">{fmt(cureData.totalPrice)}</div>
-          <div className="text-xs text-gray-500 mt-0.5">Total cure</div>
-        </div>
+      {/* Header */}
+      <div className="px-6 py-4 border-b border-gray-100">
+        <h3 className="text-base font-semibold text-gray-900 mb-3">Règlements enregistrés</h3>
+        {categories.length > 1 ? (
+          <div className="flex flex-wrap gap-2">
+            {categories.map((c, i) => {
+              const tc = CURE_TAB_COLORS[i % CURE_TAB_COLORS.length];
+              const isActive = i === activeIndex;
+              const label = c.ruleName || c.name || `Règlement ${tabOrdinals[i] ?? i + 1}`;
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => setActiveIndex(i)}
+                  className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition-all duration-150 ${isActive ? tc.tab + ' border-transparent shadow-sm' : tc.inactive + ' border'}`}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-xs text-gray-400">
+            {cat.ruleName || cat.name || 'Règlement 1er'}
+          </p>
+        )}
       </div>
 
-      <div className="px-6 py-4">
-        {cureData.treatments && cureData.treatments.length > 0 && (
-          <div className="mb-4">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Prestations</p>
+      {/* Body */}
+      <div className="px-6 py-5">
+        {/* Total */}
+        <div className="flex items-center justify-between mb-5">
+          <span className="text-sm text-gray-500">Total cure</span>
+          <span className={`text-2xl font-bold ${color.amount}`}>{fmt(total)}</span>
+        </div>
+
+        {/* Services */}
+        {activeServices.length > 0 && (
+          <div className="mb-5">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Soins</p>
             <div className="space-y-1">
-              {cureData.treatments.map((t, i) => (
+              {activeServices.map((cs, i) => (
                 <div key={i} className="flex justify-between items-center text-sm py-1.5 border-b border-gray-50">
-                  <span className="text-gray-700">{t.name}</span>
-                  <span className="text-gray-500 font-medium">{t.sessions} séances × {t.pricePerSession} €</span>
+                  <span className="text-gray-700">{CARE_SERVICE_LABELS[cs.id] ?? cs.name ?? cs.id}</span>
+                  <span className="text-gray-500 font-medium">{cs.sessions} séance{parseInt(cs.sessions, 10) > 1 ? 's' : ''}</span>
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-          Échéancier — {cureData.installmentCount}× paiement{cureData.installmentCount > 1 ? 's' : ''}
-        </p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {cureData.installments.map((inst) => (
-            <div
-              key={inst.index}
-              className={`rounded-xl p-3 flex flex-col gap-1 ${inst.index === 1 ? 'bg-pink-50 ring-1 ring-pink-200' : 'bg-gray-50 ring-1 ring-gray-100'}`}
-            >
-              <span className={`text-xs font-bold uppercase tracking-wide ${inst.index === 1 ? 'text-pink-600' : 'text-gray-400'}`}>
-                {ordinalFr[inst.index - 1]} échéance
+        {/* Deposit */}
+        {cat.deposit?.amount && parseFloat(cat.deposit.amount) > 0 && (
+          <div className="mb-4">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Acompte</p>
+            <div className={`rounded-xl p-3 flex justify-between items-center ring-1 ${cat.deposit.isPaid ? 'bg-green-50 ring-green-200' : 'bg-gray-50 ring-gray-200'}`}>
+              <span className={`text-xs font-bold uppercase tracking-wide ${cat.deposit.isPaid ? 'text-green-600' : 'text-gray-400'}`}>
+                Acompte{cat.deposit.isPaid ? ' — Payé' : ''}
               </span>
-              <span className={`text-lg font-bold ${inst.index === 1 ? 'text-pink-600' : 'text-brand-blue'}`}>
-                {fmt(inst.amount)}
+              <span className={`text-lg font-bold ${cat.deposit.isPaid ? 'text-green-600' : 'text-brand-blue'}`}>
+                {fmt(parseFloat(cat.deposit.amount))}
               </span>
             </div>
-          ))}
-        </div>
+          </div>
+        )}
+
+        {/* Installments */}
+        {installments.length > 0 && (
+          <div>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+              Échéancier — {installments.length}× paiement{installments.length > 1 ? 's' : ''}
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {installments.map((inst, i) => (
+                <div
+                  key={i}
+                  className={`rounded-xl p-3 flex flex-col gap-1 ring-1 ${inst.isPaid ? 'bg-green-50 ring-green-200' : i === 0 ? 'bg-pink-50 ring-pink-200' : 'bg-gray-50 ring-gray-100'}`}
+                >
+                  <span className={`text-xs font-bold uppercase tracking-wide ${inst.isPaid ? 'text-green-600' : i === 0 ? 'text-pink-600' : 'text-gray-400'}`}>
+                    {ordinals[i] ?? `${i + 1}ème`} échéance{inst.isPaid ? ' ✓' : ''}
+                  </span>
+                  <span className={`text-lg font-bold ${inst.isPaid ? 'text-green-600' : i === 0 ? 'text-pink-600' : 'text-brand-blue'}`}>
+                    {fmt(parseFloat(inst.amount))}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -692,9 +803,7 @@ const EditClientPage = () => {
         {currentTab === 'info' && (
           <>
             <ClientForm onSubmit={handleSubmit} initialData={clientData} isSubmitting={isSubmitting} />
-            {clientData.client.cureData && (
-              <CureSummaryCard cureData={clientData.client.cureData} />
-            )}
+            {id && <CuresPanel clientId={id} />}
             {signedContracts.length > 0 && (
               <div className="mt-6 bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
