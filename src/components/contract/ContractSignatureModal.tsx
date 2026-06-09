@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { X, Trash2, FileCheck, ChevronDown } from 'lucide-react';
+import { X, Trash2, FileCheck, ChevronDown, Maximize2, Check } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -35,12 +35,14 @@ const ContractSignatureModal: React.FC<ContractSignatureModalProps> = ({
   onSigned,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const fullscreenCanvasRef = useRef<HTMLCanvasElement>(null);
   const isDrawingRef = useRef(false);
   const lastPosRef = useRef<{ x: number; y: number } | null>(null);
   const [hasSignature, setHasSignature] = useState(false);
   const [engagements, setEngagements] = useState<boolean[]>(ENGAGEMENT_ITEMS.map(() => false));
   const [isSaving, setIsSaving] = useState(false);
   const [showScrollHint, setShowScrollHint] = useState(true);
+  const [showSignatureFullscreen, setShowSignatureFullscreen] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   // Per-consent photo rights state: map of consent key → [bool, bool]
   const [consentPhotoChecked, setConsentPhotoChecked] = useState<Record<string, boolean[]>>({});
@@ -117,6 +119,112 @@ const ContractSignatureModal: React.FC<ContractSignatureModalProps> = ({
     isDrawingRef.current = false;
     lastPosRef.current = null;
   }, []);
+
+  // Sync fullscreen canvas from main canvas when opening
+  const openSignatureFullscreen = () => {
+    setShowSignatureFullscreen(true);
+  };
+
+  useEffect(() => {
+    if (!showSignatureFullscreen) return;
+    const src = canvasRef.current;
+    const dst = fullscreenCanvasRef.current;
+    if (!src || !dst) return;
+    const ctx = dst.getContext('2d');
+    if (!ctx) return;
+    ctx.clearRect(0, 0, dst.width, dst.height);
+    // Scale signature from small canvas into fullscreen canvas
+    if (hasSignature) {
+      ctx.drawImage(src, 0, 0, dst.width, dst.height);
+    }
+  }, [showSignatureFullscreen, hasSignature]);
+
+  // Fullscreen canvas drawing — mirrors back to main canvas on confirm
+  const fullscreenGetPos = useCallback((e: MouseEvent | TouchEvent, canvas: HTMLCanvasElement) => {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    if (e instanceof TouchEvent) {
+      const touch = e.touches[0];
+      return { x: (touch.clientX - rect.left) * scaleX, y: (touch.clientY - rect.top) * scaleY };
+    }
+    return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
+  }, []);
+
+  const fullscreenStartDraw = useCallback((e: MouseEvent | TouchEvent) => {
+    const canvas = fullscreenCanvasRef.current;
+    if (!canvas) return;
+    e.preventDefault();
+    isDrawingRef.current = true;
+    lastPosRef.current = fullscreenGetPos(e, canvas);
+  }, [fullscreenGetPos]);
+
+  const fullscreenDraw = useCallback((e: MouseEvent | TouchEvent) => {
+    if (!isDrawingRef.current) return;
+    const canvas = fullscreenCanvasRef.current;
+    if (!canvas) return;
+    e.preventDefault();
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const pos = fullscreenGetPos(e, canvas);
+    const last = lastPosRef.current;
+    if (!last) return;
+    ctx.beginPath();
+    ctx.moveTo(last.x, last.y);
+    ctx.lineTo(pos.x, pos.y);
+    ctx.strokeStyle = '#1a1a1a';
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+    lastPosRef.current = pos;
+    setHasSignature(true);
+  }, [fullscreenGetPos]);
+
+  useEffect(() => {
+    if (!showSignatureFullscreen) return;
+    const canvas = fullscreenCanvasRef.current;
+    if (!canvas) return;
+    canvas.addEventListener('mousedown', fullscreenStartDraw);
+    canvas.addEventListener('mousemove', fullscreenDraw);
+    canvas.addEventListener('mouseup', endDraw);
+    canvas.addEventListener('mouseleave', endDraw);
+    canvas.addEventListener('touchstart', fullscreenStartDraw, { passive: false });
+    canvas.addEventListener('touchmove', fullscreenDraw, { passive: false });
+    canvas.addEventListener('touchend', endDraw);
+    return () => {
+      canvas.removeEventListener('mousedown', fullscreenStartDraw);
+      canvas.removeEventListener('mousemove', fullscreenDraw);
+      canvas.removeEventListener('mouseup', endDraw);
+      canvas.removeEventListener('mouseleave', endDraw);
+      canvas.removeEventListener('touchstart', fullscreenStartDraw);
+      canvas.removeEventListener('touchmove', fullscreenDraw);
+      canvas.removeEventListener('touchend', endDraw);
+    };
+  }, [showSignatureFullscreen, fullscreenStartDraw, fullscreenDraw, endDraw]);
+
+  const handleClearFullscreen = () => {
+    const canvas = fullscreenCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    setHasSignature(false);
+  };
+
+  const handleConfirmFullscreen = () => {
+    // Copy fullscreen canvas back to main canvas
+    const src = fullscreenCanvasRef.current;
+    const dst = canvasRef.current;
+    if (src && dst) {
+      const ctx = dst.getContext('2d');
+      if (ctx) {
+        ctx.clearRect(0, 0, dst.width, dst.height);
+        ctx.drawImage(src, 0, 0, dst.width, dst.height);
+      }
+    }
+    setShowSignatureFullscreen(false);
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -340,42 +448,58 @@ const ContractSignatureModal: React.FC<ContractSignatureModalProps> = ({
                 <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">
                   Signature du Client — "Lu et approuvé"
                 </h3>
-                {hasSignature && (
+                <div className="flex items-center gap-2">
+                  {hasSignature && (
+                    <button
+                      onClick={handleClearSignature}
+                      className="flex items-center gap-1.5 text-sm text-red-500 hover:text-red-700 transition-colors"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Effacer
+                    </button>
+                  )}
                   <button
-                    onClick={handleClearSignature}
-                    className="flex items-center gap-1.5 text-sm text-red-500 hover:text-red-700 transition-colors"
+                    onClick={openSignatureFullscreen}
+                    className="flex items-center gap-1.5 text-sm text-brand-blue hover:text-blue-700 transition-colors font-medium"
+                    title="Ouvrir la zone de signature en plein écran"
                   >
-                    <Trash2 className="h-4 w-4" />
-                    Effacer
+                    <Maximize2 className="h-4 w-4" />
+                    Plein écran
                   </button>
-                )}
+                </div>
               </div>
               <div
-                className={`relative rounded-xl border-2 transition-colors ${
-                  hasSignature ? 'border-brand-blue' : 'border-dashed border-gray-300'
+                className={`relative rounded-xl border-2 transition-colors cursor-pointer ${
+                  hasSignature ? 'border-brand-blue' : 'border-dashed border-gray-300 hover:border-brand-blue'
                 } bg-white`}
                 style={{ touchAction: 'none' }}
+                onClick={openSignatureFullscreen}
+                title="Cliquer pour ouvrir la signature en plein écran"
               >
                 <canvas
                   ref={canvasRef}
                   width={800}
                   height={200}
-                  className="w-full rounded-xl"
-                  style={{ display: 'block', cursor: 'crosshair', height: '160px' }}
+                  className="w-full rounded-xl pointer-events-none"
+                  style={{ display: 'block', height: '160px' }}
                 />
                 {!hasSignature && (
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none gap-2">
+                    <Maximize2 className="h-5 w-5 text-gray-300" />
                     <p className="text-gray-400 text-sm select-none">
-                      Signez ici avec votre doigt ou la souris
+                      Cliquez pour signer
                     </p>
                   </div>
                 )}
+                {hasSignature && (
+                  <div className="absolute top-2 right-2 pointer-events-none">
+                    <Maximize2 className="h-4 w-4 text-gray-300" />
+                  </div>
+                )}
               </div>
-              {!hasSignature && (
-                <p className="mt-2 text-xs text-gray-400">
-                  Tracez votre signature dans la zone ci-dessus.
-                </p>
-              )}
+              <p className="mt-2 text-xs text-gray-400">
+                Cliquez sur la zone pour ouvrir la signature en plein écran (optimisé tablette graphique).
+              </p>
             </div>
 
             {/* Validate button */}
@@ -415,6 +539,76 @@ const ContractSignatureModal: React.FC<ContractSignatureModalProps> = ({
             Faites défiler pour lire le contrat
           </span>
           <ChevronDown className="h-4 w-4 text-gray-400" />
+        </div>
+      )}
+
+      {/* Fullscreen signature overlay */}
+      {showSignatureFullscreen && (
+        <div className="fixed inset-0 z-[60] flex flex-col bg-white">
+          {/* Header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white shadow-sm flex-shrink-0">
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">Signature du client</h2>
+              <p className="text-sm text-gray-500 mt-0.5">Signez dans la zone ci-dessous — "Lu et approuvé"</p>
+            </div>
+            <button
+              onClick={() => setShowSignatureFullscreen(false)}
+              className="rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Canvas area — takes all available space */}
+          <div className="flex-1 flex flex-col p-6 gap-4">
+            <div
+              className={`relative flex-1 rounded-2xl border-2 transition-colors ${
+                hasSignature ? 'border-brand-blue' : 'border-dashed border-gray-300'
+              } bg-white shadow-inner`}
+              style={{ touchAction: 'none' }}
+            >
+              <canvas
+                ref={fullscreenCanvasRef}
+                width={1600}
+                height={900}
+                className="w-full h-full rounded-2xl"
+                style={{ display: 'block', cursor: 'crosshair' }}
+              />
+              {!hasSignature && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none gap-3">
+                  <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
+                    <svg className="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                  </div>
+                  <p className="text-gray-400 text-base select-none">Signez ici avec votre stylet ou la souris</p>
+                </div>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center justify-between flex-shrink-0">
+              <button
+                onClick={handleClearFullscreen}
+                className="flex items-center gap-2 px-5 py-3 rounded-xl border border-red-200 text-red-500 hover:bg-red-50 transition-colors font-medium"
+              >
+                <Trash2 className="h-5 w-5" />
+                Effacer
+              </button>
+              <button
+                onClick={handleConfirmFullscreen}
+                disabled={!hasSignature}
+                className={`flex items-center gap-2 px-8 py-3 rounded-xl text-base font-bold transition-all ${
+                  hasSignature
+                    ? 'bg-brand-blue text-white shadow-md hover:opacity-90'
+                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                }`}
+              >
+                <Check className="h-5 w-5" />
+                Confirmer la signature
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
