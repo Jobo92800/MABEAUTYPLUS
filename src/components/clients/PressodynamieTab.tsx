@@ -24,10 +24,7 @@ const PressodynamieTab: React.FC<PressodynamieTabProps> = ({ clientId, centerId 
   const [newSession, setNewSession] = useState({
     date: format(new Date(), 'yyyy-MM-dd'),
     mode: {
-      minutes: '',
-      c: '',
-      d: '',
-      w: ''
+      programme: ''
     },
     comment: ''
   });
@@ -128,10 +125,7 @@ const PressodynamieTab: React.FC<PressodynamieTabProps> = ({ clientId, centerId 
       setNewSession({
         date: format(new Date(), 'yyyy-MM-dd'),
         mode: {
-          minutes: '',
-          c: '',
-          d: '',
-          w: ''
+          programme: ''
         },
         comment: ''
       });
@@ -146,10 +140,7 @@ const PressodynamieTab: React.FC<PressodynamieTabProps> = ({ clientId, centerId 
     setNewSession({
       date: session.date,
       mode: session.mode || {
-        minutes: '',
-        c: '',
-        d: '',
-        w: ''
+        programme: ''
       },
       comment: session.comment || ''
     });
@@ -273,71 +264,24 @@ const PressodynamieTab: React.FC<PressodynamieTabProps> = ({ clientId, centerId 
                     />
                   </div>
                   <div>
-                    <label htmlFor="minutes" className="block text-sm font-medium text-gray-700">
-                      Minutes
+                    <label htmlFor="programme" className="block text-sm font-medium text-gray-700">
+                      Programme appliqué
                     </label>
-                    <input
-                      type="text"
-                      name="minutes"
-                      id="minutes"
-                      value={newSession.mode.minutes}
+                    <select
+                      name="programme"
+                      id="programme"
+                      value={newSession.mode.programme}
                       onChange={(e) => setNewSession({
                         ...newSession,
-                        mode: { ...newSession.mode, minutes: e.target.value }
+                        mode: { programme: e.target.value }
                       })}
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring-brand-pink sm:text-sm"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <label htmlFor="c" className="block text-sm font-medium text-gray-700">
-                      C
-                    </label>
-                    <input
-                      type="text"
-                      name="c"
-                      id="c"
-                      value={newSession.mode.c}
-                      onChange={(e) => setNewSession({
-                        ...newSession,
-                        mode: { ...newSession.mode, c: e.target.value }
-                      })}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring-brand-pink sm:text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="d" className="block text-sm font-medium text-gray-700">
-                      D
-                    </label>
-                    <input
-                      type="text"
-                      name="d"
-                      id="d"
-                      value={newSession.mode.d}
-                      onChange={(e) => setNewSession({
-                        ...newSession,
-                        mode: { ...newSession.mode, d: e.target.value }
-                      })}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring-brand-pink sm:text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="w" className="block text-sm font-medium text-gray-700">
-                      W
-                    </label>
-                    <input
-                      type="text"
-                      name="w"
-                      id="w"
-                      value={newSession.mode.w}
-                      onChange={(e) => setNewSession({
-                        ...newSession,
-                        mode: { ...newSession.mode, w: e.target.value }
-                      })}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-pink focus:ring-brand-pink sm:text-sm"
-                    />
+                    >
+                      <option value="">— Sélectionner un programme —</option>
+                      <option value="Jambes légères / Drainage lymphatique">Jambes légères / Drainage lymphatique</option>
+                      <option value="Drainage minceur">Drainage minceur</option>
+                      <option value="Cellulite aqueuse / Rétention d'eau">Cellulite aqueuse / Rétention d'eau</option>
+                    </select>
                   </div>
                 </div>
 
@@ -375,7 +319,7 @@ const PressodynamieTab: React.FC<PressodynamieTabProps> = ({ clientId, centerId 
                     <tr>
                       <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900">Séance</th>
                       <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Date</th>
-                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Mode/intensité</th>
+                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Programme</th>
                       <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Commentaire</th>
                       <th scope="col" className="px-3 py-3.5 text-right text-sm font-semibold text-gray-900">Actions</th>
                     </tr>
@@ -388,7 +332,7 @@ const PressodynamieTab: React.FC<PressodynamieTabProps> = ({ clientId, centerId 
                           {format(new Date(session.date), 'dd/MM/yyyy', { locale: fr })}
                         </td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                          Min: {session.mode?.minutes} - C: {session.mode?.c} - D: {session.mode?.d} - W: {session.mode?.w}
+                          {session.mode?.programme || '—'}
                         </td>
                         <td className="px-3 py-4 text-sm text-gray-500">{session.comment}</td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-right">
