@@ -559,13 +559,13 @@ const ContractSignatureModal: React.FC<ContractSignatureModalProps> = ({
             </button>
           </div>
 
-          {/* Canvas area — takes all available space */}
-          <div className="flex-1 flex flex-col p-6 gap-4">
+          {/* Canvas + actions — fixed layout so buttons are always visible */}
+          <div className="flex flex-col p-5 gap-4 overflow-hidden" style={{ height: 'calc(100vh - 73px)' }}>
             <div
-              className={`relative flex-1 rounded-2xl border-2 transition-colors ${
+              className={`relative rounded-2xl border-2 transition-colors ${
                 hasSignature ? 'border-brand-blue' : 'border-dashed border-gray-300'
               } bg-white shadow-inner`}
-              style={{ touchAction: 'none' }}
+              style={{ touchAction: 'none', flex: '1 1 0', minHeight: 0 }}
             >
               <canvas
                 ref={fullscreenCanvasRef}
@@ -586,7 +586,7 @@ const ContractSignatureModal: React.FC<ContractSignatureModalProps> = ({
               )}
             </div>
 
-            {/* Actions */}
+            {/* Actions — always visible at bottom */}
             <div className="flex items-center justify-between flex-shrink-0">
               <button
                 onClick={handleClearFullscreen}
