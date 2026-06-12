@@ -137,7 +137,10 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
                 ...cat,
                 ruleName: cat.ruleName || cat.name || '',
                 name: cat.name || '',
-                careServices: cat.careServices || []
+                careServices: cat.careServices || [],
+                installments: cat.installments || [{ amount: '', date: '', purpose: '', method: '', isPaid: false, isGiven: false }],
+                deposit: cat.deposit || { amount: '', date: '', method: '', isPaid: false, isGiven: false },
+                avoir: cat.avoir || { amount: '', comment: '' }
               };
             });
             setCategories(updatedCategories);
@@ -267,7 +270,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
     const newCategories = [
       ...categories,
       {
-        id: (categories.length + 1).toString(),
+        id: Date.now().toString(),
         name: '',
         ruleName: '',
         careServices: [],
