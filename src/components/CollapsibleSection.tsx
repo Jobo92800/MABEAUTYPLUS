@@ -34,7 +34,7 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
         />
       </button>
       <div
-        className={`transition-all duration-300 ease-in-out overflow-hidden ${isOpen ? 'max-h-[9999px] opacity-100' : 'max-h-0 opacity-0'}`}
+        className={`transition-all duration-300 ease-in-out overflow-hidden ${isOpen ? 'max-h-[999999px] opacity-100' : 'max-h-0 opacity-0'}`}
       >
         <div className="pt-4">
           {children}
