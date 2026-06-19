@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, X, CreditCard, Calendar, Euro, Trash2, Calculator } from 'lucide-react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
+import toast from 'react-hot-toast';
 import { db } from '../services/firebase';
 import { PAYMENT_COLLECTION } from '../services/collections';
 import { getClientPaymentDataFromAirtable, updateClientTherapistInAirtable, updateClientMontantCureInAirtable, updateClientMontantCureByIndexInAirtable, updateClientAvoirInAirtable, updateClientSoinsInAirtable } from '../services/airtable';
@@ -182,15 +183,20 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
     );
     setCategories(newCategories);
     await savePaymentData(newCategories);
+  };
 
-    if (clientFirstName && clientLastName && centerId) {
-      const categoryIndex = newCategories.findIndex(cat => cat.id === categoryId);
-      const amount = parseFloat(value || '0');
-      if (!isNaN(amount) && amount > 0 && categoryIndex >= 0) {
-        const cureIndex = categoryIndex + 1;
-        console.log(`[PaymentForm] Mise à jour Montant Cure ${cureIndex} dans Airtable:`, amount);
-        updateClientMontantCureByIndexInAirtable(clientFirstName, clientLastName, centerId, cureIndex, amount)
-          .catch(err => console.error(`[PaymentForm] Erreur Montant Cure ${cureIndex}:`, err));
+  const handleTotalAmountBlur = async (categoryId: string, value: string) => {
+    if (!clientFirstName || !clientLastName || !centerId) return;
+    const categoryIndex = categories.findIndex(cat => cat.id === categoryId);
+    const amount = parseFloat(value || '0');
+    if (!isNaN(amount) && amount > 0 && categoryIndex >= 0) {
+      const cureIndex = categoryIndex + 1;
+      try {
+        await updateClientMontantCureByIndexInAirtable(clientFirstName, clientLastName, centerId, cureIndex, amount);
+        toast.success(`Règlement ${cureIndex} synchronisé avec Airtable`);
+      } catch (err) {
+        console.error(`[PaymentForm] Erreur Montant Cure ${cureIndex}:`, err);
+        toast.error(`Erreur synchro Airtable règlement ${cureIndex}`);
       }
     }
   };
@@ -465,9 +471,13 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
       const categoryIndex = updatedCategories.findIndex(cat => cat.id === categoryIdToUpdate);
       if (categoryIndex >= 0 && data.total > 0) {
         const cureIndex = categoryIndex + 1;
-        console.log(`[PaymentForm] Mise à jour Montant Cure ${cureIndex} dans Airtable:`, data.total);
-        updateClientMontantCureByIndexInAirtable(clientFirstName, clientLastName, centerId, cureIndex, data.total)
-          .catch(err => console.error(`[PaymentForm] Erreur Montant Cure ${cureIndex}:`, err));
+        try {
+          await updateClientMontantCureByIndexInAirtable(clientFirstName, clientLastName, centerId, cureIndex, data.total);
+          toast.success(`Règlement ${cureIndex} synchronisé avec Airtable`);
+        } catch (err) {
+          console.error(`[PaymentForm] Erreur Montant Cure ${cureIndex}:`, err);
+          toast.error(`Erreur synchro Airtable règlement ${cureIndex}`);
+        }
       }
 
       const allCareServiceIds = updatedCategories.flatMap(cat => cat.careServices.map((cs: any) => cs.id));
@@ -632,6 +642,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
                   id={`totalAmount-${category.id}`}
                   value={category.totalAmount}
                   onChange={(e) => handleTotalAmountChange(category.id, e.target.value)}
+                  onBlur={(e) => handleTotalAmountBlur(category.id, e.target.value)}
                   onWheel={(e) => e.currentTarget.blur()}
                   className="block w-full pl-10 rounded-lg border-gray-200 shadow-sm focus:border-brand-blue focus:ring-brand-blue"
                   placeholder="0.00"
