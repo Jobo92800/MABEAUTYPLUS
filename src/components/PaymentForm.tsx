@@ -145,6 +145,17 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
               };
             });
             setCategories(updatedCategories);
+
+            // Sync all existing totalAmounts to Airtable on load
+            if (clientFirstName && clientLastName && centerId) {
+              updatedCategories.forEach((cat: any, index: number) => {
+                const amount = parseFloat(cat.totalAmount || '0');
+                if (!isNaN(amount) && amount > 0) {
+                  updateClientMontantCureByIndexInAirtable(clientFirstName, clientLastName, centerId, index + 1, amount)
+                    .catch(() => {});
+                }
+              });
+            }
           }
           if (data.therapists) {
             setTherapists(data.therapists);
