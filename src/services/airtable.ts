@@ -192,7 +192,7 @@ export const updateClientMontantCureByIndexInAirtable = async (
   montantCure: number
 ): Promise<void> => {
   try {
-    const fieldName = cureIndex === 1 ? 'Montant Cure' : `Montant Cure ${cureIndex}`;
+    const fieldName = cureIndex === 1 ? 'Montant Cure' : `Montant cure ${cureIndex}`;
     console.log(`[Airtable] Début mise à jour ${fieldName}:`, { firstName, lastName, centerId, montantCure });
 
     const centerNames: Record<string, string> = {
