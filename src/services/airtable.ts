@@ -247,6 +247,7 @@ export const updateClientMontantCureByIndexInAirtable = async (
     console.log(`[Airtable] ✓ ${fieldName} mis à jour avec succès: ${montantCure}`);
   } catch (error) {
     console.error(`[Airtable] Erreur mise à jour Montant Cure ${cureIndex}:`, error);
+    throw error;
   }
 };
 

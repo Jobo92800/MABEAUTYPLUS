@@ -200,7 +200,11 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
       if (!isNaN(amount) && amount > 0 && categoryIndex >= 0) {
         const cureIndex = categoryIndex + 1;
         updateClientMontantCureByIndexInAirtable(clientFirstName, clientLastName, centerId, cureIndex, amount)
-          .catch(err => console.error(`[PaymentForm] Erreur Montant Cure ${cureIndex}:`, err));
+          .then(() => toast.success(`Règlement ${cureIndex} synchronisé`))
+          .catch(err => {
+            const msg = err?.message || String(err);
+            toast.error(`Erreur cure ${cureIndex}: ${msg.substring(0, 120)}`);
+          });
       }
     }
   };
@@ -214,8 +218,9 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
       try {
         await updateClientMontantCureByIndexInAirtable(clientFirstName, clientLastName, centerId, cureIndex, amount);
         toast.success(`Règlement ${cureIndex} synchronisé`);
-      } catch (err) {
-        toast.error(`Erreur synchro règlement ${cureIndex}`);
+      } catch (err: any) {
+        const msg = err?.message || String(err);
+        toast.error(`Erreur cure ${cureIndex}: ${msg.substring(0, 120)}`);
       }
     }
   };
