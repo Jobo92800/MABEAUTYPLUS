@@ -627,6 +627,7 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
     // Addons (guide 19€, tenue 60€) → 1ère échéance comme dans InstallmentsCalculator
     let addonTotal = 0;
     document.querySelectorAll('[data-fixed-price]').forEach(el => {
+      if (el.style.display === 'none') return;
       addonTotal += parseFloat(el.dataset.fixedPrice) || 0;
     });
     payments[0] += addonTotal;
