@@ -533,8 +533,8 @@ export const InstallmentsCalculator: React.FC<InstallmentsCalculatorProps> = ({ 
                       ))}
                     </div>
                     {total > 0 && (
-                      <div style={{ marginTop: 10, padding: "8px 12px", background: "#fdf2f8", borderRadius: 8, fontSize: 12, color: "#be185d", textAlign: "center" }}>
-                        Frais Alma : +{(getAlmaFeeRate(total, almaCount) * 100).toFixed(2)}% = +{fmt(almaFees)}
+                      <div style={{ marginTop: 8, padding: "6px 10px", background: "#fdf2f8", borderRadius: 8, fontSize: 11, color: "#be185d", textAlign: "center" }}>
+                        {(getAlmaFeeRate(total, almaCount) * 100).toFixed(2)}% frais client
                       </div>
                     )}
                   </>
@@ -563,11 +563,17 @@ export const InstallmentsCalculator: React.FC<InstallmentsCalculatorProps> = ({ 
                 </div>
                 <div className="hdr" style={{ fontSize: 42, fontWeight: 300, color: "white" }}>{fmt(total)}</div>
                 {paymentMode === 'alma' && total > 0 && almaFees > 0 && (
-                  <div style={{ color: "rgba(255,255,255,.85)", fontSize: 13, marginTop: 4, fontWeight: 600 }}>
-                    + {fmt(almaFees)} frais Alma → {fmt(total + almaFees)} total
-                  </div>
+                  <>
+                    <div style={{ color: "rgba(255,255,255,.7)", fontSize: 12, marginTop: 4 }}>
+                      + {fmt(almaFees)} frais Alma ({(getAlmaFeeRate(total, almaCount) * 100).toFixed(2)}%)
+                    </div>
+                    <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid rgba(255,255,255,.25)" }}>
+                      <div style={{ fontSize: 10, letterSpacing: ".15em", textTransform: "uppercase", color: "rgba(255,255,255,.65)", marginBottom: 4 }}>Total payé par le client (frais inclus)</div>
+                      <div className="hdr" style={{ fontSize: 52, fontWeight: 600, color: "white", lineHeight: 1 }}>{fmt(total + almaFees)}</div>
+                    </div>
+                  </>
                 )}
-                {activeCount>1 && total>0 && <div style={{ color: "rgba(255,255,255,.7)", fontSize: 12, marginTop: 4 }}>Réparti sur {activeCount} {paymentMode === 'alma' && activeCount >= 10 ? 'mensualités' : 'échéances'}</div>}
+                {!(paymentMode === 'alma' && almaFees > 0) && activeCount>1 && total>0 && <div style={{ color: "rgba(255,255,255,.7)", fontSize: 12, marginTop: 4 }}>Réparti sur {activeCount} {paymentMode === 'alma' && activeCount >= 10 ? 'mensualités' : 'échéances'}</div>}
                 {total > 0 && onValidate && (
                   <button
                     type="button"

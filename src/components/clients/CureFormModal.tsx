@@ -364,6 +364,10 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
         <div class="ech-total-label">Total cure</div>
         <div class="ech-total-amount" id="echTotal">— €</div>
         <div class="ech-total-sub" id="echTotalSub"></div>
+        <div id="echAlmaFeesWrap" style="display:none; margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.25);">
+          <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.2em; color:rgba(255,255,255,0.65); margin-bottom:4px;" id="echAlmaFeesLabel"></div>
+          <div id="echTotalWithFees" style="font-family:'Cormorant Garamond',serif; font-size:56px; font-weight:600; color:white; line-height:1;"></div>
+        </div>
       </div>
       <div class="ech-cards" id="echCards"></div>
       <div class="ech-verify" id="echVerify" style="display:none;">
@@ -780,12 +784,18 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
     const displayTotal = isAlma ? payments.reduce((a, b) => a + b, 0) : total;
     const almaFees = isAlma ? displayTotal - total : 0;
 
-    document.getElementById('echTotal').textContent = fmtEur(isAlma ? displayTotal : total);
+    document.getElementById('echTotal').textContent = fmtEur(total);
     const sub = document.getElementById('echTotalSub');
+    const almaWrap = document.getElementById('echAlmaFeesWrap');
     if (isAlma && almaFees > 0) {
-      sub.textContent = 'Prix cure ' + fmtEur(total) + ' + frais Alma ' + fmtEur(almaFees);
+      const rate = getAlmaFeeRate(total, currentNbEch);
+      sub.textContent = '+ ' + fmtEur(almaFees) + ' frais Alma (' + (rate * 100).toFixed(2) + '%)';
+      document.getElementById('echTotalWithFees').textContent = fmtEur(displayTotal);
+      document.getElementById('echAlmaFeesLabel').textContent = 'Total pay\u00e9 par le client (frais inclus)';
+      almaWrap.style.display = '';
     } else {
       sub.textContent = currentNbEch > 1 ? 'R\u00e9parti sur ' + currentNbEch + ' \u00e9ch\u00e9ances' : 'R\u00e8glement en une fois';
+      almaWrap.style.display = 'none';
     }
 
     const termLabel = isAlma && currentNbEch >= 10 ? 'mensualit\u00e9' : '\u00e9ch\u00e9ance';
@@ -887,7 +897,7 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
     const firstName = (document.getElementById('clientFirstName')?.value || '').trim();
     const lastName = (document.getElementById('clientLastName')?.value || '').trim();
     const payload = {
-      totalPrice: isAlma ? totalPaid : total,
+      totalPrice: total,
       installmentCount: currentNbEch,
       installments: payments.map((amt, i) => ({ index: i + 1, amount: amt })),
       savedAt: new Date().toISOString(),
