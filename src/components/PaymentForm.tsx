@@ -63,6 +63,7 @@ const CARE_SERVICES = [
   { id: 'meso-visage', name: 'Méso Visage' },
   { id: 'advance-lift', name: 'Advance Lift' },
   { id: 'psio', name: 'Psio' },
+  { id: 'dome', name: 'Dôme' },
   { id: 'guide', name: 'Guide' },
   { id: 'tenue', name: 'Tenue' }
 ];
