@@ -264,6 +264,13 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
   /* ── BOUTON ENREGISTRER ── */
   .save-section { margin-top: 24px; display: none; }
   .save-section.show { display: block; }
+  /* ── MODE TOGGLE ── */
+  .mode-toggle { display: flex; gap: 8px; justify-content: center; margin-bottom: 20px; }
+  .mode-btn { flex: 1; max-width: 160px; padding: 10px 0; border-radius: 10px; border: 2px solid var(--line); background: var(--bg); font-family: 'Manrope', sans-serif; font-size: 13px; font-weight: 600; color: var(--ink-soft); cursor: pointer; transition: all 0.2s; }
+  .mode-btn.active-std { border-color: var(--primary); background: var(--primary); color: white; }
+  .mode-btn.active-alma { border-color: var(--secondary); background: var(--secondary); color: white; }
+  .mode-btn:not(.active-std):not(.active-alma):hover { border-color: var(--line-strong); color: var(--ink); }
+  .alma-fees-badge { display: inline-block; background: rgba(218,51,191,0.12); color: var(--secondary); font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 8px; margin-top: 8px; text-align: center; width: 100%; }
   .save-btn { width: 100%; padding: 18px 24px; border-radius: 14px; border: none; background: linear-gradient(135deg, #0d9488 0%, #0891b2 100%); color: white; font-family: 'Manrope', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: 0.06em; cursor: pointer; transition: all 0.2s; box-shadow: 0 6px 20px -6px rgba(13,148,136,0.5); display: flex; align-items: center; justify-content: center; gap: 10px; }
   .save-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 28px -6px rgba(13,148,136,0.55); }
   .save-btn:active { transform: translateY(0); }
@@ -339,8 +346,13 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
     <!-- ÉCHÉANCIER -->
     <div class="echeancier" id="echeancier">
       <div class="ech-title">Échéancier de paiement</div>
-      <p class="ech-subtitle">Sélectionnez le nombre de fois pour répartir le règlement.</p>
-      <div class="ech-selector">
+      <p class="ech-subtitle">Sélectionnez le mode et le nombre de fois pour répartir le règlement.</p>
+      <div class="mode-toggle">
+        <button class="mode-btn active-std" id="modeStd" onclick="setMode('standard')">Paiement classique</button>
+        <button class="mode-btn" id="modeAlma" onclick="setMode('alma')">Alma</button>
+      </div>
+      <div id="almaFeesBadge" class="alma-fees-badge" style="display:none;"></div>
+      <div class="ech-selector" id="echSelector">
         <button class="ech-btn" data-n="1" onclick="setNbEch(1)">1×</button>
         <button class="ech-btn" data-n="2" onclick="setNbEch(2)">2×</button>
         <button class="ech-btn active" data-n="3" onclick="setNbEch(3)">3×</button>
@@ -583,12 +595,94 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
       }
     });
     document.getElementById('priceTotal').textContent = total > 0 ? total.toLocaleString('fr-FR') + ' \u20ac' : '\u2014 \u20ac';
+    if (currentMode === 'alma') updateAlmaFeesBadge();
     renderEcheancier();
   }
 
   // ── ÉCHÉANCIER ──────────────────────────────────────────────────────────────
   let currentNbEch = 3;
-  const ordinal = ['1ère', '2ème', '3ème', '4ème', '5ème', '6ème'];
+  let currentMode = 'standard'; // 'standard' | 'alma'
+  const ordinal = ['1ère', '2ème', '3ème', '4ème', '5ème', '6ème', '7ème', '8ème', '9ème', '10ème', '11ème', '12ème'];
+
+  const ALMA_COUNTS = [2, 3, 4, 10, 12];
+
+  function getAlmaFeeRate(total, n) {
+    if (n === 2) return 0.0087;
+    if (n === 3) return 0.0173;
+    if (n === 4) return 0.019;
+    if (n === 10) return total <= 3333 ? 0.065 : 0.0515;
+    if (n === 12) return total <= 3273 ? 0.075 : 0.0627;
+    return 0;
+  }
+
+  function computeAlmaInstallments(total, n) {
+    if (total === 0) return Array(n).fill(0);
+    const rate = getAlmaFeeRate(total, n);
+    const fees = Math.round(total * rate);
+    if (n <= 4) {
+      const base = Math.floor(total / n);
+      const remainder = total - base * n;
+      const result = Array(n).fill(base);
+      result[0] = base + remainder + fees;
+      return result;
+    } else {
+      const totalWithFees = total + fees;
+      const base = Math.floor(totalWithFees / n);
+      const remainder = totalWithFees - base * n;
+      const result = Array(n).fill(base);
+      result[0] += remainder;
+      return result;
+    }
+  }
+
+  function setMode(mode) {
+    currentMode = mode;
+    const stdBtn = document.getElementById('modeStd');
+    const almaBtn = document.getElementById('modeAlma');
+    stdBtn.className = 'mode-btn' + (mode === 'standard' ? ' active-std' : '');
+    almaBtn.className = 'mode-btn' + (mode === 'alma' ? ' active-alma' : '');
+    const selector = document.getElementById('echSelector');
+    selector.innerHTML = '';
+    if (mode === 'standard') {
+      [1,2,3,4,5,6].forEach(n => {
+        const btn = document.createElement('button');
+        btn.className = 'ech-btn' + (currentNbEch === n ? ' active' : '');
+        btn.dataset.n = n;
+        btn.textContent = n + '×';
+        btn.onclick = () => setNbEch(n);
+        selector.appendChild(btn);
+      });
+      document.getElementById('almaFeesBadge').style.display = 'none';
+    } else {
+      ALMA_COUNTS.forEach(n => {
+        const btn = document.createElement('button');
+        btn.className = 'ech-btn' + (currentNbEch === n ? ' active' : '');
+        btn.dataset.n = n;
+        btn.textContent = n + '×';
+        btn.onclick = () => setNbEch(n);
+        selector.appendChild(btn);
+      });
+      if (!ALMA_COUNTS.includes(currentNbEch)) {
+        currentNbEch = 3;
+      }
+      updateAlmaFeesBadge();
+    }
+    renderEcheancier();
+  }
+
+  function updateAlmaFeesBadge() {
+    const badge = document.getElementById('almaFeesBadge');
+    const total = getTotalNumeric();
+    if (currentMode === 'alma' && total > 0) {
+      const rate = getAlmaFeeRate(total, currentNbEch);
+      const fees = Math.round(total * rate);
+      const fmtEur = (v) => v.toLocaleString('fr-FR') + ' \u20ac';
+      badge.textContent = 'Frais Alma : +' + (rate * 100).toFixed(2) + '% = +' + fmtEur(fees) + ' \u2192 Total client : ' + fmtEur(total + fees);
+      badge.style.display = 'block';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
 
   // Même logique que InstallmentsCalculator
   const UP = Math.ceil, DOWN = Math.floor;
@@ -669,6 +763,7 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
     document.querySelectorAll('.ech-btn').forEach(btn => {
       btn.classList.toggle('active', parseInt(btn.dataset.n) === n);
     });
+    if (currentMode === 'alma') updateAlmaFeesBadge();
     renderEcheancier();
   }
 
@@ -678,20 +773,32 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
     if (total <= 0) { echEl.classList.remove('show'); return; }
     echEl.classList.add('show');
 
+    const isAlma = currentMode === 'alma';
     const fmtEur = (v) => v.toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' \u20ac';
-    document.getElementById('echTotal').textContent = fmtEur(total);
-    const sub = document.getElementById('echTotalSub');
-    sub.textContent = currentNbEch > 1 ? 'R\u00e9parti sur ' + currentNbEch + ' \u00e9ch\u00e9ances' : 'R\u00e8glement en une fois';
 
-    const payments = computeInstallments(total, currentNbEch);
+    const payments = isAlma ? computeAlmaInstallments(total, currentNbEch) : computeInstallments(total, currentNbEch);
+    const displayTotal = isAlma ? payments.reduce((a, b) => a + b, 0) : total;
+    const almaFees = isAlma ? displayTotal - total : 0;
+
+    document.getElementById('echTotal').textContent = fmtEur(isAlma ? displayTotal : total);
+    const sub = document.getElementById('echTotalSub');
+    if (isAlma && almaFees > 0) {
+      sub.textContent = 'Prix cure ' + fmtEur(total) + ' + frais Alma ' + fmtEur(almaFees);
+    } else {
+      sub.textContent = currentNbEch > 1 ? 'R\u00e9parti sur ' + currentNbEch + ' \u00e9ch\u00e9ances' : 'R\u00e8glement en une fois';
+    }
+
+    const termLabel = isAlma && currentNbEch >= 10 ? 'mensualit\u00e9' : '\u00e9ch\u00e9ance';
     const cards = document.getElementById('echCards');
     cards.innerHTML = payments.map((amt, i) => {
       const isFirst = i === 0;
-      const pct = Math.round(amt / total * 100);
+      const refTotal = isAlma ? displayTotal : total;
+      const pct = Math.round(amt / refTotal * 100);
       return '<div class="ech-card ' + (isFirst ? 'first' : '') + '">' +
         '<div class="ech-card-left">' +
-          '<div class="ech-card-ordinal">' + ordinal[i] + ' \u00e9ch\u00e9ance</div>' +
-          (isFirst && currentNbEch > 1 ? '<div class="ech-card-note">Versement initial</div>' : '') +
+          '<div class="ech-card-ordinal">' + ordinal[i] + ' ' + termLabel + '</div>' +
+          (isFirst && currentNbEch > 1 && !isAlma ? '<div class="ech-card-note">Versement initial</div>' : '') +
+          (isFirst && isAlma && currentNbEch <= 4 && almaFees > 0 ? '<div class="ech-card-note" style="color:var(--secondary);">Frais Alma inclus</div>' : '') +
           '<div class="ech-bar-wrap"><div class="ech-bar" style="width:' + pct + '%"></div></div>' +
         '</div>' +
         '<div>' +
@@ -773,12 +880,14 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
   function saveCure() {
     const total = getTotalNumeric();
     if (total <= 0) return;
-    const payments = computeInstallments(total, currentNbEch);
+    const isAlma = currentMode === 'alma';
+    const payments = isAlma ? computeAlmaInstallments(total, currentNbEch) : computeInstallments(total, currentNbEch);
+    const totalPaid = payments.reduce((a, b) => a + b, 0);
     const treatments = getActiveTreatments();
     const firstName = (document.getElementById('clientFirstName')?.value || '').trim();
     const lastName = (document.getElementById('clientLastName')?.value || '').trim();
     const payload = {
-      totalPrice: total,
+      totalPrice: isAlma ? totalPaid : total,
       installmentCount: currentNbEch,
       installments: payments.map((amt, i) => ({ index: i + 1, amount: amt })),
       savedAt: new Date().toISOString(),
@@ -786,6 +895,7 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
       careServiceIds: treatments.map(t => t.careServiceId).filter(Boolean),
       firstName,
       lastName,
+      paymentMethod: isAlma ? 'alma' : 'standard',
     };
     window.parent.postMessage({ type: 'SAVE_CURE_DATA', payload }, '*');
   }

@@ -207,7 +207,38 @@ function computeInstallments(inputs: Record<string, number>, N: number): number[
   return payments;
 }
 
-const ordinal = ["1ère","2ème","3ème","4ème","5ème","6ème"];
+const ordinal = ["1ère","2ème","3ème","4ème","5ème","6ème","7ème","8ème","9ème","10ème","11ème","12ème"];
+
+const ALMA_COUNTS = [2, 3, 4, 10, 12];
+
+function getAlmaFeeRate(total: number, n: number): number {
+  if (n === 2) return 0.0087;
+  if (n === 3) return 0.0173;
+  if (n === 4) return 0.019;
+  if (n === 10) return total <= 3333 ? 0.065 : 0.0515;
+  if (n === 12) return total <= 3273 ? 0.075 : 0.0627;
+  return 0;
+}
+
+function computeAlmaInstallments(total: number, n: number): number[] {
+  if (total === 0) return Array(n).fill(0);
+  const rate = getAlmaFeeRate(total, n);
+  const fees = Math.round(total * rate);
+  if (n <= 4) {
+    const base = Math.floor(total / n);
+    const remainder = total - base * n;
+    const result = Array(n).fill(base);
+    result[0] = base + remainder + fees;
+    return result;
+  } else {
+    const totalWithFees = total + fees;
+    const base = Math.floor(totalWithFees / n);
+    const remainder = totalWithFees - base * n;
+    const result = Array(n).fill(base);
+    result[0] += remainder;
+    return result;
+  }
+}
 const fmt = (n: number) => n.toLocaleString("fr-FR",{minimumFractionDigits:0,maximumFractionDigits:0})+" €";
 
 // Maps individual item keys to their care service ID and aggregation key for session counting
@@ -300,6 +331,8 @@ interface InstallmentsCalculatorProps {
 export const InstallmentsCalculator: React.FC<InstallmentsCalculatorProps> = ({ isOpen, onClose, clientName = "", onValidate }) => {
   const [inputs, setInputs] = useState<Record<string, number>>({});
   const [nbEch, setNbEch] = useState(3);
+  const [paymentMode, setPaymentMode] = useState<'standard' | 'alma'>('standard');
+  const [almaCount, setAlmaCount] = useState(3);
   const [client, setClient] = useState(clientName);
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({ corpo: true });
   const [search, setSearch] = useState("");
@@ -310,7 +343,13 @@ export const InstallmentsCalculator: React.FC<InstallmentsCalculatorProps> = ({ 
   };
 
   const total = useMemo(() => computeTotal(inputs), [inputs]);
-  const payments = useMemo(() => computeInstallments(inputs, nbEch), [inputs, nbEch]);
+  const activeCount = paymentMode === 'alma' ? almaCount : nbEch;
+  const almaFees = useMemo(() => paymentMode === 'alma' ? Math.round(total * getAlmaFeeRate(total, almaCount)) : 0, [paymentMode, total, almaCount]);
+  const payments = useMemo(() =>
+    paymentMode === 'alma'
+      ? computeAlmaInstallments(total, almaCount)
+      : computeInstallments(inputs, nbEch),
+  [paymentMode, inputs, nbEch, almaCount, total]);
 
   const toggleSection = (id: string) => setOpenSections(prev => ({ ...prev, [id]: !prev[id] }));
   const reset = () => { setInputs({}); setClient(""); setSearch(""); };
@@ -456,16 +495,50 @@ export const InstallmentsCalculator: React.FC<InstallmentsCalculatorProps> = ({ 
             </div>
 
             <div style={{ position: "sticky", top: 20 }}>
+
+              {/* Mode toggle */}
+              <div style={{ background: "white", borderRadius: 16, padding: "14px 18px", marginBottom: 12, boxShadow: "0 2px 12px rgba(0,0,0,.06)" }}>
+                <div style={{ fontSize: 10, letterSpacing: ".12em", textTransform: "uppercase", color: "#6b7280", marginBottom: 8 }}>Mode de paiement</div>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <button type="button" onClick={() => setPaymentMode('standard')}
+                    style={{ flex: 1, padding: "9px 4px", borderRadius: 10, border: "2px solid", borderColor: paymentMode === 'standard' ? "#0d9488" : "#e5e7eb", background: paymentMode === 'standard' ? "#0d9488" : "white", color: paymentMode === 'standard' ? "white" : "#374151", fontWeight: 600, fontSize: 13, fontFamily: "inherit", cursor: "pointer" }}>
+                    Classique
+                  </button>
+                  <button type="button" onClick={() => setPaymentMode('alma')}
+                    style={{ flex: 1, padding: "9px 4px", borderRadius: 10, border: "2px solid", borderColor: paymentMode === 'alma' ? "#be185d" : "#e5e7eb", background: paymentMode === 'alma' ? "#be185d" : "white", color: paymentMode === 'alma' ? "white" : "#374151", fontWeight: 600, fontSize: 13, fontFamily: "inherit", cursor: "pointer" }}>
+                    Alma
+                  </button>
+                </div>
+              </div>
+
               <div style={{ background: "white", borderRadius: 16, padding: "18px", marginBottom: 12, boxShadow: "0 2px 12px rgba(0,0,0,.06)" }}>
                 <div style={{ fontSize: 10, letterSpacing: ".12em", textTransform: "uppercase", color: "#6b7280", marginBottom: 10 }}>Nombre d'échéances</div>
-                <div style={{ display: "flex", gap: 7 }}>
-                  {[1,2,3,4,5,6].map(n => (
-                    <button type="button" key={n} className="pb" onClick={()=>setNbEch(n)}
-                      style={{ flex: 1, padding: "10px 4px", borderRadius: 10, border: "2px solid", borderColor: nbEch===n?"#0d9488":"#e5e7eb", background: nbEch===n?"#0d9488":"white", color: nbEch===n?"white":"#374151", fontWeight: 700, fontSize: 15, fontFamily: "inherit", cursor: "pointer" }}>
-                      {n}×
-                    </button>
-                  ))}
-                </div>
+                {paymentMode === 'standard' ? (
+                  <div style={{ display: "flex", gap: 7 }}>
+                    {[1,2,3,4,5,6].map(n => (
+                      <button type="button" key={n} className="pb" onClick={()=>setNbEch(n)}
+                        style={{ flex: 1, padding: "10px 4px", borderRadius: 10, border: "2px solid", borderColor: nbEch===n?"#0d9488":"#e5e7eb", background: nbEch===n?"#0d9488":"white", color: nbEch===n?"white":"#374151", fontWeight: 700, fontSize: 15, fontFamily: "inherit", cursor: "pointer" }}>
+                        {n}×
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ display: "flex", gap: 7 }}>
+                      {ALMA_COUNTS.map(n => (
+                        <button type="button" key={n} className="pb" onClick={()=>setAlmaCount(n)}
+                          style={{ flex: 1, padding: "10px 4px", borderRadius: 10, border: "2px solid", borderColor: almaCount===n?"#be185d":"#e5e7eb", background: almaCount===n?"#be185d":"white", color: almaCount===n?"white":"#374151", fontWeight: 700, fontSize: 13, fontFamily: "inherit", cursor: "pointer" }}>
+                          {n}×
+                        </button>
+                      ))}
+                    </div>
+                    {total > 0 && (
+                      <div style={{ marginTop: 10, padding: "8px 12px", background: "#fdf2f8", borderRadius: 8, fontSize: 12, color: "#be185d", textAlign: "center" }}>
+                        Frais Alma : +{(getAlmaFeeRate(total, almaCount) * 100).toFixed(2)}% = +{fmt(almaFees)}
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
 
               {activeTreatments.length > 0 && (
@@ -484,12 +557,17 @@ export const InstallmentsCalculator: React.FC<InstallmentsCalculatorProps> = ({ 
                 </div>
               )}
 
-              <div className="tg" style={{ background: "linear-gradient(135deg,#0d9488,#0891b2)", borderRadius: 16, padding: "20px 22px", marginBottom: 14, textAlign: "center" }}>
+              <div className="tg" style={{ background: paymentMode === 'alma' ? "linear-gradient(135deg,#be185d,#9d174d)" : "linear-gradient(135deg,#0d9488,#0891b2)", borderRadius: 16, padding: "20px 22px", marginBottom: 14, textAlign: "center" }}>
                 <div style={{ fontSize: 10, letterSpacing: ".15em", textTransform: "uppercase", color: "rgba(255,255,255,.75)", marginBottom: 6 }}>
                   {client ? `Cure de ${client}` : "Total cure"}
                 </div>
                 <div className="hdr" style={{ fontSize: 42, fontWeight: 300, color: "white" }}>{fmt(total)}</div>
-                {nbEch>1 && total>0 && <div style={{ color: "rgba(255,255,255,.7)", fontSize: 12, marginTop: 4 }}>Réparti sur {nbEch} échéances</div>}
+                {paymentMode === 'alma' && total > 0 && almaFees > 0 && (
+                  <div style={{ color: "rgba(255,255,255,.85)", fontSize: 13, marginTop: 4, fontWeight: 600 }}>
+                    + {fmt(almaFees)} frais Alma → {fmt(total + almaFees)} total
+                  </div>
+                )}
+                {activeCount>1 && total>0 && <div style={{ color: "rgba(255,255,255,.7)", fontSize: 12, marginTop: 4 }}>Réparti sur {activeCount} {paymentMode === 'alma' && activeCount >= 10 ? 'mensualités' : 'échéances'}</div>}
                 {total > 0 && onValidate && (
                   <button
                     type="button"
@@ -498,7 +576,7 @@ export const InstallmentsCalculator: React.FC<InstallmentsCalculatorProps> = ({ 
                       marginTop: 16,
                       width: "100%",
                       background: "white",
-                      color: "#0d9488",
+                      color: paymentMode === 'alma' ? "#be185d" : "#0d9488",
                       border: "2px solid white",
                       padding: "12px 24px",
                       borderRadius: 12,
@@ -525,22 +603,27 @@ export const InstallmentsCalculator: React.FC<InstallmentsCalculatorProps> = ({ 
 
               {total > 0 ? (
                 <div>
-                  <div style={{ fontSize: 10, letterSpacing: ".12em", textTransform: "uppercase", color: "#6b7280", marginBottom: 8 }}>Montant des échéances</div>
+                  <div style={{ fontSize: 10, letterSpacing: ".12em", textTransform: "uppercase", color: "#6b7280", marginBottom: 8 }}>
+                    {paymentMode === 'alma' && activeCount >= 10 ? 'Mensualités Alma' : 'Montant des échéances'}
+                    {paymentMode === 'alma' && <span style={{ marginLeft: 6, background: "#fce7f3", color: "#be185d", fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 6 }}>ALMA</span>}
+                  </div>
                   {payments.map((amt,i) => {
                     const isFirst = i===0;
+                    const accentColor = paymentMode === 'alma' ? "#be185d" : "#0d9488";
                     const pct = total>0 ? amt/total*100 : 0;
                     return (
                       <div key={i} className="ec"
                         style={{ background: isFirst?"linear-gradient(135deg,#fdf4ff,#fce7f3)":"white", border: `2px solid ${isFirst?"#f9a8d4":"#f3f4f6"}`, borderRadius: 14, padding: "14px 18px", marginBottom: 9, display: "flex", alignItems: "center", justifyContent: "space-between", boxShadow: "0 2px 8px rgba(0,0,0,.05)" }}>
                         <div>
-                          <div style={{ fontSize: 11, fontWeight: 700, color: isFirst?"#be185d":"#6b7280", letterSpacing: ".06em", textTransform: "uppercase", marginBottom: 2 }}>{ordinal[i]} échéance</div>
-                          {isFirst && <div style={{ fontSize: 10, color: "#9ca3af", marginTop: 1 }}>Guide, tenue & compléments inclus</div>}
+                          <div style={{ fontSize: 11, fontWeight: 700, color: isFirst?"#be185d":"#6b7280", letterSpacing: ".06em", textTransform: "uppercase", marginBottom: 2 }}>{ordinal[i]} {paymentMode === 'alma' && activeCount >= 10 ? 'mensualité' : 'échéance'}</div>
+                          {isFirst && paymentMode === 'standard' && <div style={{ fontSize: 10, color: "#9ca3af", marginTop: 1 }}>Guide, tenue & compléments inclus</div>}
+                          {isFirst && paymentMode === 'alma' && activeCount <= 4 && <div style={{ fontSize: 10, color: "#be185d", marginTop: 1 }}>Frais Alma inclus (+{fmt(almaFees)})</div>}
                           <div style={{ marginTop: 7, height: 3, background: "#f3f4f6", borderRadius: 2, width: 90 }}>
-                            <div style={{ height: "100%", width: `${pct}%`, background: isFirst?"#be185d":"#0d9488", borderRadius: 2 }} />
+                            <div style={{ height: "100%", width: `${pct}%`, background: isFirst?"#be185d":accentColor, borderRadius: 2 }} />
                           </div>
                         </div>
                         <div style={{ textAlign: "right" }}>
-                          <div className="hdr" style={{ fontSize: 28, fontWeight: 400, color: isFirst?"#be185d":"#0d9488" }}>{fmt(amt)}</div>
+                          <div className="hdr" style={{ fontSize: 28, fontWeight: 400, color: isFirst?"#be185d":accentColor }}>{fmt(amt)}</div>
                           <div style={{ fontSize: 11, color: "#9ca3af" }}>{pct.toFixed(0)}%</div>
                         </div>
                       </div>
