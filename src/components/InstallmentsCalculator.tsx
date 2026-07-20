@@ -220,22 +220,23 @@ function getAlmaFeeRate(total: number, n: number): number {
   return 0;
 }
 
+const rc = (v: number) => Math.round(v * 100) / 100;
+
 function computeAlmaInstallments(total: number, n: number): number[] {
   if (total === 0) return Array(n).fill(0);
   const rate = getAlmaFeeRate(total, n);
-  const fees = Math.round(total * rate);
+  const fees = rc(total * rate);
+  const totalWithFees = rc(total + fees);
   if (n <= 4) {
-    const base = Math.floor(total / n);
-    const remainder = total - base * n;
+    const base = rc(total / n);
     const result = Array(n).fill(base);
-    result[0] = base + remainder + fees;
+    result[0] = rc(totalWithFees - (n - 1) * base);
     return result;
   } else {
-    const totalWithFees = total + fees;
-    const base = Math.floor(totalWithFees / n);
-    const remainder = totalWithFees - base * n;
+    const base = Math.floor(totalWithFees / n * 100) / 100;
+    const remainder = rc(totalWithFees - base * n);
     const result = Array(n).fill(base);
-    result[0] += remainder;
+    result[0] = rc(base + remainder);
     return result;
   }
 }
