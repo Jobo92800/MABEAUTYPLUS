@@ -67,6 +67,7 @@ const CONTRACT_LINES: Array<{
   { contractLabel: 'Pressodynamie', careServiceIds: ['presso'] },
   { contractLabel: 'Soins minceur / soins esthétiques corps', careServiceIds: ['cavitalyse', 'adipologie', 'meso-corps'] },
   { contractLabel: 'Soins visage', careServiceIds: ['meso-visage', 'advance-lift'] },
+  { contractLabel: 'Dôme', careServiceIds: ['dome'] },
 ];
 
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
