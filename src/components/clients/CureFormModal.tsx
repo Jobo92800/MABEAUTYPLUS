@@ -680,9 +680,9 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
     const total = getTotalNumeric();
     if (currentMode === 'alma' && total > 0) {
       const rate = getAlmaFeeRate(total, currentNbEch);
-      const fees = Math.round(total * rate);
-      const fmtEur = (v) => v.toLocaleString('fr-FR') + ' \u20ac';
-      badge.textContent = 'Frais Alma : +' + (rate * 100).toFixed(2) + '% = +' + fmtEur(fees) + ' \u2192 Total client : ' + fmtEur(total + fees);
+      const fees = rc(total * rate);
+      const fmtEur = (v) => v.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' \u20ac';
+      badge.textContent = 'Frais Alma : +' + (rate * 100).toFixed(2) + '% = +' + fmtEur(fees) + ' \u2192 Total client : ' + fmtEur(rc(total + fees));
       badge.style.display = 'block';
     } else {
       badge.style.display = 'none';

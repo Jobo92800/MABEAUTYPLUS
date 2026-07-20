@@ -345,7 +345,7 @@ export const InstallmentsCalculator: React.FC<InstallmentsCalculatorProps> = ({ 
 
   const total = useMemo(() => computeTotal(inputs), [inputs]);
   const activeCount = paymentMode === 'alma' ? almaCount : nbEch;
-  const almaFees = useMemo(() => paymentMode === 'alma' ? Math.round(total * getAlmaFeeRate(total, almaCount)) : 0, [paymentMode, total, almaCount]);
+  const almaFees = useMemo(() => paymentMode === 'alma' ? rc(total * getAlmaFeeRate(total, almaCount)) : 0, [paymentMode, total, almaCount]);
   const payments = useMemo(() =>
     paymentMode === 'alma'
       ? computeAlmaInstallments(total, almaCount)
