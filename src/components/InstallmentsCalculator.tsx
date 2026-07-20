@@ -225,7 +225,9 @@ const rc = (v: number) => Math.round(v * 100) / 100;
 function computeAlmaInstallments(total: number, n: number): number[] {
   if (total === 0) return Array(n).fill(0);
   const rate = getAlmaFeeRate(total, n);
-  const fees = rc(total * rate);
+  // 2x/3x/4x: exclusive fee (fee = principal × rate)
+  // 10x/12x: inclusive fee (Alma applies rate on total paid, i.e. fee = principal × rate / (1 − rate))
+  const fees = n <= 4 ? rc(total * rate) : rc(total * rate / (1 - rate));
   const totalWithFees = rc(total + fees);
   if (n <= 4) {
     const base = rc(total / n);
@@ -345,7 +347,11 @@ export const InstallmentsCalculator: React.FC<InstallmentsCalculatorProps> = ({ 
 
   const total = useMemo(() => computeTotal(inputs), [inputs]);
   const activeCount = paymentMode === 'alma' ? almaCount : nbEch;
-  const almaFees = useMemo(() => paymentMode === 'alma' ? rc(total * getAlmaFeeRate(total, almaCount)) : 0, [paymentMode, total, almaCount]);
+  const almaFees = useMemo(() => {
+    if (paymentMode !== 'alma') return 0;
+    const rate = getAlmaFeeRate(total, almaCount);
+    return almaCount <= 4 ? rc(total * rate) : rc(total * rate / (1 - rate));
+  }, [paymentMode, total, almaCount]);
   const payments = useMemo(() =>
     paymentMode === 'alma'
       ? computeAlmaInstallments(total, almaCount)
