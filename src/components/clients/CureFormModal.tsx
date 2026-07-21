@@ -619,12 +619,18 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
     return 0;
   }
 
+  function getAlmaEffectiveRate(total, n) {
+    const rate = getAlmaFeeRate(total, n);
+    if (n <= 4) return rate;
+    if (n === 10 && total <= 3333) return 0.069488;
+    return rate / (1 - rate);
+  }
+
   const rc = (v) => Math.round(v * 100) / 100;
 
   function computeAlmaInstallments(total, n) {
     if (total === 0) return Array(n).fill(0);
-    const rate = getAlmaFeeRate(total, n);
-    const fees = n <= 4 ? rc(total * rate) : rc(total * rate / (1 - rate));
+    const fees = rc(total * getAlmaEffectiveRate(total, n));
     const totalWithFees = rc(total + fees);
     if (n <= 4) {
       const base = rc(total / n);
@@ -680,7 +686,7 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
     const total = getTotalNumeric();
     if (currentMode === 'alma' && total > 0) {
       const rate = getAlmaFeeRate(total, currentNbEch);
-      const fees = currentNbEch <= 4 ? rc(total * rate) : rc(total * rate / (1 - rate));
+      const fees = rc(total * getAlmaEffectiveRate(total, currentNbEch));
       const fmtEur = (v) => v.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' \u20ac';
       badge.textContent = 'Frais Alma : +' + (rate * 100).toFixed(2) + '% = +' + fmtEur(fees) + ' \u2192 Total client : ' + fmtEur(rc(total + fees));
       badge.style.display = 'block';
