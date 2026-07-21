@@ -5,6 +5,9 @@ import { getClients } from '../../services/database';
 import { utils, writeFile } from 'xlsx';
 import type { Client } from '../../services/database';
 import ClientList from '../../components/clients/ClientList';
+import { THERAPISTS_BY_CENTER } from '../../components/PaymentForm';
+import { db } from '../../services/firebase';
+import { collection, getDocs } from 'firebase/firestore';
 
 type SortMode = 'recent' | 'old' | 'alpha-asc' | 'alpha-desc';
 
@@ -23,6 +26,7 @@ const ClientsPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [sortMode, setSortMode] = useState<SortMode>('recent');
   const [therapistFilter, setTherapistFilter] = useState<string>('');
+  const [paymentTherapists, setPaymentTherapists] = useState<Record<string, string[]>>({});
 
   const fetchClients = async () => {
     if (!centerId) return;
@@ -48,6 +52,25 @@ const ClientsPage = () => {
     fetchClients();
   }, [centerId]);
 
+  useEffect(() => {
+    const fetchPaymentTherapists = async () => {
+      try {
+        const snap = await getDocs(collection(db, 'payments'));
+        const map: Record<string, string[]> = {};
+        snap.forEach((d) => {
+          const data = d.data();
+          if (Array.isArray(data.therapists) && data.therapists.length > 0) {
+            map[d.id] = data.therapists;
+          }
+        });
+        setPaymentTherapists(map);
+      } catch (err) {
+        console.error('Error fetching payment therapists:', err);
+      }
+    };
+    fetchPaymentTherapists();
+  }, [centerId]);
+
   const handleExportExcel = () => {
     if (!clients?.length) return;
 
@@ -71,16 +94,20 @@ const ClientsPage = () => {
   };
 
   const therapists = useMemo(() => {
-    const set = new Set<string>();
-    clients.forEach((c) => { if (c.therapist?.trim()) set.add(c.therapist.trim()); });
-    return Array.from(set).sort((a, b) => a.localeCompare(b, 'fr'));
-  }, [clients]);
+    if (!centerId) return [];
+    return THERAPISTS_BY_CENTER[centerId] || [];
+  }, [centerId]);
 
   const filteredClients = useMemo(() => {
     let result = [...clients];
 
     if (therapistFilter) {
-      result = result.filter((c) => (c.therapist || '') === therapistFilter);
+      result = result.filter((c) => {
+        const fromPayments = paymentTherapists[c.id!] || [];
+        if (fromPayments.length > 0) return fromPayments.includes(therapistFilter);
+        const fromField = (c.therapist || '').split(',').map((t) => t.trim());
+        return fromField.includes(therapistFilter);
+      });
     }
 
     if (searchQuery.trim()) {
@@ -108,7 +135,7 @@ const ClientsPage = () => {
     }
 
     return result;
-  }, [clients, searchQuery, sortMode, therapistFilter]);
+  }, [clients, searchQuery, sortMode, therapistFilter, paymentTherapists]);
 
   if (loading) {
     return (

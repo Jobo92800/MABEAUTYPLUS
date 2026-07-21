@@ -83,7 +83,7 @@ const TREATMENT_LABELS: Record<string, string> = {
   'psio': 'Psio'
 };
 
-const THERAPISTS_BY_CENTER: Record<string, string[]> = {
+export const THERAPISTS_BY_CENTER: Record<string, string[]> = {
   'grau-du-roi': ['Marie', 'Fanny', 'Nadia', 'Stéphanie'],
   'le-cres': ['Alexandra', 'Paola', 'Malvina'],
   'serignant': ['Caroll', 'Aude', 'Marie-san'],
