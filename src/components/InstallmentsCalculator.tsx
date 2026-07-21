@@ -335,7 +335,7 @@ interface InstallmentsCalculatorProps {
   isOpen: boolean;
   onClose: () => void;
   clientName?: string;
-  onValidate?: (data: { total: number; installments: number[]; careServiceIds: string[]; careServicesWithSessions: Array<{ id: string; sessions: string }> }) => void;
+  onValidate?: (data: { total: number; installments: number[]; careServiceIds: string[]; careServicesWithSessions: Array<{ id: string; sessions: string }>; paymentMode: 'standard' | 'alma' }) => void;
 }
 
 export const InstallmentsCalculator: React.FC<InstallmentsCalculatorProps> = ({ isOpen, onClose, clientName = "", onValidate }) => {
@@ -372,7 +372,7 @@ export const InstallmentsCalculator: React.FC<InstallmentsCalculatorProps> = ({ 
   const handleValidate = () => {
     if (onValidate && total > 0) {
       const careServicesWithSessions = detectCareServicesWithSessions(inputs);
-      onValidate({ total, installments: payments, careServiceIds: detectCareServices(inputs), careServicesWithSessions });
+      onValidate({ total, installments: payments, careServiceIds: detectCareServices(inputs), careServicesWithSessions, paymentMode });
       onClose();
     }
   };

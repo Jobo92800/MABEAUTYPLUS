@@ -451,7 +451,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
     return 'bg-red-50 border-red-200';
   };
 
-  const handleCalculatorValidate = async (data: { total: number; installments: number[]; careServiceIds: string[]; careServicesWithSessions: Array<{ id: string; sessions: string }> }) => {
+  const handleCalculatorValidate = async (data: { total: number; installments: number[]; careServiceIds: string[]; careServicesWithSessions: Array<{ id: string; sessions: string }>; paymentMode: 'standard' | 'alma' }) => {
     const categoryIdToUpdate = activeCategoryId || categories[0]?.id;
 
     const updatedCategories = categories.map(cat => {
@@ -476,14 +476,23 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
           ...cat,
           careServices: [...updatedExisting, ...newServices],
           totalAmount: data.total.toString(),
-          installments: data.installments.map((amount, index) => ({
-            amount: amount.toString(),
-            date: '',
-            purpose: index === 0 ? 'Première échéance' : `Échéance ${index + 1}`,
-            method: '',
-            isPaid: false,
-            isGiven: false
-          }))
+          installments: data.paymentMode === 'alma'
+            ? [{
+                amount: data.total.toString(),
+                date: '',
+                purpose: 'Règlement Alma',
+                method: 'alma',
+                isPaid: false,
+                isGiven: false
+              }]
+            : data.installments.map((amount, index) => ({
+                amount: amount.toString(),
+                date: '',
+                purpose: index === 0 ? 'Première échéance' : `Échéance ${index + 1}`,
+                method: '',
+                isPaid: false,
+                isGiven: false
+              }))
         };
       }
       return cat;
