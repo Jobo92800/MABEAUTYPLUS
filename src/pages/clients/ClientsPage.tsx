@@ -1,10 +1,19 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { PlusIcon, Download } from 'lucide-react';
+import { Plus as PlusIcon, Download, ArrowUpDown, Filter, X } from 'lucide-react';
 import { getClients } from '../../services/database';
 import { utils, writeFile } from 'xlsx';
 import type { Client } from '../../services/database';
 import ClientList from '../../components/clients/ClientList';
+
+type SortMode = 'recent' | 'old' | 'alpha-asc' | 'alpha-desc';
+
+const SORT_OPTIONS: { value: SortMode; label: string }[] = [
+  { value: 'recent', label: 'Plus récent au plus ancien' },
+  { value: 'old', label: 'Plus ancien au plus récent' },
+  { value: 'alpha-asc', label: 'Alphabétique (A → Z)' },
+  { value: 'alpha-desc', label: 'Alphabétique (Z → A)' },
+];
 
 const ClientsPage = () => {
   const { centerId } = useParams<{ centerId: string }>();
@@ -12,6 +21,8 @@ const ClientsPage = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [sortMode, setSortMode] = useState<SortMode>('recent');
+  const [therapistFilter, setTherapistFilter] = useState<string>('');
 
   const fetchClients = async () => {
     if (!centerId) return;
@@ -59,20 +70,45 @@ const ClientsPage = () => {
     writeFile(wb, 'clients.xlsx');
   };
 
-  const filteredClients = useMemo(() => {
-    if (!clients) return [];
-    if (!searchQuery.trim()) return clients;
+  const therapists = useMemo(() => {
+    const set = new Set<string>();
+    clients.forEach((c) => { if (c.therapist?.trim()) set.add(c.therapist.trim()); });
+    return Array.from(set).sort((a, b) => a.localeCompare(b, 'fr'));
+  }, [clients]);
 
-    const query = searchQuery.toLowerCase().trim();
-    return clients.filter((client) => {
-      return (
+  const filteredClients = useMemo(() => {
+    let result = [...clients];
+
+    if (therapistFilter) {
+      result = result.filter((c) => (c.therapist || '') === therapistFilter);
+    }
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      result = result.filter((client) =>
         client.firstName?.toLowerCase().includes(query) ||
         client.lastName?.toLowerCase().includes(query) ||
         client.email?.toLowerCase().includes(query) ||
         client.phone?.toLowerCase().includes(query)
       );
-    });
-  }, [clients, searchQuery]);
+    }
+
+    const fullName = (c: Client) => `${c.firstName || ''} ${c.lastName || ''}`.toLowerCase();
+    const byDate = (a: Client, b: Client) => {
+      const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return ta - tb;
+    };
+
+    switch (sortMode) {
+      case 'recent': result.sort((a, b) => byDate(b, a)); break;
+      case 'old': result.sort(byDate); break;
+      case 'alpha-asc': result.sort((a, b) => fullName(a).localeCompare(fullName(b), 'fr')); break;
+      case 'alpha-desc': result.sort((a, b) => fullName(b).localeCompare(fullName(a), 'fr')); break;
+    }
+
+    return result;
+  }, [clients, searchQuery, sortMode, therapistFilter]);
 
   if (loading) {
     return (
@@ -132,8 +168,8 @@ const ClientsPage = () => {
 
         {/* Search and List Container */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Search Bar */}
-          <div className="relative mb-6">
+          {/* Search Bar + Sort + Filter */}
+          <div className="relative mb-4">
             <input
               type="text"
               value={searchQuery}
@@ -143,6 +179,53 @@ const ClientsPage = () => {
                 transition-all duration-200"
               placeholder="Rechercher un client..."
             />
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 mb-6">
+            <div className="relative">
+              <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+              <select
+                value={sortMode}
+                onChange={(e) => setSortMode(e.target.value as SortMode)}
+                className="appearance-none pl-9 pr-8 py-2 text-sm rounded-full border border-brand-blue/20 bg-white/80 backdrop-blur-sm
+                  text-gray-700 focus:outline-none focus:border-brand-pink focus:ring-1 focus:ring-brand-pink
+                  transition-all duration-200 cursor-pointer"
+              >
+                {SORT_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="relative">
+              <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+              <select
+                value={therapistFilter}
+                onChange={(e) => setTherapistFilter(e.target.value)}
+                className="appearance-none pl-9 pr-8 py-2 text-sm rounded-full border border-brand-blue/20 bg-white/80 backdrop-blur-sm
+                  text-gray-700 focus:outline-none focus:border-brand-pink focus:ring-1 focus:ring-brand-pink
+                  transition-all duration-200 cursor-pointer"
+              >
+                <option value="">Tous les thérapeutes</option>
+                {therapists.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </div>
+
+            {(sortMode !== 'recent' || therapistFilter) && (
+              <button
+                onClick={() => { setSortMode('recent'); setTherapistFilter(''); }}
+                className="flex items-center gap-1 px-3 py-2 text-xs rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+              >
+                <X className="h-3 w-3" />
+                Réinitialiser
+              </button>
+            )}
+
+            <span className="ml-auto text-sm text-gray-500">
+              {filteredClients.length} client{filteredClients.length > 1 ? 's' : ''}
+            </span>
           </div>
 
           {/* Clients List */}
