@@ -85,7 +85,7 @@ const TREATMENT_LABELS: Record<string, string> = {
 
 export const THERAPISTS_BY_CENTER: Record<string, string[]> = {
   'grau-du-roi': ['Marie', 'Fanny', 'Nadia', 'Stéphanie'],
-  'le-cres': ['Alexandra', 'Paola', 'Malvina'],
+  'le-cres': ['Alexandra', 'Paola', 'Malvina', 'Flora'],
   'serignant': ['Caroll', 'Aude', 'Marie-san'],
   'cabestany': ['Audrey', 'Sara', 'Alexandra C', 'Marine'],
   'avignon': ['Alexandra 2', 'Laura']
