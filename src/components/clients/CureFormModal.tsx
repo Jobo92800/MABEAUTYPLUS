@@ -424,9 +424,11 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
       questions: [
         { id: 'ishape-mb',        label: 'M\u00e9tabolisme bas' },
         { id: 'ishape-muscu',     label: 'Masse musculaire faible' },
-        { id: 'ishape-ventre',    label: 'Ventre qui tombe' },
+        { id: 'ishape-ventre',    label: 'Ventre rel\u00e2ch\u00e9e' },
         { id: 'ishape-atonicite', label: 'Atonicit\u00e9 musculaire' },
-        { id: 'ishape-cellulite', label: 'Cellulite' }
+        { id: 'ishape-cellulite', label: 'Cellulite' },
+        { id: 'ishape-2sem',      label: '2 s\u00e9ances par semaine', special: 'double' },
+        { id: 'ishape-souhaite',  label: 'Souhaite la prestation', special: 'force' }
       ]
     },
     presso: {
@@ -434,10 +436,12 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
       benefits: ["\u2193 R\u00e9tention d'eau \u2014 l\u00e9g\u00e8ret\u00e9 imm\u00e9diate", 'Am\u00e9liore transit, \u00e9limination & constipation', '\u00c9limination des d\u00e9chets m\u00e9taboliques', 'Drainage & circulation boost\u00e9s'],
       questions: [
         { id: 'presso-eau',          label: "R\u00e9tention d'eau" },
-        { id: 'presso-circulation',  label: 'Mauvaise circulation' },
+        { id: 'presso-circulation',  label: 'Mauvaise circulation / jambes lourdes' },
         { id: 'presso-constipation', label: 'Constipation' },
-        { id: 'presso-teint',        label: 'Teint terne' },
-        { id: 'presso-toxines',      label: "Sensation d'encombrement / toxines" }
+        { id: 'presso-teint',        label: 'Digestion difficile / sensation de lourdeur' },
+        { id: 'presso-toxines',      label: "Sensation de gonflement" },
+        { id: 'presso-2sem',        label: '2 s\u00e9ances par semaine', special: 'double' },
+        { id: 'presso-souhaite',    label: 'Souhaite la prestation', special: 'force' }
       ]
     },
     relax: {
@@ -460,9 +464,10 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
       const card = document.createElement('div');
       card.className = 'presta-card';
       card.dataset.key = key;
-      let questionsHTML = p.questions.map(q =>
-        '<label class="check-item"><input type="checkbox" id="' + q.id + '" data-presta="' + key + '" data-type="single" onchange="updateScores()"><span>' + q.label + '</span></label>'
-      ).join('');
+      let questionsHTML = p.questions.map(q => {
+        const specialAttr = q.special ? ' data-special="' + q.special + '"' : '';
+        return '<label class="check-item"><input type="checkbox" id="' + q.id + '" data-presta="' + key + '" data-type="single"' + specialAttr + ' onchange="updateScores()"><span>' + q.label + '</span></label>';
+      }).join('');
       let poidsHTML = '';
       if (p.poidsGroup) {
         poidsHTML = '<div class="check-group"><div class="check-group-label">' + p.poidsGroup.label + '</div>' +
@@ -479,9 +484,12 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
 
   function calculateScores() {
     const scores = { luxo: 0, ishape: 0, presso: 0, relax: 0 };
+    const flags = { double: {}, force: {} };
     let poidsSessions = null, poidsLabel = null;
     document.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
-      if (cb.dataset.presta) scores[cb.dataset.presta]++;
+      if (!cb.dataset.presta) return;
+      if (cb.dataset.special) { flags[cb.dataset.special][cb.dataset.presta] = true; return; }
+      scores[cb.dataset.presta]++;
     });
     const poidsChecked = document.querySelector('input[data-type="poids"]:checked');
     if (poidsChecked) {
@@ -490,11 +498,17 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
       const opt = prestations.luxo.poidsGroup.options.find(o => o.id === poidsChecked.id);
       if (opt) poidsLabel = opt.label;
     }
-    return { scores, poidsSessions, poidsLabel };
+    return { scores, poidsSessions, poidsLabel, flags };
+  }
+
+  function getSessionCount(key, baseCount, flags) {
+    let count = key === 'relax' ? Math.min(baseCount, 10) : baseCount;
+    if (flags && flags.double[key]) count *= 2;
+    return count;
   }
 
   function updateScores() {
-    const { scores, poidsSessions, poidsLabel } = calculateScores();
+    const { scores, poidsSessions, poidsLabel, flags } = calculateScores();
     Object.entries(scores).forEach(([key, score]) => {
       const badge = document.getElementById('badge-' + key);
       const card = document.querySelector('.presta-card[data-key="' + key + '"]');
@@ -505,11 +519,11 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
       else if (score >= 3) { badge.classList.add('recommended'); card.classList.add('has-score'); }
       else if (score >= 2) { badge.classList.add('active'); card.classList.add('has-score'); }
     });
-    renderResults(scores, poidsSessions, poidsLabel);
+    renderResults(scores, poidsSessions, poidsLabel, flags);
   }
 
-  function renderResults(scores, poidsSessions, poidsLabel) {
-    const recommended = Object.entries(scores).filter(([, s]) => s >= 2).sort((a, b) => b[1] - a[1]);
+  function renderResults(scores, poidsSessions, poidsLabel, flags) {
+    const recommended = Object.entries(scores).filter(([k, s]) => s >= 2 || flags.force[k]).sort((a, b) => b[1] - a[1]);
     const cureGrid = document.getElementById('cureGrid');
     const results = document.getElementById('results');
     const emptyState = document.getElementById('emptyState');
@@ -534,11 +548,11 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
         '<div class="cure-status ' + statusClass + '">' + statusText + '</div>' +
         '<div class="cure-tag">' + p.tag + '</div>' +
         '<div class="cure-name">' + p.name + '</div>' +
-        '<div class="cure-sessions"><span class="cure-sessions-num">' + (key === 'relax' ? Math.min(sessionsCount, 10) : sessionsCount) + '</span><span class="cure-sessions-label">s\u00e9ances</span></div>' +
+        '<div class="cure-sessions"><span class="cure-sessions-num">' + getSessionCount(key, sessionsCount, flags) + '</span><span class="cure-sessions-label">s\u00e9ances</span></div>' +
         '<ul class="cure-benefits">' + p.benefits.map(b => '<li>' + b + '</li>').join('') + '</ul>';
       cureGrid.appendChild(card);
     });
-    renderPricingRows(recommended, sessionsCount);
+    renderPricingRows(recommended, sessionsCount, flags);
   }
 
   const DEFAULT_PRICE = 49;
@@ -547,13 +561,13 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
     ishape: { name: 'Tenue I-Shape', detail: 'Tenue technique d\u00e9di\u00e9e \u00e0 la cure I-Shape', price: 60 }
   };
 
-  function renderPricingRows(recommended, sessionsCount) {
+  function renderPricingRows(recommended, sessionsCount, flags) {
     const rows = document.getElementById('priceRows');
     const keys = recommended.map(([k]) => k);
     let html = recommended.map(([key]) => {
       const p = prestations[key];
       return '<div class="price-row"><div class="price-row-label"><span class="price-row-name">' + p.name + '</span><span class="price-row-detail" style="color:var(--ink-soft);">' + DEFAULT_PRICE + ' \u20ac / s\u00e9ance</span></div>' +
-        '<div style="display:flex;align-items:center;gap:8px;"><input type="number" class="sessions-input" id="sessions-' + key + '" min="1" step="1" oninput="updateTotal()" value="' + (key === 'relax' ? Math.min(sessionsCount, 10) : sessionsCount) + '"><span style="font-size:14px;color:var(--ink-soft);">s\u00e9ances</span></div></div>';
+        '<div style="display:flex;align-items:center;gap:8px;"><input type="number" class="sessions-input" id="sessions-' + key + '" min="1" step="1" oninput="updateTotal()" value="' + getSessionCount(key, sessionsCount, flags) + '"><span style="font-size:14px;color:var(--ink-soft);">s\u00e9ances</span></div></div>';
     }).join('');
     const addons = [];
     if (keys.includes('luxo'))   addons.push(ADDONS.luxo);
