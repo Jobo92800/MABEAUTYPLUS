@@ -276,6 +276,8 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
   .save-btn:active { transform: translateY(0); }
   .save-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
   .save-note { font-size: 12px; color: var(--ink-soft); text-align: center; margin-top: 10px; }
+  .bilan-seul-btn { padding: 12px 28px; border-radius: 100px; border: 2px solid var(--gold); background: var(--bg); color: var(--gold); font-family: 'Manrope', sans-serif; font-size: 14px; font-weight: 600; letter-spacing: 0.06em; cursor: pointer; transition: all 0.2s; }
+  .bilan-seul-btn:hover { background: var(--gold); color: white; transform: translateY(-1px); box-shadow: 0 6px 18px -6px rgba(50,172,222,0.5); }
   @media print {
     .client-bar, .form-grid, .legend, .results-header, .reset-btn { display: none !important; }
     body { background: white; }
@@ -374,6 +376,10 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
         <span class="ech-verify-label">✓ Total vérifié</span>
         <span class="ech-verify-amount" id="echVerifyAmount"></span>
       </div>
+    </div>
+    <!-- BOUTON BILAN SEUL -->
+    <div style="margin-top:24px; text-align:center;">
+      <button class="bilan-seul-btn" onclick="bilanSeul()">Bilan Seul — 87 €</button>
     </div>
     <!-- BOUTON ENREGISTRER -->
     <div class="save-section" id="saveSection">
@@ -929,6 +935,20 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
       paymentMethod: isAlma ? 'alma' : 'standard',
     };
     window.parent.postMessage({ type: 'SAVE_CURE_DATA', payload }, '*');
+  }
+
+  function bilanSeul() {
+    document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+    document.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
+    updateScores();
+    document.getElementById('results').classList.remove('visible');
+    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('printBtn').classList.remove('visible');
+    document.getElementById('priceRows').innerHTML = '<div class="price-row" data-fixed-price="87"><div class="price-row-label"><span class="price-row-name">Bilan</span><span class="price-row-detail">Bilan seul sans cure</span></div><div class="price-row-amount">87 \u20ac</div></div>';
+    document.getElementById('priceTotal').textContent = '87 \u20ac';
+    document.getElementById('pricingLocked').classList.add('hide');
+    document.getElementById('pricingRevealed').classList.add('show');
+    renderEcheancier();
   }
 
   function revealPricing() {
