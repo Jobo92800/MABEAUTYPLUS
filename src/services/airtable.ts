@@ -282,7 +282,7 @@ export const updateClientAcompteInAirtable = async (
     const updateResponse = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_ID}/${recordId}`, {
       method: 'PATCH',
       headers,
-      body: JSON.stringify({ fields: { 'Acompte': acompteAmount } })
+      body: JSON.stringify({ fields: { 'Acompte': String(acompteAmount) } })
     });
 
     if (!updateResponse.ok) {
