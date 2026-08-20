@@ -4,7 +4,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 import { db } from '../services/firebase';
 import { PAYMENT_COLLECTION } from '../services/collections';
-import { getClientPaymentDataFromAirtable, updateClientTherapistInAirtable, updateClientMontantCureInAirtable, updateClientMontantCureByIndexInAirtable, updateClientAvoirInAirtable, updateClientSoinsInAirtable } from '../services/airtable';
+import { getClientPaymentDataFromAirtable, updateClientTherapistInAirtable, updateClientMontantCureInAirtable, updateClientMontantCureByIndexInAirtable, updateClientAcompteInAirtable, updateClientAvoirInAirtable, updateClientSoinsInAirtable } from '../services/airtable';
 import { InstallmentsCalculator } from './InstallmentsCalculator';
 
 interface PaymentLine {
@@ -241,6 +241,16 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ clientId, formData, prefix, c
     });
     setCategories(newCategories);
     savePaymentData(newCategories);
+
+    if (field === 'amount' && clientFirstName && clientLastName && centerId) {
+      const acompteAmount = newCategories.reduce(
+        (total, category) => total + (parseFloat(category.deposit?.amount || '') || 0),
+        0
+      );
+      updateClientAcompteInAirtable(clientFirstName, clientLastName, centerId, acompteAmount).catch((error) => {
+        console.error('[PaymentForm] Erreur synchronisation Acompte:', error);
+      });
+    }
   };
 
   const handlePaymentLineChange = (categoryId: string, index: number, field: keyof PaymentLine, value: any) => {

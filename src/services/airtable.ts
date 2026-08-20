@@ -251,6 +251,50 @@ export const updateClientMontantCureByIndexInAirtable = async (
   }
 };
 
+export const updateClientAcompteInAirtable = async (
+  firstName: string,
+  lastName: string,
+  centerId: string,
+  acompteAmount: number
+): Promise<void> => {
+  try {
+    const centerNames: Record<string, string> = {
+      'grau-du-roi': 'Le Grau-du-Roi',
+      'le-cres': 'Le Crès',
+      'serignan': 'Sérignan',
+      'cabestany': 'Cabestany',
+      'avignon': 'Avignon'
+    };
+    const centerName = centerNames[centerId] || centerId;
+    const filterFormula = `AND({Prénom}='${firstName}', {Nom}='${lastName}', {Centre}='${centerName}')`;
+    const searchUrl = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_ID}?filterByFormula=${encodeURIComponent(filterFormula)}`;
+    const headers = {
+      'Authorization': `Bearer ${AIRTABLE_ACCESS_TOKEN}`,
+      'Content-Type': 'application/json'
+    };
+
+    const getResponse = await fetch(searchUrl, { headers });
+    if (!getResponse.ok) return;
+    const data = await getResponse.json();
+    if (!data.records || data.records.length === 0) return;
+
+    const recordId = data.records[0].id;
+    const updateResponse = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_ID}/${recordId}`, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify({ fields: { 'Acompte': acompteAmount } })
+    });
+
+    if (!updateResponse.ok) {
+      const errorData = await updateResponse.json();
+      throw new Error(`Airtable API error: ${JSON.stringify(errorData)}`);
+    }
+  } catch (error) {
+    console.error('[Airtable] Erreur mise à jour Acompte:', error);
+    throw error;
+  }
+};
+
 export const updateClientAvoirInAirtable = async (
   firstName: string,
   lastName: string,
