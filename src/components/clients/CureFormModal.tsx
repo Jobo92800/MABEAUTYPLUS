@@ -606,6 +606,7 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
       if (detail) detail.textContent = DEFAULT_PRICE + ' \u20ac / s\u00e9ance';
     });
     document.querySelectorAll('[data-fixed-price]').forEach(el => {
+      if (el.style.display === 'none') return;
       const addonName = el.querySelector('.addon-name')?.textContent || '';
       const isTenue = addonName.toLowerCase().includes('tenue');
       const isGuide = addonName.toLowerCase().includes('guide');
@@ -779,6 +780,7 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
       if (key === 'luxo') luxoSessions = count;
     });
     document.querySelectorAll('[data-fixed-price]').forEach(el => {
+      if (el.style.display === 'none') return;
       const addonName = el.querySelector('.addon-name')?.textContent || '';
       const isTenue = addonName.toLowerCase().includes('tenue');
       const isGuide = addonName.toLowerCase().includes('guide');
@@ -883,6 +885,7 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
     'psio':          'Psio',
     'guide':         'Guide',
     'tenue':         'Tenue',
+    'bilan':         'Bilan',
   };
 
   function getActiveTreatments() {
@@ -901,14 +904,16 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
         });
       }
     });
-    // Addons (guide, tenue)
+    // Addons (guide, tenue) and Bilan seul
     document.querySelectorAll('[data-fixed-price]').forEach(el => {
       const addonName = el.querySelector('.addon-name')?.textContent || '';
+      const rowName = el.querySelector('.price-row-name')?.textContent || '';
       let careServiceId = null;
       if (addonName.toLowerCase().includes('guide')) careServiceId = 'guide';
       else if (addonName.toLowerCase().includes('tenue')) careServiceId = 'tenue';
+      else if (rowName.toLowerCase().includes('bilan')) careServiceId = 'bilan';
       if (careServiceId) {
-        results.push({ name: addonName, sessions: 1, pricePerSession: parseFloat(el.dataset.fixedPrice) || 0, careServiceId });
+        results.push({ name: rowName || addonName, sessions: 1, pricePerSession: parseFloat(el.dataset.fixedPrice) || 0, careServiceId });
       }
     });
     return results;
@@ -941,14 +946,17 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
     document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
     document.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
     updateScores();
-    document.getElementById('results').classList.remove('visible');
+    document.getElementById('results').classList.add('visible');
     document.getElementById('emptyState').style.display = 'none';
     document.getElementById('printBtn').classList.remove('visible');
+    document.getElementById('cureGrid').innerHTML = '';
+    document.getElementById('resultsSub').innerHTML = '<strong>Bilan seul</strong> — sans cure';
     document.getElementById('priceRows').innerHTML = '<div class="price-row" data-fixed-price="87"><div class="price-row-label"><span class="price-row-name">Bilan</span><span class="price-row-detail">Bilan seul sans cure</span></div><div class="price-row-amount">87 \u20ac</div></div>';
-    document.getElementById('priceTotal').textContent = '87 \u20ac';
     document.getElementById('pricingLocked').classList.add('hide');
     document.getElementById('pricingRevealed').classList.add('show');
-    renderEcheancier();
+    currentNbEch = 1;
+    setMode('standard');
+    updateTotal();
   }
 
   function revealPricing() {
