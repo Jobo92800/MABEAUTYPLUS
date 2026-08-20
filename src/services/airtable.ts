@@ -4,7 +4,7 @@ import { supabase } from './supabase';
 // Configuration Airtable
 const AIRTABLE_ACCESS_TOKEN = 'patl2Z5JpLllHOn7G.eb220d4d725d40eb8e7e748618208cc33c853025400bada00df48dbf37ff41f8';
 const AIRTABLE_BASE_ID = 'appI97jEL2mSCg3Wc';
-const AIRTABLE_TABLE_ID = 'Clients';
+const AIRTABLE_TABLE_ID = 'tblfqxwGePzeiWqqY';
 
 interface AirtablePaymentData {
   ruleName?: string;
