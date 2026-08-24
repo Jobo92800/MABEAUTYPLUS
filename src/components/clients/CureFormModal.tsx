@@ -60,7 +60,7 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aide à la vente — MaBeautyPlus</title>
+<title>Bilan & Cure personnalisée — MaBeautyPlus</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -298,7 +298,6 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
   <header class="header">
     <div class="brand-mark">MaBeauty<span style="color: var(--ink-soft);">+</span></div>
     <h1>Bilan & <em>Cure personnalisée</em></h1>
-    <p class="subtitle">Aide à la vente — Cochez les besoins identifiés lors du bilan pour générer la cure adaptée à votre cliente.</p>
     <div class="divider"></div>
   </header>
   <div class="client-bar">
