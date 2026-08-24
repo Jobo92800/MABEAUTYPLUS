@@ -60,7 +60,7 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bilan & Cure personnalisée — MaBeautyPlus</title>
+<title>Bilan & Cure personnalisée — MAbeautyplus</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -112,7 +112,7 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
   }
   .container { max-width: 1400px; margin: 0 auto; padding: 32px 24px 80px; }
   .header { text-align: center; padding: 24px 0 40px; position: relative; }
-  .brand-mark { font-family: 'Cormorant Garamond', serif; font-size: 13px; letter-spacing: 0.35em; color: var(--gold); text-transform: uppercase; margin-bottom: 12px; font-weight: 500; }
+  .brand-mark { font-family: 'Cormorant Garamond', serif; font-size: 13px; letter-spacing: 0.2em; color: var(--gold); margin-bottom: 12px; font-weight: 500; }
   .header h1 { font-family: 'Cormorant Garamond', serif; font-size: clamp(34px, 5vw, 52px); font-weight: 500; letter-spacing: -0.01em; line-height: 1.05; color: var(--ink); }
   .header h1 em { font-style: italic; color: var(--gold); }
   .header .subtitle { margin-top: 16px; font-size: 14px; color: var(--ink-soft); letter-spacing: 0.02em; max-width: 540px; margin-left: auto; margin-right: auto; }
@@ -296,7 +296,7 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
 <body>
 <div class="container">
   <header class="header">
-    <div class="brand-mark">MaBeauty<span style="color: var(--ink-soft);">+</span></div>
+    <div class="brand-mark">MAbeautyplus</div>
     <h1>Bilan & <em>Cure personnalisée</em></h1>
     <div class="divider"></div>
   </header>
@@ -1019,7 +1019,7 @@ const CureFormModal: React.FC<CureFormModalProps> = ({ clientId, clientName, onC
           ref={iframeRef}
           src={url}
           className="flex-1 w-full border-0"
-          title="Formulaire Cure MaBeautyPlus"
+          title="Formulaire Cure MAbeautyplus"
         />
       </div>
     </div>
