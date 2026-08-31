@@ -28,6 +28,12 @@ const TREATMENT_TO_CARE_SERVICE: Record<string, string> = {
 interface CurePayload extends ClientCureData {
   firstName?: string;
   lastName?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  postalCode?: string;
+  city?: string;
+  age?: number;
 }
 
 const NewClientPage = () => {
@@ -37,16 +43,27 @@ const NewClientPage = () => {
   const [showCureForm, setShowCureForm] = useState(false);
   const pendingCureRef = useRef<CurePayload | null>(null);
 
+  const setInputValue = (id: string, value: string | undefined) => {
+    if (value === undefined || value === null || value === '') return;
+    const input = document.getElementById(id) as HTMLInputElement | null;
+    if (!input) return;
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+    if (setter) setter.call(input, value);
+    else input.value = value;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  };
+
   const handleCureData = (payload: CurePayload) => {
     pendingCureRef.current = payload;
-    // Préremplir les champs firstName / lastName du formulaire principal
-    if (payload.firstName) {
-      const firstNameInput = document.getElementById('firstName') as HTMLInputElement | null;
-      if (firstNameInput) firstNameInput.value = payload.firstName;
-    }
-    if (payload.lastName) {
-      const lastNameInput = document.getElementById('lastName') as HTMLInputElement | null;
-      if (lastNameInput) lastNameInput.value = payload.lastName;
+    setInputValue('firstName', payload.firstName);
+    setInputValue('lastName', payload.lastName);
+    setInputValue('email', payload.email);
+    setInputValue('phone', payload.phone);
+    setInputValue('address', payload.address);
+    setInputValue('postalCode', payload.postalCode);
+    setInputValue('city', payload.city);
+    if (typeof payload.age === 'number' && Number.isFinite(payload.age)) {
+      setInputValue('age', String(payload.age));
     }
   };
 

@@ -6,7 +6,7 @@ import {
   saveEmpreinteBilan,
   type EmpreintePayload,
 } from '../../services/database/operations/empreinte';
-import { saveCureData } from '../../services/database';
+import { saveCureData, updateClientContactInfo } from '../../services/database';
 import type { ClientCureData } from '../../types/client';
 
 const PRIX_SEANCE = 59;
@@ -17,6 +17,12 @@ const DEFAULT_INSTALLMENTS = 4;
 interface EmpreinteCurePayload extends ClientCureData {
   firstName?: string;
   lastName?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  postalCode?: string;
+  city?: string;
+  age?: number;
   empreinte?: EmpreintePayload;
 }
 
@@ -177,18 +183,35 @@ const EmpreinteBilanModal: React.FC<EmpreinteBilanModalProps> = ({
       }
 
       const cureData = deriveCureData(payload);
+      const contact = payload.contact || ({} as EmpreintePayload['contact']);
+      const ageNumber = contact.age ? parseInt(contact.age, 10) : NaN;
+      const contactPatch = {
+        firstName: contact.prenom || payload.prenom || '',
+        lastName: contact.nom || '',
+        email: contact.email || '',
+        phone: contact.tel || '',
+        address: contact.adresse || '',
+        postalCode: contact.cp || '',
+        city: contact.ville || '',
+        age: Number.isFinite(ageNumber) ? ageNumber : undefined,
+      };
 
       if (!clientId) {
         onCureData?.({
           ...cureData,
-          firstName: payload.contact?.prenom || payload.prenom || '',
-          lastName: payload.contact?.nom || '',
+          ...contactPatch,
           empreinte: payload,
         });
         toast.success('Bilan enregistré. Il sera relié au client à sa création.');
         savingRef.current = false;
         onClose();
         return;
+      }
+
+      try {
+        await updateClientContactInfo(clientId, contactPatch);
+      } catch (err) {
+        console.error('Contact info update failed', err);
       }
 
       try {

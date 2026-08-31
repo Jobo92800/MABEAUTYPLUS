@@ -106,6 +106,33 @@ export const saveIShapeTenuSize = async (clientId: string, size: string): Promis
   await updateDoc(clientRef, { ishapeTenuSize: size, updatedAt: new Date().toISOString() });
 };
 
+export interface ClientContactPatch {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  postalCode?: string;
+  city?: string;
+  age?: number;
+}
+
+export const updateClientContactInfo = async (
+  clientId: string,
+  patch: ClientContactPatch,
+): Promise<void> => {
+  const clean: Record<string, unknown> = {};
+  Object.entries(patch).forEach(([key, value]) => {
+    if (value === undefined || value === null) return;
+    if (typeof value === 'string' && value.trim() === '') return;
+    if (typeof value === 'number' && !Number.isFinite(value)) return;
+    clean[key] = value;
+  });
+  if (Object.keys(clean).length === 0) return;
+  const clientRef = doc(db, 'clients', clientId);
+  await updateDoc(clientRef, { ...clean, updatedAt: new Date().toISOString() });
+};
+
 export const getIShapeTenuSize = async (clientId: string): Promise<string> => {
   const clientRef = doc(db, 'clients', clientId);
   const snap = await getDoc(clientRef);

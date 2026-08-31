@@ -803,7 +803,12 @@ const EditClientPage = () => {
       <div>
         {currentTab === 'info' && (
           <>
-            <ClientForm onSubmit={handleSubmit} initialData={clientData} isSubmitting={isSubmitting} />
+            <ClientForm
+              key={clientData?.client.updatedAt || 'initial'}
+              onSubmit={handleSubmit}
+              initialData={clientData}
+              isSubmitting={isSubmitting}
+            />
             {id && <CuresPanel clientId={id} />}
             {signedContracts.length > 0 && (
               <div className="mt-6 bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl overflow-hidden">
