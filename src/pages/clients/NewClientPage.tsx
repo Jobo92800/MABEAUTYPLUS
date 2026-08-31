@@ -1,10 +1,9 @@
 import React, { useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { Sparkles, Wand2 } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import ClientForm from '../../components/clients/ClientForm';
 import CureFormModal from '../../components/clients/CureFormModal';
-import EmpreinteBilanModal from '../../components/clients/EmpreinteBilanModal';
 import { saveClient, saveCureData } from '../../services/database';
 import { updateClientSoinsInAirtable } from '../../services/airtable';
 import type { ClientCureData } from '../../types/client';
@@ -29,12 +28,6 @@ const TREATMENT_TO_CARE_SERVICE: Record<string, string> = {
 interface CurePayload extends ClientCureData {
   firstName?: string;
   lastName?: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-  postalCode?: string;
-  city?: string;
-  age?: number;
 }
 
 const NewClientPage = () => {
@@ -42,30 +35,18 @@ const NewClientPage = () => {
   const { centerId } = useParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCureForm, setShowCureForm] = useState(false);
-  const [showEmpreinteForm, setShowEmpreinteForm] = useState(false);
   const pendingCureRef = useRef<CurePayload | null>(null);
-
-  const setInputValue = (id: string, value: string | undefined) => {
-    if (value === undefined || value === null || value === '') return;
-    const input = document.getElementById(id) as HTMLInputElement | null;
-    if (!input) return;
-    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
-    if (setter) setter.call(input, value);
-    else input.value = value;
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-  };
 
   const handleCureData = (payload: CurePayload) => {
     pendingCureRef.current = payload;
-    setInputValue('firstName', payload.firstName);
-    setInputValue('lastName', payload.lastName);
-    setInputValue('email', payload.email);
-    setInputValue('phone', payload.phone);
-    setInputValue('address', payload.address);
-    setInputValue('postalCode', payload.postalCode);
-    setInputValue('city', payload.city);
-    if (typeof payload.age === 'number' && Number.isFinite(payload.age)) {
-      setInputValue('age', String(payload.age));
+    // Préremplir les champs firstName / lastName du formulaire principal
+    if (payload.firstName) {
+      const firstNameInput = document.getElementById('firstName') as HTMLInputElement | null;
+      if (firstNameInput) firstNameInput.value = payload.firstName;
+    }
+    if (payload.lastName) {
+      const lastNameInput = document.getElementById('lastName') as HTMLInputElement | null;
+      if (lastNameInput) lastNameInput.value = payload.lastName;
     }
   };
 
@@ -119,34 +100,18 @@ const NewClientPage = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-gray-900">Nouveau Client</h1>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowCureForm(true)}
-            className="flex items-center rounded-full px-5 py-2 text-sm font-semibold text-white shadow-sm hover:shadow-md transition-all duration-200 bg-brand-pink"
-          >
-            <Sparkles className="h-4 w-4 mr-2" />
-            Formulaire Cure
-          </button>
-          <button
-            onClick={() => setShowEmpreinteForm(true)}
-            className="flex items-center rounded-full px-5 py-2 text-sm font-semibold text-white shadow-sm hover:shadow-md transition-all duration-200 bg-brand-blue"
-          >
-            <Wand2 className="h-4 w-4 mr-2" />
-            Nouvelle méthode
-          </button>
-        </div>
+        <button
+          onClick={() => setShowCureForm(true)}
+          className="flex items-center rounded-full px-5 py-2 text-sm font-semibold text-white shadow-sm hover:shadow-md transition-all duration-200 bg-brand-pink"
+        >
+          <Sparkles className="h-4 w-4 mr-2" />
+          Formulaire Cure
+        </button>
       </div>
       <ClientForm onSubmit={handleSubmit} centerId={centerId} />
       {showCureForm && (
         <CureFormModal
           onClose={() => setShowCureForm(false)}
-          onCureData={handleCureData}
-        />
-      )}
-      {showEmpreinteForm && (
-        <EmpreinteBilanModal
-          centerId={centerId}
-          onClose={() => setShowEmpreinteForm(false)}
           onCureData={handleCureData}
         />
       )}
