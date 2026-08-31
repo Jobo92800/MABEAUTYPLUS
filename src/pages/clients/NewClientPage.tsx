@@ -1,9 +1,10 @@
 import React, { useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Wand2 } from 'lucide-react';
 import ClientForm from '../../components/clients/ClientForm';
-import CureFormModal from '../../components/clients/EmpreinteBilanModal';
+import CureFormModal from '../../components/clients/CureFormModal';
+import EmpreinteBilanModal from '../../components/clients/EmpreinteBilanModal';
 import { saveClient, saveCureData } from '../../services/database';
 import { updateClientSoinsInAirtable } from '../../services/airtable';
 import type { ClientCureData } from '../../types/client';
@@ -41,6 +42,7 @@ const NewClientPage = () => {
   const { centerId } = useParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCureForm, setShowCureForm] = useState(false);
+  const [showEmpreinteForm, setShowEmpreinteForm] = useState(false);
   const pendingCureRef = useRef<CurePayload | null>(null);
 
   const setInputValue = (id: string, value: string | undefined) => {
@@ -117,19 +119,34 @@ const NewClientPage = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-gray-900">Nouveau Client</h1>
-        <button
-          onClick={() => setShowCureForm(true)}
-          className="flex items-center rounded-full px-5 py-2 text-sm font-semibold text-white shadow-sm hover:shadow-md transition-all duration-200 bg-brand-pink"
-        >
-          <Sparkles className="h-4 w-4 mr-2" />
-          Formulaire Cure
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowCureForm(true)}
+            className="flex items-center rounded-full px-5 py-2 text-sm font-semibold text-white shadow-sm hover:shadow-md transition-all duration-200 bg-brand-pink"
+          >
+            <Sparkles className="h-4 w-4 mr-2" />
+            Formulaire Cure
+          </button>
+          <button
+            onClick={() => setShowEmpreinteForm(true)}
+            className="flex items-center rounded-full px-5 py-2 text-sm font-semibold text-white shadow-sm hover:shadow-md transition-all duration-200 bg-brand-blue"
+          >
+            <Wand2 className="h-4 w-4 mr-2" />
+            Nouvelle méthode
+          </button>
+        </div>
       </div>
       <ClientForm onSubmit={handleSubmit} centerId={centerId} />
       {showCureForm && (
         <CureFormModal
-          centerId={centerId}
           onClose={() => setShowCureForm(false)}
+          onCureData={handleCureData}
+        />
+      )}
+      {showEmpreinteForm && (
+        <EmpreinteBilanModal
+          centerId={centerId}
+          onClose={() => setShowEmpreinteForm(false)}
           onCureData={handleCureData}
         />
       )}

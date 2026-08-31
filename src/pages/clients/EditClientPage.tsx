@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { User, Scale, Ruler, FileDown, Activity, Sparkles, Zap, Heart, Coffee, ArrowLeft, Pill, Brain, Droplet, MessageSquare, AlertTriangle, X, Ligature as FileSignature, CheckCircle, Eye } from 'lucide-react';
+import { User, Scale, Ruler, FileDown, Activity, Sparkles, Wand2, Zap, Heart, Coffee, ArrowLeft, Pill, Brain, Droplet, MessageSquare, AlertTriangle, X, Ligature as FileSignature, CheckCircle, Eye } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import ClientForm from '../../components/clients/ClientForm';
 import SessionsTab from '../../components/clients/SessionsTab';
@@ -22,7 +22,8 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../../services/firebase';
 import { PAYMENT_COLLECTION } from '../../services/collections';
 import { generateClientPDF } from '../../utils/pdfGenerator';
-import CureFormModal from '../../components/clients/EmpreinteBilanModal';
+import CureFormModal from '../../components/clients/CureFormModal';
+import EmpreinteBilanModal from '../../components/clients/EmpreinteBilanModal';
 import ClientNoteModal from '../../components/clients/ClientNoteModal';
 import ContractSignatureModal from '../../components/contract/ContractSignatureModal';
 import RuleSelectionModal from '../../components/contract/RuleSelectionModal';
@@ -273,6 +274,7 @@ const EditClientPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasExpiredComplements, setHasExpiredComplements] = useState(false);
   const [showCureForm, setShowCureForm] = useState(false);
+  const [showEmpreinteForm, setShowEmpreinteForm] = useState(false);
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [showExceptionModal, setShowExceptionModal] = useState(false);
   const [exceptionText, setExceptionText] = useState('');
@@ -608,6 +610,15 @@ const EditClientPage = () => {
         onSaved={() => fetchData()}
       />
     )}
+    {showEmpreinteForm && (
+      <EmpreinteBilanModal
+        clientId={id}
+        centerId={centerId}
+        clientName={clientData ? `${clientData.client.firstName} ${clientData.client.lastName}` : undefined}
+        onClose={() => setShowEmpreinteForm(false)}
+        onSaved={() => fetchData()}
+      />
+    )}
     <ClientNoteModal
       isOpen={showNoteModal}
       onClose={() => setShowNoteModal(false)}
@@ -686,6 +697,13 @@ const EditClientPage = () => {
             >
               <Sparkles className="h-4 w-4 mr-2" />
               Formulaire Cure
+            </button>
+            <button
+              onClick={() => setShowEmpreinteForm(true)}
+              className="flex items-center rounded-full px-5 py-2 text-sm font-semibold text-white shadow-sm hover:shadow-md transition-all duration-200 bg-brand-blue"
+            >
+              <Wand2 className="h-4 w-4 mr-2" />
+              Nouvelle méthode
             </button>
             <button
               onClick={handleDownloadPDF}
