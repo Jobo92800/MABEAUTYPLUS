@@ -22,7 +22,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../../services/firebase';
 import { PAYMENT_COLLECTION } from '../../services/collections';
 import { generateClientPDF } from '../../utils/pdfGenerator';
-import CureFormModal from '../../components/clients/CureFormModal';
+import CureFormModal from '../../components/clients/EmpreinteBilanModal';
 import ClientNoteModal from '../../components/clients/ClientNoteModal';
 import ContractSignatureModal from '../../components/contract/ContractSignatureModal';
 import RuleSelectionModal from '../../components/contract/RuleSelectionModal';
@@ -602,6 +602,7 @@ const EditClientPage = () => {
     {showCureForm && (
       <CureFormModal
         clientId={id}
+        centerId={centerId}
         clientName={clientData ? `${clientData.client.firstName} ${clientData.client.lastName}` : undefined}
         onClose={() => setShowCureForm(false)}
         onSaved={() => fetchData()}

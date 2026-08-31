@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { Sparkles } from 'lucide-react';
 import ClientForm from '../../components/clients/ClientForm';
-import CureFormModal from '../../components/clients/CureFormModal';
+import CureFormModal from '../../components/clients/EmpreinteBilanModal';
 import { saveClient, saveCureData } from '../../services/database';
 import { updateClientSoinsInAirtable } from '../../services/airtable';
 import type { ClientCureData } from '../../types/client';
@@ -111,6 +111,7 @@ const NewClientPage = () => {
       <ClientForm onSubmit={handleSubmit} centerId={centerId} />
       {showCureForm && (
         <CureFormModal
+          centerId={centerId}
           onClose={() => setShowCureForm(false)}
           onCureData={handleCureData}
         />
