@@ -255,9 +255,9 @@ const RelaxationTab: React.FC<{ clientId: string; centerId: string }> = ({ clien
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {sessions.map((session) => (
+                    {sessions.map((session, index) => (
                       <tr key={session.id}>
-                        <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900">{session.number}</td>
+                        <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900">{sessions.length - index}</td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                           {format(new Date(session.date), 'dd MMMM yyyy', { locale: fr })}
                         </td>
